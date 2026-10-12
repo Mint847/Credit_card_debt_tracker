@@ -31,12 +31,31 @@ A modern, comprehensive Single-Page Application (SPA) designed to help users tra
 
 ## 📂 Repository Structure
 
-- **`stitch_fintech_credit_debt_manager/`**: The primary production web application.
-  - `index.html`: The core Single Page Application containing all views, components, and logic.
-  - `serve.py`: Lightweight Python local HTTP server script.
-  - `firebase.json` & `.firebaserc`: Firebase hosting and project deployment configuration.
-- **Reference & Design Packages:**
-  - Feature-specific UI prototypes, design archives, and spreadsheets detailing fee structures.
+```
+├── app/                  # 🚀 Production Web Application
+│   ├── index.html        # Core Single Page Application (UI + Logic)
+│   ├── serve.py          # Local Python development server
+│   ├── firebase.json     # Firebase Hosting configuration
+│   └── .firebaserc       # Firebase Project mappings
+│
+├── prototypes/           # 🎨 UI Screen Mockups & Component Prototypes
+│   ├── 0%_surcharge/     # Surcharge fee exposer prototype
+│   ├── card_overview/    # Card details view prototype
+│   ├── cash_advance/     # Cash advance calculator prototype
+│   ├── home_page/        # Home dashboard screen mockup
+│   ├── login_page/       # Auth login view mockup
+│   ├── signup_page/      # Registration view mockup
+│   ├── simulators1/      # Payoff engine simulator prototypes
+│   └── ...               # Additional modular screen prototypes
+│
+├── docs/                 # 📄 Documentation, Specifications & Data
+│   ├── Sri Lanka Credit Card App.pdf
+│   ├── Sri Lanka Credit Card App.txt
+│   ├── sri_lanka_credit_card_cash_advance_fees.xlsx
+│   └── Web design/       # Design inspiration guidelines & references
+│
+└── archives/             # 📦 Original Zip Archives & Backups
+```
 
 ---
 
@@ -48,17 +67,17 @@ A modern, comprehensive Single-Page Application (SPA) designed to help users tra
 
 ### Running Locally
 
-1. Clone or download this repository:
+1. Clone this repository:
    ```bash
-   git clone <REPO_URL>
-   cd "Debt tracker"
+   git clone https://github.com/Mint847/Credit_card_debt_tracker.git
+   cd Credit_card_debt_tracker
    ```
 
 2. Start the local server using Python:
    ```bash
-   python stitch_fintech_credit_debt_manager/serve.py
+   python app/serve.py
    ```
-   Or navigate into `stitch_fintech_credit_debt_manager` and open `index.html` directly in your browser.
+   *Or navigate into `app/` and double-click `index.html` to open directly in your browser.*
 
 3. Open your browser and navigate to:
    ```
