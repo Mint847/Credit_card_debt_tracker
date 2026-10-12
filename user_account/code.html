@@ -1,0 +1,400 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Profile &amp; Settings - Serendib Debt Health</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Plus Jakarta Sans Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim from Design System -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline-variant": "#bbcac4",
+            "primary": "#006b5c",
+            "on-surface-variant": "#3c4a46",
+            "on-tertiary-container": "#004741",
+            "on-primary-fixed": "#00201a",
+            "tertiary-fixed": "#56faeb",
+            "on-tertiary-fixed": "#00201d",
+            "secondary-fixed-dim": "#bec6e0",
+            "on-secondary-container": "#5c647a",
+            "inverse-primary": "#44ddc1",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#3f465c",
+            "error": "#ba1a1a",
+            "on-background": "#191c1d",
+            "surface-container-low": "#f3f4f5",
+            "on-tertiary-fixed-variant": "#00504a",
+            "surface-container-highest": "#e1e3e4",
+            "primary-container": "#00bfa5",
+            "surface-dim": "#d9dadb",
+            "background": "#f8f9fa",
+            "on-surface": "#191c1d",
+            "on-primary-fixed-variant": "#005145",
+            "surface-variant": "#e1e3e4",
+            "error-container": "#ffdad6",
+            "primary-fixed-dim": "#44ddc1",
+            "on-error": "#ffffff",
+            "surface": "#f8f9fa",
+            "surface-tint": "#006b5c",
+            "tertiary-fixed-dim": "#28ddcf",
+            "tertiary": "#006a63",
+            "secondary": "#565e74",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed": "#dae2fd",
+            "on-error-container": "#93000a",
+            "primary-fixed": "#68fadd",
+            "secondary-container": "#dae2fd",
+            "surface-container-high": "#e7e8e9",
+            "outline": "#6c7a76",
+            "on-secondary-fixed": "#131b2e",
+            "inverse-on-surface": "#f0f1f2",
+            "inverse-surface": "#2e3132",
+            "surface-container": "#edeeef",
+            "on-secondary": "#ffffff",
+            "on-primary-container": "#00473c",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-container": "#00beb1",
+            "surface-bright": "#f8f9fa"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-md": "1rem",
+            "gutter-sm": "0.75rem",
+            "margin-lg": "2rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem",
+            "gutter-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin-md": "1.5rem"
+          },
+          "fontFamily": {
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .app-card-shadow {
+      box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+    }
+    .nav-shadow {
+      box-shadow: 0 -4px 12px -2px rgba(15, 23, 42, 0.05);
+    }
+    /* Hide scrollbars cleanly */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center items-center p-0 md:p-6 text-on-surface">
+<!-- iPhone 16 Pro Max Canvas Container -->
+<main class="w-full max-w-[430px] h-[932px] bg-background relative flex flex-col overflow-hidden md:rounded-[52px] shadow-2xl border-0 md:border-[8px] md:border-slate-800">
+<!-- iOS Status Bar & Dynamic Island -->
+<header class="w-full bg-background pt-3 pb-1 px-7 flex justify-between items-center z-40 select-none flex-shrink-0">
+<span class="text-[15px] font-semibold text-on-surface tracking-tight">9:41</span>
+<!-- Dynamic Island Pill -->
+<div class="w-28 h-7 bg-black rounded-full flex items-center justify-between px-2.5 shadow-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 animate-pulse"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-700"></div>
+</div>
+<!-- System Status Indicators -->
+<div class="flex items-center space-x-1.5 text-on-surface">
+<span class="material-symbols-outlined text-[17px]">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[17px]">wifi</span>
+<span class="material-symbols-outlined text-[20px]">battery_full</span>
+</div>
+</header>
+<!-- Top App Bar (Shared Components standard implementation) -->
+<section class="flex justify-between items-center w-full px-margin h-14 bg-surface z-30 flex-shrink-0">
+<button class="w-10 h-10 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface hover:bg-surface-container active:scale-95 transition-all" onclick="window.history.back()" aria-label="Back to Dashboard">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex flex-col items-center text-center">
+<h1 class="text-headline-sm font-headline-sm text-on-surface tracking-tight leading-none">Profile &amp; Settings</h1>
+<p class="text-label-sm font-label-sm text-secondary mt-0.5">Financial Health &amp; Regulatory Rules</p>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="help_outline">help_outline</span>
+</button>
+</section>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 overflow-y-auto no-scrollbar px-margin pt-2 pb-24 space-y-4">
+<!-- Section 1: User Identity & Income Card -->
+<article class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-margin app-card-shadow">
+<div class="flex items-center space-x-3.5 mb-4">
+<div class="w-13 h-13 w-12 h-12 rounded-full bg-primary-container/20 border-2 border-primary-container flex items-center justify-center flex-shrink-0">
+<span class="text-primary font-bold text-headline-sm">RK</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center space-x-1.5">
+<h2 class="text-body-lg font-headline-sm text-on-surface truncate">Rohan Kaluwitharana</h2>
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary flex items-center gap-1 mt-0.5">
+<span class="">Verified Resident (Sri Lanka)</span>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-label-sm font-label-sm text-primary font-semibold">NIC Active</span>
+</p>
+</div>
+</div>
+<!-- Net Take Home Income Input Container -->
+<div class="bg-surface-container-low rounded-xl p-3 border border-outline-variant/30 flex items-center justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-secondary block">Monthly Net Take-Home Income</span>
+<span class="text-headline-sm font-headline-sm text-on-surface mt-0.5 block tracking-tight">LKR 175,000 <span class="text-label-md font-label-md text-secondary">/ mo</span></span>
+</div>
+<button aria-label="Edit Income" class="w-8 h-8 rounded-lg bg-surface-container-lowest border border-outline-variant/40 text-on-surface-variant flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- Sub-metric health pill -->
+<div class="mt-3 bg-teal-50 border border-teal-100 rounded-xl px-3 py-2 flex items-center space-x-2">
+<span class="material-symbols-outlined text-[#008f7a] text-[18px] flex-shrink-0" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<p class="text-label-sm font-label-sm text-teal-900 leading-tight">
+            Current Card Debt Load: <strong class="font-bold text-[#008f7a]">14%</strong> of monthly income (Healthy benchmark &lt; 20%)
+          </p>
+</div>
+</article>
+<!-- Section 2: CBSL Regulatory Benchmarks Card -->
+<section class="space-y-2">
+<div class="flex items-center space-x-2 px-1">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="gavel">gavel</span>
+<h3 class="text-label-lg font-label-lg text-on-surface">Central Bank (CBSL) Tariff Caps</h3>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-margin app-card-shadow space-y-3.5">
+<!-- Row 1: Max APR -->
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="percent">percent</span>
+</div>
+<div>
+<span class="text-body-md font-label-md text-on-surface block">Maximum Credit Card APR</span>
+<span class="text-label-sm font-body-sm text-secondary">Statutory finance charge ceiling</span>
+</div>
+</div>
+<div class="flex items-center space-x-1.5">
+<span class="text-headline-sm font-headline-sm text-on-surface">28.0% <span class="text-label-sm font-label-sm text-secondary font-normal">p.a.</span></span>
+<button class="text-secondary hover:text-primary transition-colors p-1" title="CBSL Direction No. 03 of 2021">
+<span class="material-symbols-outlined text-[18px]" data-icon="info">info</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Minimum Payment -->
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="payments">payments</span>
+</div>
+<div>
+<span class="text-body-md font-label-md text-on-surface block">Mandated Minimum Payment</span>
+<span class="text-label-sm font-body-sm text-secondary">Minimum monthly principal + interest</span>
+</div>
+</div>
+<div class="flex items-center space-x-1.5">
+<span class="text-headline-sm font-headline-sm text-on-surface">4.0% <span class="text-label-sm font-label-sm text-secondary font-normal">min</span></span>
+<button class="text-secondary hover:text-primary transition-colors p-1" title="Credit Card Operating Guidelines">
+<span class="material-symbols-outlined text-[18px]" data-icon="info">info</span>
+</button>
+</div>
+</div>
+<!-- Callout Disclaimer -->
+<div class="bg-surface-container-low/70 rounded-xl p-2.5 flex items-start space-x-2 border border-outline-variant/30">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-0.5" data-icon="lock">lock</span>
+<p class="text-body-sm font-body-sm text-secondary text-[11px] leading-tight">
+              Rates fixed under CBSL Monetary Law Act directives. Non-editable by individual cardholders to prevent miscalculated amortizations.
+            </p>
+</div>
+</div>
+</section>
+<!-- Section 3: Repayment Strategy Preference -->
+<section class="space-y-2">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="tune">tune</span>
+<h3 class="text-label-lg font-label-lg text-on-surface">Default Payoff Method</h3>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-medium">Recommended</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Option 1: Avalanche (Selected) -->
+<button class="text-left bg-surface-container-lowest border-2 border-primary rounded-2xl p-3.5 relative app-card-shadow active:scale-[0.98] transition-all">
+<div class="absolute top-2.5 right-2.5">
+<div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[14px]" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+</div>
+<div class="w-7 h-7 rounded-lg bg-teal-50 text-primary flex items-center justify-center mb-2.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="trending_down">trending_down</span>
+</div>
+<h4 class="text-label-lg font-headline-sm text-on-surface">Debt Avalanche</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 text-[11px] leading-relaxed">
+              Saves maximum interest (Target highest APR first).
+            </p>
+<div class="mt-2.5 inline-block bg-teal-50 text-[#008f7a] text-[10px] font-semibold px-2 py-0.5 rounded-full">
+              Save ~LKR 34,200
+            </div>
+</button>
+<!-- Option 2: Snowball (Unselected) -->
+<button class="text-left bg-surface-container-lowest border border-outline-variant/40 rounded-2xl p-3.5 relative app-card-shadow active:scale-[0.98] transition-all opacity-85 hover:opacity-100">
+<div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-secondary mb-2.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_vintage">filter_vintage</span>
+</div>
+<h4 class="text-label-lg font-headline-sm text-on-surface">Debt Snowball</h4>
+<p class="text-body-sm font-body-sm text-secondary mt-1 text-[11px] leading-relaxed">
+              Quick psychological wins (Target lowest balance first).
+            </p>
+<div class="mt-2.5 inline-block bg-surface-container text-secondary text-[10px] font-semibold px-2 py-0.5 rounded-full">
+              Speed payoff
+            </div>
+</button>
+</div>
+</section>
+<!-- Section 4: Privacy & Data Management -->
+<section class="space-y-2">
+<div class="flex items-center space-x-2 px-1">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="security">security</span>
+<h3 class="text-label-lg font-label-lg text-on-surface">Privacy &amp; Data Management</h3>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-margin app-card-shadow space-y-3">
+<!-- Privacy Guarantee Badge -->
+<div class="flex items-center space-x-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl px-3 py-2.5">
+<span class="material-symbols-outlined text-[#008f7a] text-[18px]" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<div class="flex-1">
+<span class="text-label-md font-label-md text-emerald-950 block">Private &amp; Local Storage</span>
+<span class="text-body-sm font-body-sm text-emerald-700 text-[11px] block">No credit card numbers or credentials ever leave this device.</span>
+</div>
+</div>
+<!-- Action Rows -->
+<div class="pt-1 space-y-1">
+<!-- Export JSON -->
+<button class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-surface-container active:scale-[0.99] transition-all">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</div>
+<div class="text-left">
+<span class="text-label-md font-label-md text-on-surface block">Export Financial Data (JSON)</span>
+<span class="text-body-sm font-body-sm text-secondary text-[11px]">Download encrypted simulation ledger</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Reset Data Destructive Action -->
+<button class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-error-container/20 active:scale-[0.99] transition-all text-error">
+<div class="flex items-center space-x-3">
+<div class="w-8 h-8 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete_forever">delete_forever</span>
+</div>
+<div class="text-left">
+<span class="text-label-md font-label-md text-error block">Reset All Card Data</span>
+<span class="text-body-sm font-body-sm text-error/80 text-[11px]">Purge all statement balances and amortizations</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-error text-[18px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- App version & CBSL compliance footer note -->
+<footer class="text-center pt-2 pb-1">
+<p class="text-label-sm font-label-sm text-secondary/70">Serendib Debt Health • v2.4.1 (Build 118)</p>
+<p class="text-[10px] text-secondary/60 mt-0.5">Compliant with Central Bank of Sri Lanka Consumer Protection Directives</p>
+</footer>
+</div>
+<!-- Bottom Navigation Bar (Verbatim from Shared Components JSON logic) -->
+<!-- Destination count: 5 | Labels: Home, Cards, Simulators, Spaces, Offers | Screen: Profile/Settings -->
+<nav class="fixed md:absolute bottom-0 left-0 w-full z-50 flex flex-col bg-surface-container-lowest nav-shadow border-t border-outline-variant/30">
+<div class="flex justify-around items-center px-gutter-sm py-2">
+<!-- Tab 1: Home -->
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</button>
+<!-- Tab 2: Cards -->
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="credit_card">credit_card</span>
+<span class="text-label-sm font-label-sm mt-0.5">Cards</span>
+</button>
+<!-- Tab 3: Simulators -->
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="calculate">calculate</span>
+<span class="text-label-sm font-label-sm mt-0.5">Simulators</span>
+</button>
+<!-- Tab 4: Spaces (Active intent for Settings/Debt spaces) -->
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="pie_chart">pie_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Spaces</span>
+</button>
+<!-- Tab 5: Offers -->
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="local_offer">local_offer</span>
+<span class="text-label-sm font-label-sm mt-0.5">Offers</span>
+</button>
+</div>
+<!-- iOS Home Indicator Bar -->
+<div class="w-full flex justify-center pb-2 pt-1">
+<div class="w-36 h-1.5 bg-slate-300 rounded-full"></div>
+</div>
+</nav>
+</main>
+
+
+</body></html>

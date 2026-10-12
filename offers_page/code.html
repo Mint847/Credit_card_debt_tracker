@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Offers - Sri Lankan Neo-Banking</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Plus Jakarta Sans Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed": "#68fadd",
+            "outline": "#6c7a76",
+            "on-secondary-fixed-variant": "#3f465c",
+            "inverse-primary": "#44ddc1",
+            "tertiary-fixed-dim": "#28ddcf",
+            "outline-variant": "#bbcac4",
+            "error": "#ba1a1a",
+            "primary-container": "#00bfa5",
+            "surface-container-highest": "#e1e3e4",
+            "on-secondary": "#ffffff",
+            "on-surface": "#191c1d",
+            "surface": "#f8f9fa",
+            "on-surface-variant": "#3c4a46",
+            "on-tertiary": "#ffffff",
+            "surface-variant": "#e1e3e4",
+            "tertiary-container": "#00beb1",
+            "on-error-container": "#93000a",
+            "on-error": "#ffffff",
+            "surface-container-high": "#e7e8e9",
+            "on-primary-fixed-variant": "#005145",
+            "secondary": "#565e74",
+            "secondary-fixed-dim": "#bec6e0",
+            "on-tertiary-container": "#004741",
+            "surface-container-lowest": "#ffffff",
+            "inverse-on-surface": "#f0f1f2",
+            "surface-dim": "#d9dadb",
+            "surface-container-low": "#f3f4f5",
+            "surface-container": "#edeeef",
+            "on-primary-container": "#00473c",
+            "on-primary": "#ffffff",
+            "tertiary": "#006a63",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed": "#131b2e",
+            "on-secondary-container": "#5c647a",
+            "primary-fixed-dim": "#44ddc1",
+            "tertiary-fixed": "#56faeb",
+            "on-primary-fixed": "#00201a",
+            "background": "#f8f9fa",
+            "on-background": "#191c1d",
+            "on-tertiary-fixed-variant": "#00504a",
+            "primary": "#006b5c",
+            "surface-bright": "#f8f9fa",
+            "on-tertiary-fixed": "#00201d",
+            "surface-tint": "#006b5c",
+            "inverse-surface": "#2e3132",
+            "secondary-fixed": "#dae2fd",
+            "secondary-container": "#dae2fd"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "gutter": "1rem",
+            "gutter-lg": "1.5rem",
+            "margin-md": "1.5rem",
+            "margin-lg": "2rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "gutter-sm": "0.75rem",
+            "margin": "1rem"
+          },
+          "fontFamily": {
+            "headline-xl": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- iPhone 16 Pro Max Container -->
+<div class="max-w-md mx-auto min-h-screen bg-surface text-on-surface font-['Plus_Jakarta_Sans',sans-serif] relative flex flex-col shadow-2xl">
+<!-- Top View Header -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md px-margin pt-4 pb-3">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-outline tracking-wider uppercase mb-0.5">OVERVIEW</span>
+<h1 class="text-headline-lg font-headline-lg text-on-surface tracking-tight">Latest Offers</h1>
+</div>
+<!-- Profile Badge & Menu Cluster -->
+<div class="flex items-center gap-3">
+<!-- Branded Profile Avatar with Ring & Status Dot -->
+<div class="relative flex items-center justify-center w-10 h-10 rounded-full bg-surface-container border border-outline-variant/60 shadow-xs active:scale-95 transition-transform cursor-pointer">
+<span class="text-label-md font-label-md text-primary font-bold">SM</span>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-primary-container border-2 border-surface rounded-full"></span>
+</div>
+<!-- Hamburger Menu Icon Button -->
+<button aria-label="Open menu" class="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-lowest border border-outline-variant/50 text-on-surface hover:bg-surface-container transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[22px]" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Flow Area -->
+<main class="flex-1 px-margin pt-2 pb-28">
+<!-- Smart Match Segmented Toggle -->
+<div class="w-full bg-surface-container p-1 rounded-xl flex mb-6">
+<button class="w-1/2 bg-surface-container-lowest text-on-surface shadow-xs rounded-lg py-2 text-label-lg font-label-lg text-center transition-all" id="tab-my-cards">
+          My Cards
+        </button>
+<button class="w-1/2 text-secondary hover:text-on-surface py-2 text-label-lg font-label-lg text-center transition-all" id="tab-explore">
+          Explore All
+        </button>
+</div>
+<!-- Horizontal Category Carousel -->
+<div class="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide no-scrollbar">
+<!-- Active Chip -->
+<button class="whitespace-nowrap px-4 py-2 bg-primary-fixed/25 text-primary font-label-lg rounded-full text-label-lg border border-primary/30 shadow-2xs transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="apps">apps</span>
+          All
+        </button>
+<!-- Inactive Chips -->
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-lowest text-secondary font-label-lg rounded-full text-label-lg border border-outline-variant/40 hover:bg-surface-container transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="shopping_basket">shopping_basket</span>
+          Groceries
+        </button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-lowest text-secondary font-label-lg rounded-full text-label-lg border border-outline-variant/40 hover:bg-surface-container transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="restaurant">restaurant</span>
+          Dining
+        </button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-lowest text-secondary font-label-lg rounded-full text-label-lg border border-outline-variant/40 hover:bg-surface-container transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="percent">percent</span>
+          0% EPP
+        </button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-lowest text-secondary font-label-lg rounded-full text-label-lg border border-outline-variant/40 hover:bg-surface-container transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="flight">flight</span>
+          Travel
+        </button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-lowest text-secondary font-label-lg rounded-full text-label-lg border border-outline-variant/40 hover:bg-surface-container transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="local_gas_station">local_gas_station</span>
+          Fuel &amp; Bills
+        </button>
+</div>
+<!-- Quick Summary Metric / Starling-Style Banner -->
+<div class="mb-5 p-4 rounded-xl bg-surface-container-lowest border border-outline-variant/40 shadow-xs flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="savings">savings</span>
+</div>
+<div>
+<div class="text-label-sm font-label-sm text-outline">Active Card Optimization</div>
+<div class="text-label-lg font-label-lg text-on-surface">Up to <span class="text-primary font-bold">LKR 42,500</span> in eligible savings</div>
+</div>
+</div>
+<span class="text-label-sm font-label-sm bg-primary/10 text-primary px-2.5 py-1 rounded-full font-bold">4 Cards</span>
+</div>
+<!-- Offer Card Feed -->
+<div class="flex flex-col gap-4">
+<!-- Card 1: Keells Supermarkets -->
+<article class="bg-surface-container-lowest rounded-[24px] p-5 border border-outline-variant/40 shadow-xs flex flex-col gap-3 hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm font-bold text-on-surface bg-surface-container px-2.5 py-1 rounded-md">Commercial Bank</span>
+<span class="text-label-sm font-label-sm font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-200/60">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+              Ends in 2 Days
+            </span>
+</div>
+<!-- Main Content -->
+<div class="space-y-1">
+<h2 class="text-headline-sm font-headline-sm text-on-surface leading-tight">
+              25% Off Fresh Produce at Keells Supermarkets
+            </h2>
+<p class="text-body-md font-body-md text-secondary">
+              Valid for Visa Gold &amp; Platinum credit cards on weekends. Max discount LKR 2,500.
+            </p>
+</div>
+<!-- Footer Action -->
+<div class="border-t border-surface-container-high pt-3 mt-1">
+<a class="text-label-lg font-label-lg text-primary hover:text-on-primary-container transition-colors flex justify-between items-center group" href="#terms-card-1">
+<span>Read Terms &amp; Conditions</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</article>
+<!-- Card 2: HSBC Dining -->
+<article class="bg-surface-container-lowest rounded-[24px] p-5 border border-outline-variant/40 shadow-xs flex flex-col gap-3 hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm font-bold text-on-surface bg-surface-container px-2.5 py-1 rounded-md">HSBC Sri Lanka</span>
+<span class="text-label-sm font-label-sm font-bold text-error bg-error-container/40 px-2.5 py-1 rounded-full flex items-center gap-1 border border-error/20">
+<span class="material-symbols-outlined text-[14px]" data-icon="bolt">bolt</span>
+              Ends Today
+            </span>
+</div>
+<!-- Main Content -->
+<div class="space-y-1">
+<h2 class="text-headline-sm font-headline-sm text-on-surface leading-tight">
+              1-for-1 Main Course at Cinnamon Grand &amp; Lakeside
+            </h2>
+<p class="text-body-md font-body-md text-secondary">
+              Exclusive to HSBC Premier &amp; Advance credit cards. Prior reservations mandatory.
+            </p>
+</div>
+<!-- Footer Action -->
+<div class="border-t border-surface-container-high pt-3 mt-1">
+<a class="text-label-lg font-label-lg text-primary hover:text-on-primary-container transition-colors flex justify-between items-center group" href="#terms-card-2">
+<span>Read Terms &amp; Conditions</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</article>
+<!-- Card 3: Sampath 0% EPP -->
+<article class="bg-surface-container-lowest rounded-[24px] p-5 border border-outline-variant/40 shadow-xs flex flex-col gap-3 hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm font-bold text-on-surface bg-surface-container px-2.5 py-1 rounded-md">Sampath Bank</span>
+<span class="text-label-sm font-label-sm font-bold text-primary bg-primary-fixed/30 px-2.5 py-1 rounded-full flex items-center gap-1 border border-primary/30">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+              0% Surcharge Approved
+            </span>
+</div>
+<!-- Main Content -->
+<div class="space-y-1">
+<h2 class="text-headline-sm font-headline-sm text-on-surface leading-tight">
+              0% Interest 12-Month Extended Payment Plan at Singer &amp; Abans
+            </h2>
+<p class="text-body-md font-body-md text-secondary">
+              Convert electronics purchases over LKR 50,000 via Sampath Vishwa with zero processing fee.
+            </p>
+</div>
+<!-- Footer Action -->
+<div class="border-t border-surface-container-high pt-3 mt-1">
+<a class="text-label-lg font-label-lg text-primary hover:text-on-primary-container transition-colors flex justify-between items-center group" href="#terms-card-3">
+<span>Read Terms &amp; Conditions</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</article>
+<!-- Card 4: HNB Travel -->
+<article class="bg-surface-container-lowest rounded-[24px] p-5 border border-outline-variant/40 shadow-xs flex flex-col gap-3 hover:shadow-md transition-shadow">
+<!-- Top Row -->
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm font-bold text-on-surface bg-surface-container px-2.5 py-1 rounded-md">HNB (Hatton National Bank)</span>
+<span class="text-label-sm font-label-sm font-bold text-secondary bg-secondary-fixed/50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-secondary-fixed-dim/70">
+<span class="material-symbols-outlined text-[14px]" data-icon="flight_takeoff">flight_takeoff</span>
+              Travel Season
+            </span>
+</div>
+<!-- Main Content -->
+<div class="space-y-1">
+<h2 class="text-headline-sm font-headline-sm text-on-surface leading-tight">
+              20% Cash Back on SriLankan Airlines Direct Bookings
+            </h2>
+<p class="text-body-md font-body-md text-secondary">
+              Applies on flights to Singapore, Bangkok, and Dubai booked via hnb.lk.
+            </p>
+</div>
+<!-- Footer Action -->
+<div class="border-t border-surface-container-high pt-3 mt-1">
+<a class="text-label-lg font-label-lg text-primary hover:text-on-primary-container transition-colors flex justify-between items-center group" href="#terms-card-4">
+<span>Read Terms &amp; Conditions</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</article>
+</div>
+</main>
+<!-- Shared Bottom Navigation Bar (Docked Bottom-0, Destination: Offers Active) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-col justify-around items-center bg-surface-container-lowest border-t border-outline-variant/40 shadow-md">
+<!-- 5-item Nav Row -->
+<div class="w-full max-w-md flex justify-around items-center px-gutter-sm py-space-xs">
+<!-- Tab 1: Home -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150 py-1" href="#home">
+<span class="material-symbols-outlined text-[24px]" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</a>
+<!-- Tab 2: Cards -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150 py-1" href="#cards">
+<span class="material-symbols-outlined text-[24px]" data-icon="credit_card">credit_card</span>
+<span class="text-label-sm font-label-sm mt-0.5">Cards</span>
+</a>
+<!-- Tab 3: Simulators -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150 py-1" href="#simulators">
+<span class="material-symbols-outlined text-[24px]" data-icon="calculate">calculate</span>
+<span class="text-label-sm font-label-sm mt-0.5">Simulators</span>
+</a>
+<!-- Tab 4: Spaces -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150 py-1" href="#spaces">
+<span class="material-symbols-outlined text-[24px]" data-icon="pie_chart">pie_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Spaces</span>
+</a>
+<!-- Tab 5: Offers (ACTIVE LOCK) -->
+<a class="flex flex-col items-center justify-center text-primary font-semibold hover:text-primary transition-colors active:scale-95 duration-150 py-1" href="#offers">
+<span class="material-symbols-outlined text-[24px] text-primary" data-icon="local_offer" data-weight="fill" style="font-variation-settings: 'FILL' 1;">local_offer</span>
+<span class="text-label-sm font-label-sm mt-0.5 text-primary font-bold">Offers</span>
+</a>
+</div>
+<!-- Native iPhone 16 Pro Max Home Indicator Bar -->
+<div class="w-full flex justify-center pb-2 pt-0.5">
+<div class="w-36 h-1 bg-on-surface/80 rounded-full mx-auto"></div>
+</div>
+</nav>
+</div>
+<!-- Interactive script for segmented toggle micro-interaction -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnMyCards = document.getElementById('tab-my-cards');
+      const btnExplore = document.getElementById('tab-explore');
+
+      if (btnMyCards && btnExplore) {
+        btnMyCards.addEventListener('click', () => {
+          btnMyCards.className = "w-1/2 bg-surface-container-lowest text-on-surface shadow-xs rounded-lg py-2 text-label-lg font-label-lg text-center transition-all";
+          btnExplore.className = "w-1/2 text-secondary hover:text-on-surface py-2 text-label-lg font-label-lg text-center transition-all";
+        });
+
+        btnExplore.addEventListener('click', () => {
+          btnExplore.className = "w-1/2 bg-surface-container-lowest text-on-surface shadow-xs rounded-lg py-2 text-label-lg font-label-lg text-center transition-all";
+          btnMyCards.className = "w-1/2 text-secondary hover:text-on-surface py-2 text-label-lg font-label-lg text-center transition-all";
+        });
+      }
+    });
+  </script>
+</body></html>

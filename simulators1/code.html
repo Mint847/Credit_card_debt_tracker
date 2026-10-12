@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Simulators - Credit Card Debt Management</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed": "#00201d",
+            "outline": "#6c7a76",
+            "on-primary-fixed": "#00201a",
+            "on-surface-variant": "#3c4a46",
+            "error-container": "#ffdad6",
+            "on-error": "#ffffff",
+            "surface-tint": "#006b5c",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary-container": "#5c647a",
+            "primary-fixed": "#68fadd",
+            "on-secondary-fixed": "#131b2e",
+            "tertiary": "#006a63",
+            "surface-container-high": "#e7e8e9",
+            "on-primary": "#ffffff",
+            "primary-container": "#00bfa5",
+            "on-primary-fixed-variant": "#005145",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed-variant": "#3f465c",
+            "inverse-surface": "#2e3132",
+            "surface-container-highest": "#e1e3e4",
+            "surface-dim": "#d9dadb",
+            "secondary": "#565e74",
+            "on-error-container": "#93000a",
+            "tertiary-fixed-dim": "#28ddcf",
+            "surface-bright": "#f8f9fa",
+            "inverse-primary": "#44ddc1",
+            "on-tertiary-fixed-variant": "#00504a",
+            "tertiary-fixed": "#56faeb",
+            "background": "#f8f9fa",
+            "on-background": "#191c1d",
+            "primary": "#006b5c",
+            "inverse-on-surface": "#f0f1f2",
+            "secondary-fixed": "#dae2fd",
+            "surface-container-low": "#f3f4f5",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#bec6e0",
+            "surface-variant": "#e1e3e4",
+            "surface": "#f8f9fa",
+            "on-tertiary-container": "#004741",
+            "outline-variant": "#bbcac4",
+            "primary-fixed-dim": "#44ddc1",
+            "surface-container": "#edeeef",
+            "on-surface": "#191c1d",
+            "secondary-container": "#dae2fd",
+            "error": "#ba1a1a",
+            "on-primary-container": "#00473c",
+            "tertiary-container": "#00beb1"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-sm": "0.75rem",
+            "gutter-lg": "1.5rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem",
+            "space-xs": "0.25rem",
+            "margin-md": "1.5rem",
+            "gutter": "1rem",
+            "space-md": "1rem",
+            "margin-lg": "2rem",
+            "space-lg": "1.5rem"
+          },
+          "fontFamily": {
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased font-body-md flex justify-center min-h-screen">
+<!-- iPhone 16 Pro Max Mockup Shell -->
+<main class="w-full max-w-[430px] min-h-screen bg-background relative flex flex-col pb-28 shadow-2xl overflow-x-hidden border-x border-slate-200">
+<!-- iOS Status Bar & Dynamic Island -->
+<header class="w-full pt-3 px-7 flex justify-between items-center z-40 bg-surface select-none">
+<span class="text-sm font-bold tracking-tight text-on-surface">9:41</span>
+<!-- Dynamic Island Pill -->
+<div class="w-28 h-7 bg-black rounded-full flex items-center justify-between px-2.5">
+<div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<div class="w-1 h-1 rounded-full bg-emerald-400"></div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface">
+<span class="material-symbols-outlined text-base leading-none">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-base leading-none">wifi</span>
+<span class="material-symbols-outlined text-base leading-none">battery_full</span>
+</div>
+</header>
+<!-- Top App Bar / Screen Header -->
+<section class="flex items-center justify-between px-5 h-24 shrink-0 bg-surface"><div>
+<h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Simulators</h1>
+</div>
+<div class="flex items-center gap-3">
+<!-- Profile Avatar -->
+<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-sm relative border-2 border-emerald-500/80 shadow-sm cursor-pointer active:scale-95 transition-transform duration-150">
+          SM
+          <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white"></span>
+</div>
+<!-- Menu Icon -->
+<button aria-label="Menu" class="rounded-full p-2 text-slate-600 hover:bg-surface-container active:scale-95 transition-transform duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+</div></section>
+<!-- Simulator Navigation Tabs -->
+<nav class="overflow-x-auto no-scrollbar px-5 pb-4 gap-3 flex items-center shrink-0"><button class="bg-slate-900 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm active:scale-95 transition-transform duration-150">
+        Min Payment Trap
+      </button>
+<button class="bg-white text-slate-500 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-transform duration-150 hover:bg-slate-50">
+        Cash Advance
+      </button>
+<button class="bg-white text-slate-500 border border-slate-200 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap active:scale-95 transition-transform duration-150 hover:bg-slate-50">
+        0% Surcharge
+      </button></nav>
+<!-- The Sandbox Workspace (Main White Card) -->
+<section class="bg-white rounded-3xl shadow-sm mx-4 p-5 flex flex-col gap-5 border border-slate-100">
+<!-- Card Header -->
+<div class="flex items-start justify-between">
+<div>
+<h2 class="text-xl font-bold text-slate-900">Minimum Payment Sandbox</h2>
+<p class="text-slate-500 text-sm mt-0.5">Calculate the true cost of the CBSL 4% minimum rule.</p>
+</div>
+<span class="bg-emerald-50 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200/60 whitespace-nowrap shrink-0 mt-1">
+          CBSL Cap: 28% APR
+        </span>
+</div>
+<!-- Data Source Dropdown -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Load data from</label>
+<button class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex justify-between items-center w-full active:scale-95 transition-all text-left" type="button">
+<span class="font-medium text-slate-700 text-sm">Custom Scenario</span>
+<span class="material-symbols-outlined text-slate-500 text-lg">expand_more</span>
+</button>
+</div>
+<!-- Input Fields -->
+<div class="flex flex-col gap-3.5">
+<!-- Input 1: Simulated Balance -->
+<div class="bg-slate-50 rounded-xl p-4 border border-slate-200/70 relative">
+<div class="flex items-center justify-between">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Simulated Balance (LKR)</label>
+<span class="material-symbols-outlined text-slate-400 text-lg">edit</span>
+</div>
+<div class="mt-1 flex items-baseline justify-between">
+<span class="text-2xl font-extrabold text-slate-900 tracking-tight">LKR 100,000</span>
+<span class="text-xs font-medium text-slate-400">Tap to edit</span>
+</div>
+<div class="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200/60">
+<span class="text-xs text-slate-400 font-medium">Presets:</span>
+<button class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300/60 active:scale-95 transition-transform">100k</button>
+<button class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform">250k</button>
+<button class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform">500k</button>
+<button class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform">1M</button>
+</div>
+</div>
+<!-- Input 2: Interest Rate -->
+<div class="bg-slate-50 rounded-xl p-4 border border-slate-200/70 flex items-center justify-between">
+<div>
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interest Rate (APR)</span>
+<div class="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">28.0%</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="material-symbols-outlined text-slate-400 text-lg">lock</span>
+<span class="text-xs font-medium text-slate-500 mt-0.5">CBSL Statutory Ceiling</span>
+</div>
+</div>
+</div>
+<!-- Results Grid (2 Columns Side-by-Side) -->
+<div class="grid grid-cols-2 gap-3.5">
+<!-- Left Result: The Trap -->
+<div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-rose-600">warning</span>
+<span class="text-rose-600 font-medium text-xs uppercase tracking-wider">If paying minimum</span>
+</div>
+<div class="text-lg font-bold text-rose-900 mt-2 tracking-tight">11 Yrs 2 Mo</div>
+<div class="text-xs font-medium text-rose-700 mt-2 bg-rose-100/60 px-2 py-1 rounded-md inline-block">
+              Interest: LKR 152,956
+            </div>
+</div>
+<div class="mt-4 pt-3 border-t border-rose-200/60 text-xs font-medium text-rose-600">
+            Payoff takes over a decade
+          </div>
+</div>
+<!-- Right Result: The Fix -->
+<div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-emerald-700">bolt</span>
+<span class="text-emerald-700 font-medium text-xs uppercase tracking-wider">If paying fixed LKR 25k</span>
+</div>
+<div class="text-lg font-bold text-emerald-950 mt-2 tracking-tight">1 Yr 1 Mo</div>
+<div class="text-xs font-semibold text-emerald-800 mt-2 bg-emerald-100/60 px-2 py-1 rounded-md inline-block">
+              Save LKR 130,000
+            </div>
+</div>
+<div class="mt-4 pt-3 border-t border-emerald-200/60 text-xs font-medium text-emerald-700">
+            10x faster payoff pace
+          </div>
+</div>
+</div>
+<!-- CTA Inside Sandbox -->
+<button class="w-full bg-primary-container text-on-primary-container font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+<span>Adopt Fixed Repayment Plan</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</section>
+<!-- Explanatory Insight / Warning Banner -->
+<aside class="mx-4 mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-700 shrink-0">
+<span class="material-symbols-outlined text-xl">account_balance</span>
+</div>
+<div>
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">CBSL Statutory Note</h3>
+<p class="text-xs text-slate-600 leading-relaxed mt-1">
+          Under Central Bank of Sri Lanka (CBSL) regulations, paying only the mandated 4% minimum triggers continuous compounding interest on residual balances, extending debt for years.
+        </p>
+</div>
+</aside>
+<!-- Starling-Style Debt Velocity Visualizer -->
+<section class="mx-4 mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-700">Principal vs Interest Velocity</span>
+<span class="text-xs font-bold text-emerald-700">85% Principal</span>
+</div>
+<div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 85%;"></div>
+<div class="h-full bg-rose-400" style="width: 15%;"></div>
+</div>
+<div class="flex items-center justify-between mt-2.5 text-xs text-slate-500">
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Principal: LKR 21,250</span>
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-400"></span> Interest: LKR 3,750</span>
+</div>
+</section>
+<!-- Global Bottom Navigation Bar (Shared Component Blueprint) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter-sm py-space-xs bg-surface-container-lowest border-t border-outline-variant shadow-md max-w-[430px] mx-auto right-0"><!-- Home -->
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</a>
+<!-- Cards -->
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-2xl">credit_card</span>
+<span class="text-label-sm font-label-sm mt-0.5">Cards</span>
+</a>
+<!-- Simulators (Active) -->
+<a class="flex flex-col items-center justify-center text-emerald-700 font-semibold hover:text-primary transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">calculate</span>
+<span class="text-label-sm font-label-sm mt-0.5">Simulators</span>
+</a>
+<!-- Spaces -->
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-2xl">pie_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Spaces</span>
+</a>
+<!-- Offers -->
+<a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-2xl">local_offer</span>
+<span class="text-label-sm font-label-sm mt-0.5">Offers</span>
+</a>
+<!-- iOS Home Indicator -->
+<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-[140px] h-[5px] rounded-full bg-slate-900/30 pointer-events-none"></div></nav>
+</main>
+</body></html>

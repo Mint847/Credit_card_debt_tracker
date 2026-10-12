@@ -1,0 +1,316 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Credit Cards - Spending Trackers</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Plus Jakarta Sans Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Theme Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#00201d",
+            "surface-dim": "#d9dadb",
+            "surface-tint": "#006b5c",
+            "on-background": "#191c1d",
+            "primary-fixed-dim": "#44ddc1",
+            "surface-container-highest": "#e1e3e4",
+            "surface-bright": "#f8f9fa",
+            "inverse-primary": "#44ddc1",
+            "error-container": "#ffdad6",
+            "tertiary": "#006a63",
+            "on-secondary-fixed": "#131b2e",
+            "surface-container-lowest": "#ffffff",
+            "secondary-container": "#dae2fd",
+            "tertiary-fixed": "#56faeb",
+            "secondary": "#565e74",
+            "primary-container": "#00bfa5",
+            "on-surface-variant": "#3c4a46",
+            "on-primary-fixed": "#00201a",
+            "error": "#ba1a1a",
+            "outline-variant": "#bbcac4",
+            "inverse-surface": "#2e3132",
+            "background": "#f8f9fa",
+            "on-secondary-container": "#5c647a",
+            "outline": "#6c7a76",
+            "surface": "#f8f9fa",
+            "tertiary-fixed-dim": "#28ddcf",
+            "on-secondary-fixed-variant": "#3f465c",
+            "inverse-on-surface": "#f0f1f2",
+            "on-primary-container": "#00473c",
+            "secondary-fixed": "#dae2fd",
+            "on-primary": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-variant": "#e1e3e4",
+            "surface-container": "#edeeef",
+            "on-tertiary": "#ffffff",
+            "primary-fixed": "#68fadd",
+            "secondary-fixed-dim": "#bec6e0",
+            "tertiary-container": "#00beb1",
+            "on-tertiary-fixed-variant": "#00504a",
+            "surface-container-low": "#f3f4f5",
+            "on-tertiary-container": "#004741",
+            "primary": "#006b5c",
+            "on-secondary": "#ffffff",
+            "surface-container-high": "#e7e8e9",
+            "on-surface": "#191c1d",
+            "on-primary-fixed-variant": "#005145"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-lg": "1.5rem",
+            "gutter-sm": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin-md": "1.5rem",
+            "margin": "1rem",
+            "space-md": "1rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "margin-lg": "2rem"
+          },
+          "fontFamily": {
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8f9fa;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex justify-center selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
+<!-- Mobile Device Shell Frame -->
+<div class="w-full max-w-[440px] min-h-screen bg-background flex flex-col relative pb-28 shadow-sm">
+<!-- Top Status Bar Area -->
+<header class="relative pt-3.5 pb-1 px-margin flex items-center justify-between z-40"><span class="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface text-[15px] pl-1.5">9:41</span><div class="absolute left-1/2 -translate-x-1/2 top-2.5 w-[126px] h-[35px] bg-black rounded-full flex items-center justify-between px-3 shadow-sm pointer-events-none"><div class="w-3 h-3 rounded-full bg-[#111827] flex items-center justify-center"><div class="w-1.5 h-1.5 rounded-full bg-[#1e293b]/70"></div></div><div class="w-2.5 h-2.5 rounded-full bg-[#0a0f1d]"></div></div><div class="flex items-center space-x-1.5 text-on-surface pr-1"><span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span><span class="material-symbols-outlined text-[18px]">wifi</span><span class="material-symbols-outlined text-[20px]">battery_full</span></div></header>
+<!-- Top App Navigation / Header Bar -->
+<div class="px-margin pt-4 pb-2 flex justify-between items-center">
+<h1 class="font-headline-xl-mobile text-headline-xl-mobile font-bold tracking-tight text-on-surface">
+        Credit Cards
+      </h1>
+<!-- Profile Avatar with Notification Pill badge -->
+<div class="flex items-center space-x-2">
+<div class="relative flex items-center justify-center p-0.5">
+<button aria-label="User Profile" class="relative w-10 h-10 rounded-full bg-secondary-container/50 flex items-center justify-center text-primary border border-outline-variant/40 hover:bg-secondary-container transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[22px]">person</span>
+<!-- Notification Badge Pill -->
+<span class="absolute -top-1 -right-1 bg-error text-on-error text-label-sm font-label-sm font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+              4
+            </span>
+</button>
+</div>
+<button aria-label="Menu" class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[22px]">menu</span>
+</button>
+</div>
+</div>
+<!-- Starling-Style Secondary Segmented Tabs -->
+<nav aria-label="Tabs" class="px-margin mt-1 border-b border-surface-container-highest flex space-x-6">
+<button class="pb-3 text-secondary font-headline-sm text-label-lg hover:text-on-surface transition-colors cursor-pointer">
+        Cards overview
+      </button>
+<button aria-current="page" class="pb-3 text-on-surface font-headline-sm text-label-lg font-bold border-b-2 border-primary-container relative cursor-pointer">
+        All Cards
+      </button>
+</nav>
+<!-- Main Content Canvas -->
+<main class="px-margin pt-4 flex flex-col space-y-4">
+<!-- Time Period Banner Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-space-md flex items-center justify-between shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+<div class="flex flex-col">
+<span class="text-secondary font-body-sm text-body-sm">Billing cycle resets in</span>
+<span class="text-on-surface font-headline-sm text-headline-sm mt-0.5 font-bold">12 days, on 28 Aug</span>
+</div>
+<button aria-label="Billing cycle information" class="text-primary hover:text-on-primary-container transition-colors p-1">
+<span class="material-symbols-outlined text-[24px]">info</span>
+</button>
+</div>
+<!-- Section Label -->
+<div class="pt-2">
+<h2 class="text-secondary font-label-md text-label-md font-semibold tracking-wide uppercase">
+          Active credit cards
+        </h2>
+</div>
+<!-- Credit Cards Feed List -->
+<div class="flex flex-col space-y-3.5">
+<!-- Card 1: ComBank Visa Gold -->
+<article class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-space-md shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] transition-all duration-200">
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-3">
+<!-- Rounded Square Soft Indigo Icon Container -->
+<div class="w-10 h-10 rounded-[12px] bg-secondary-container/60 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-on-surface font-headline-sm text-headline-sm tracking-tight leading-snug">
+                  Commercial Bank • Visa Gold
+                </h3>
+<span class="text-secondary font-body-sm text-body-sm mt-0.5">
+                  LKR 175,000 remaining limit
+                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px] mt-1">chevron_right</span>
+</div>
+<!-- Progress Bar Indicator -->
+<div class="mt-4 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500 ease-out" style="width: 42%;"></div>
+</div>
+<!-- Spend and Limit Details Row -->
+<div class="mt-2.5 flex justify-between items-center text-secondary font-body-sm text-body-sm">
+<span class="">LKR 125,000 spent</span>
+<span class="">LKR 300,000 limit</span>
+</div>
+</article>
+<!-- Card 2: HNB Platinum Mastercard -->
+<article class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-space-md shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] transition-all duration-200">
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-3">
+<!-- Rounded Square Soft Rose Icon Container -->
+<div class="w-10 h-10 rounded-[12px] bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-on-surface font-headline-sm text-headline-sm tracking-tight leading-snug">
+                  Hatton National Bank • Platinum
+                </h3>
+<span class="text-secondary font-body-sm text-body-sm mt-0.5">
+                  LKR 265,000 remaining limit
+                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px] mt-1">chevron_right</span>
+</div>
+<!-- Progress Bar Indicator -->
+<div class="mt-4 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500 ease-out" style="width: 52%;"></div>
+</div>
+<!-- Spend and Limit Details Row -->
+<div class="mt-2.5 flex justify-between items-center text-secondary font-body-sm text-body-sm">
+<span class="">LKR 285,000 spent</span>
+<span class="">LKR 550,000 limit</span>
+</div>
+</article>
+<!-- Card 3: Sampath Bank Ultramiles -->
+<article class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-space-md shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] transition-all duration-200">
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-3">
+<!-- Rounded Square Soft Amber Icon Container -->
+<div class="w-10 h-10 rounded-[12px] bg-amber-50 flex items-center justify-center text-amber-700">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-on-surface font-headline-sm text-headline-sm tracking-tight leading-snug">
+                  Sampath Bank • Ultramiles
+                </h3>
+<span class="text-secondary font-body-sm text-body-sm mt-0.5">
+                  LKR 78,000 remaining limit
+                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px] mt-1">chevron_right</span>
+</div>
+<!-- Progress Bar Indicator -->
+<div class="mt-4 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500 ease-out" style="width: 61%;"></div>
+</div>
+<!-- Spend and Limit Details Row -->
+<div class="mt-2.5 flex justify-between items-center text-secondary font-body-sm text-body-sm">
+<span class="">LKR 122,000 spent</span>
+<span class="">LKR 200,000 limit</span>
+</div>
+</article>
+<!-- Card 4: Seylan Freedom Card -->
+<article class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-space-md shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] transition-all duration-200">
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-3">
+<!-- Rounded Square Soft Emerald Icon Container -->
+<div class="w-10 h-10 rounded-[12px] bg-primary-fixed/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-on-surface font-headline-sm text-headline-sm tracking-tight leading-snug">
+                  Seylan Bank • Freedom
+                </h3>
+<span class="text-secondary font-body-sm text-body-sm mt-0.5">
+                  LKR 85,000 remaining limit
+                </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px] mt-1">chevron_right</span>
+</div>
+<!-- Progress Bar Indicator -->
+<div class="mt-4 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500 ease-out" style="width: 15%;"></div>
+</div>
+<!-- Spend and Limit Details Row -->
+<div class="mt-2.5 flex justify-between items-center text-secondary font-body-sm text-body-sm">
+<span class="">LKR 15,000 spent</span>
+<span class="">LKR 100,000 limit</span>
+</div>
+</article>
+<!-- Action Button: Link New Credit Card -->
+<button class="w-full bg-surface-container-lowest border border-outline-variant/40 hover:border-primary-container rounded-xl py-4 px-space-md flex items-center justify-center space-x-2 text-primary hover:text-on-primary-container shadow-[0_1px_3px_0_rgba(15,23,42,0.03)] active:scale-[0.99] transition-all duration-150">
+<span class="material-symbols-outlined text-[22px]">add</span>
+<span class="font-headline-sm text-headline-sm font-semibold">Link new credit card</span>
+</button>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Semantic Shell Component Anchor) -->
+<!-- Matches JSON specification: fixed bottom-0, docked full-width, shadow-md, destination labels/icons -->
+<nav aria-label="Bottom Navigation" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 flex flex-col bg-surface-container-lowest border-t border-outline-variant/40 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] max-w-[440px]"><div class="w-full grid grid-cols-5 items-center pt-2.5 pb-1"><a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150" href="#home"><span class="material-symbols-outlined text-[24px]">home</span><span class="text-label-sm font-label-sm mt-1">Home</span></a><a aria-current="page" class="flex flex-col items-center justify-center text-primary font-bold hover:text-primary transition-colors active:scale-95 duration-150" href="#cards"><span class="material-symbols-outlined text-[24px]">credit_card</span><span class="text-label-sm font-label-sm mt-1">Cards</span></a><a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150" href="#simulators"><span class="material-symbols-outlined text-[24px]">calculate</span><span class="text-label-sm font-label-sm mt-1">Simulators</span></a><a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150" href="#spaces"><span class="material-symbols-outlined text-[24px]">pie_chart</span><span class="text-label-sm font-label-sm mt-1">Spaces</span></a><a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 duration-150" href="#offers"><span class="material-symbols-outlined text-[24px]">local_offer</span><span class="text-label-sm font-label-sm mt-1">Offers</span></a></div><div class="w-full flex items-center justify-center pt-2 pb-2"><div class="w-[140px] h-[5px] bg-[#191c1d]/30 rounded-full"></div></div></nav>
+</div>
+
+
+</body></html>

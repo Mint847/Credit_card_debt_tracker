@@ -1,0 +1,345 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Spaces - Sri Lanka Debt Management Neo-Bank</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#00504a",
+            "primary": "#006b5c",
+            "surface-bright": "#f8f9fa",
+            "secondary": "#565e74",
+            "error": "#ba1a1a",
+            "on-tertiary-container": "#004741",
+            "tertiary-fixed": "#56faeb",
+            "tertiary": "#006a63",
+            "on-surface-variant": "#3c4a46",
+            "surface-tint": "#006b5c",
+            "primary-fixed-dim": "#44ddc1",
+            "background": "#f8f9fa",
+            "on-surface": "#191c1d",
+            "surface-container-high": "#e7e8e9",
+            "on-secondary-fixed": "#131b2e",
+            "surface": "#f8f9fa",
+            "outline": "#6c7a76",
+            "on-secondary-container": "#5c647a",
+            "error-container": "#ffdad6",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#00beb1",
+            "on-primary-fixed-variant": "#005145",
+            "on-primary": "#ffffff",
+            "surface-dim": "#d9dadb",
+            "on-primary-fixed": "#00201a",
+            "inverse-surface": "#2e3132",
+            "secondary-container": "#dae2fd",
+            "secondary-fixed-dim": "#bec6e0",
+            "on-tertiary": "#ffffff",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#dae2fd",
+            "surface-container-low": "#f3f4f5",
+            "outline-variant": "#bbcac4",
+            "on-error": "#ffffff",
+            "on-background": "#191c1d",
+            "on-tertiary-fixed": "#00201d",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-fixed-dim": "#28ddcf",
+            "primary-fixed": "#68fadd",
+            "inverse-on-surface": "#f0f1f2",
+            "on-primary-container": "#00473c",
+            "surface-container-highest": "#e1e3e4",
+            "inverse-primary": "#44ddc1",
+            "surface-container": "#edeeef",
+            "surface-variant": "#e1e3e4",
+            "primary-container": "#00bfa5",
+            "on-secondary-fixed-variant": "#3f465c"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "margin-lg": "2rem",
+            "gutter-sm": "0.75rem",
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "margin-md": "1.5rem",
+            "margin": "1rem",
+            "gutter-lg": "1.5rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "label-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- iPhone 16 Pro Max Wrapper Frame -->
+<div class="min-h-screen bg-surface flex flex-col justify-between max-w-md mx-auto relative shadow-2xl overflow-hidden border-x border-outline-variant/30">
+<!-- iOS Dynamic Island & Status Bar Shell -->
+<header class="w-full pt-3 px-6 pb-2 flex justify-between items-center z-30 select-none bg-surface/90 backdrop-blur-md sticky top-0">
+<!-- Time -->
+<span class="font-headline-sm text-label-md text-on-surface tracking-tight font-bold">9:41</span>
+<!-- Dynamic Island Pill Cutout -->
+<div class="h-6 w-28 bg-on-surface rounded-full flex items-center justify-between px-2.5 shadow-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-primary/40 ring-1 ring-primary-container/20"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-highest/60"></div>
+</div>
+<!-- Indicators -->
+<div class="flex items-center gap-1.5 text-on-surface">
+<span class="material-symbols-outlined text-[16px]">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[16px]">wifi</span>
+<span class="material-symbols-outlined text-[18px]">battery_full</span>
+</div>
+</header>
+<!-- TopAppBar from Shared Specification -->
+<div class="flex justify-between items-center w-full px-4 pt-4 pb-2 bg-surface transition-colors"><div><div class="text-[11px] font-bold tracking-wider text-slate-400 uppercase font-label-sm">OVERVIEW</div><h1 class="text-headline-lg font-headline-lg text-slate-900 tracking-tight font-bold -mt-0.5">Spaces</h1></div><div class="flex items-center gap-3"><div class="relative w-10 h-10 rounded-full border-2 border-primary-container bg-surface-container-lowest flex items-center justify-center font-bold text-slate-800 text-sm shadow-sm"><span class="tracking-tight font-bold text-slate-800">SM</span><span class="w-2.5 h-2.5 bg-primary-container rounded-full absolute -bottom-0.5 right-0 ring-2 ring-surface"></span></div><button aria-label="Menu" class="p-1 text-slate-800 hover:text-slate-600 active:scale-95 transition cursor-pointer flex items-center justify-center"><span class="material-symbols-outlined text-[26px]">menu</span></button></div></div>
+<!-- Main Content Canvas -->
+<main class="flex-1 max-w-md w-full mx-auto px-4 py-4 pb-32">
+<!-- Page Header & Global Action -->
+<div class="flex justify-between items-center mb-6">
+<div>
+<h2 class="text-headline-md font-headline-md text-slate-900 tracking-tight font-bold">Your Spaces</h2>
+<p class="text-body-sm font-body-sm text-slate-500 mt-0.5">Debt buffers &amp; repayment sinking funds</p>
+</div>
+<button aria-label="Add new space" class="w-10 h-10 bg-surface-container text-slate-700 flex items-center justify-center rounded-full hover:bg-surface-container-high transition active:scale-95 cursor-pointer shadow-sm">
+<span class="material-symbols-outlined text-[20px] text-slate-800 font-bold">add</span>
+</button>
+</div>
+<!-- Aggregate Target Card (Neo-bank Starling style) -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/40 shadow-sm mb-6 relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-primary/5 rounded-full pointer-events-none blur-2xl"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary font-semibold">Total Sinking Reserves</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-headline-lg font-headline-lg text-slate-900 font-bold tracking-tight">LKR 185,000</span>
+<span class="text-body-sm font-body-sm text-slate-500 font-medium">/ 400,000</span>
+</div>
+</div>
+<span class="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-label-sm font-label-sm font-bold border border-primary/20">
+            46% Funded
+          </span>
+</div>
+<!-- Segmented Velocity Progress Track -->
+<div class="w-full bg-surface-container-high rounded-full h-2 mb-3 overflow-hidden">
+<div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: 46%;"></div>
+</div>
+<!-- Metric Footer -->
+<div class="flex items-center justify-between pt-2 border-t border-surface-container-high/60 text-label-md font-label-md">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="">3 Active Repayment Buffers</span>
+</div>
+<span class="text-primary font-bold flex items-center gap-0.5">
+            Details
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</span>
+</div>
+</div>
+<!-- Spaces Architecture Vertical Stack -->
+<div class="flex flex-col gap-4">
+<!-- Card 1: Emergency Debt Buffer -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/40 shadow-sm transition hover:shadow-md">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-slate-900 font-bold">Emergency Buffer</h3>
+<p class="text-label-md font-label-md text-slate-500 mt-0.5">Target: Dec 2025</p>
+</div>
+<button aria-label="Buffer options" class="text-slate-400 cursor-pointer p-1 hover:text-slate-600 rounded-full active:scale-95 transition">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-5 mb-5">
+<!-- 64x64 SVG Progress Ring (45%) -->
+<div class="relative w-16 h-16 flex-shrink-0">
+<svg class="w-16 h-16 -rotate-90 transform" viewBox="0 0 64 64">
+<circle class="text-surface-container-high" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163" stroke-dashoffset="89.65" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-lg font-label-lg font-bold text-slate-900">45%</span>
+</div>
+</div>
+<!-- Financial Metrics -->
+<div>
+<div class="text-headline-sm font-headline-sm font-bold text-primary">LKR 45,000</div>
+<div class="text-label-sm font-label-sm text-slate-500 font-semibold uppercase tracking-wide mt-0.5">OF LKR 100,000 GOAL</div>
+</div>
+</div>
+<div class="border-t border-slate-100 pt-3 flex justify-between items-center gap-3">
+<span class="text-label-md font-label-md font-medium text-slate-500 flex items-center gap-1.5 flex-1 min-w-0">
+<span class="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></span>
+<span class="truncate">On track • Add LKR 5,000/mo</span>
+</span>
+<button class="inline-flex items-center justify-center text-center leading-none h-9 px-4 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer">+ Add Funds</button>
+</div>
+</div>
+<!-- Card 2: ComBank Payoff Sinking Fund -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/40 shadow-sm transition hover:shadow-md">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-slate-900 font-bold">ComBank Payoff Fund</h3>
+<p class="text-label-md font-label-md text-slate-500 mt-0.5">Target: Aug 2025</p>
+</div>
+<button aria-label="Buffer options" class="text-slate-400 cursor-pointer p-1 hover:text-slate-600 rounded-full active:scale-95 transition">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-5 mb-5">
+<!-- 64x64 SVG Progress Ring (70%) -->
+<div class="relative w-16 h-16 flex-shrink-0">
+<svg class="w-16 h-16 -rotate-90 transform" viewBox="0 0 64 64">
+<circle class="text-surface-container-high" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-primary" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163" stroke-dashoffset="48.9" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-lg font-label-lg font-bold text-slate-900">70%</span>
+</div>
+</div>
+<!-- Financial Metrics -->
+<div>
+<div class="text-headline-sm font-headline-sm font-bold text-primary">LKR 105,000</div>
+<div class="text-label-sm font-label-sm text-slate-500 font-semibold uppercase tracking-wide mt-0.5">OF LKR 150,000 GOAL</div>
+</div>
+</div>
+<div class="border-t border-slate-100 pt-3 flex justify-between items-center gap-3">
+<span class="text-label-md font-label-md font-medium text-slate-500 flex items-center gap-1.5 flex-1 min-w-0">
+<span class="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0"></span>
+<span class="truncate">Ahead by 1 month • Add LKR 15,000/mo</span>
+</span>
+<button class="inline-flex items-center justify-center text-center leading-none h-9 px-4 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer">+ Add Funds</button>
+</div>
+</div>
+<!-- Card 3: Annual Fee & CBSL Reserve -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/40 shadow-sm transition hover:shadow-md">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-slate-900 font-bold">Annual Card Fees &amp; CBSL Reserve</h3>
+<p class="text-label-md font-label-md text-slate-500 mt-0.5">Target: Nov 2025</p>
+</div>
+<button aria-label="Buffer options" class="text-slate-400 cursor-pointer p-1 hover:text-slate-600 rounded-full active:scale-95 transition">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-5 mb-5">
+<!-- 64x64 SVG Progress Ring (23%) -->
+<div class="relative w-16 h-16 flex-shrink-0">
+<svg class="w-16 h-16 -rotate-90 transform" viewBox="0 0 64 64">
+<circle class="text-surface-container-high" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-amber-500" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163" stroke-dashoffset="125.5" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-lg font-label-lg font-bold text-slate-900">23%</span>
+</div>
+</div>
+<!-- Financial Metrics -->
+<div>
+<div class="text-headline-sm font-headline-sm font-bold text-slate-800">LKR 35,000</div>
+<div class="text-label-sm font-label-sm text-slate-500 font-semibold uppercase tracking-wide mt-0.5">OF LKR 150,000 GOAL</div>
+</div>
+</div>
+<div class="border-t border-slate-100 pt-3 flex justify-between items-center gap-3">
+<span class="text-label-md font-label-md font-medium text-amber-700 flex items-center gap-1.5 flex-1 min-w-0">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+<span class="truncate">Needs boost • Add LKR 12,000/mo</span>
+</span>
+<button class="inline-flex items-center justify-center text-center leading-none h-9 px-4 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer">+ Add Funds</button>
+</div>
+</div>
+<!-- Create New Space Dashed Action Card -->
+<button class="border-2 border-dashed border-outline-variant/60 rounded-2xl p-5 flex items-center justify-center gap-3 text-secondary font-label-lg hover:border-primary hover:text-primary bg-surface-container-lowest/50 hover:bg-surface-container-lowest transition cursor-pointer active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="">Create a Sinking Fund Space</span>
+</button>
+</div>
+</main>
+<!-- Bottom Navigation Bar from Shared Specification (Active: Spaces) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-col bg-surface-container-lowest/95 backdrop-blur-md shadow-md">
+<div class="max-w-md w-full mx-auto flex justify-around items-center px-gutter-sm py-space-xs">
+<!-- Tab: Home -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1 flex-1" href="#">
+<span class="material-symbols-outlined text-[22px]">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</a>
+<!-- Tab: Cards -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1 flex-1" href="#">
+<span class="material-symbols-outlined text-[22px]">credit_card</span>
+<span class="text-label-sm font-label-sm mt-0.5">Cards</span>
+</a>
+<!-- Tab: Simulators -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1 flex-1" href="#">
+<span class="material-symbols-outlined text-[22px]">calculate</span>
+<span class="text-label-sm font-label-sm mt-0.5">Simulators</span>
+</a>
+<!-- Tab: Spaces (ACTIVE) -->
+<a class="flex flex-col items-center justify-center text-primary font-semibold hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1 flex-1" href="#">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">pie_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5 font-bold">Spaces</span>
+</a>
+<!-- Tab: Offers -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1 flex-1" href="#">
+<span class="material-symbols-outlined text-[22px]">local_offer</span>
+<span class="text-label-sm font-label-sm mt-0.5">Offers</span>
+</a>
+</div>
+<!-- iOS Home Indicator -->
+<div class="w-full pb-2 select-none pointer-events-none">
+<div class="w-32 h-1 bg-slate-300 rounded-full mx-auto"></div>
+</div>
+</nav>
+</div>
+
+
+</body></html>

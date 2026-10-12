@@ -1,0 +1,505 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Card Management &amp; Calculators Hub</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#00201d",
+            "surface-dim": "#d9dadb",
+            "surface-tint": "#006b5c",
+            "on-background": "#191c1d",
+            "primary-fixed-dim": "#44ddc1",
+            "surface-container-highest": "#e1e3e4",
+            "surface-bright": "#f8f9fa",
+            "inverse-primary": "#44ddc1",
+            "error-container": "#ffdad6",
+            "tertiary": "#006a63",
+            "on-secondary-fixed": "#131b2e",
+            "surface-container-lowest": "#ffffff",
+            "secondary-container": "#dae2fd",
+            "tertiary-fixed": "#56faeb",
+            "secondary": "#565e74",
+            "primary-container": "#00bfa5",
+            "on-surface-variant": "#3c4a46",
+            "on-primary-fixed": "#00201a",
+            "error": "#ba1a1a",
+            "outline-variant": "#bbcac4",
+            "inverse-surface": "#2e3132",
+            "background": "#f8f9fa",
+            "on-secondary-container": "#5c647a",
+            "outline": "#6c7a76",
+            "surface": "#f8f9fa",
+            "tertiary-fixed-dim": "#28ddcf",
+            "on-secondary-fixed-variant": "#3f465c",
+            "inverse-on-surface": "#f0f1f2",
+            "on-primary-container": "#00473c",
+            "secondary-fixed": "#dae2fd",
+            "on-primary": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-variant": "#e1e3e4",
+            "surface-container": "#edeeef",
+            "on-tertiary": "#ffffff",
+            "primary-fixed": "#68fadd",
+            "secondary-fixed-dim": "#bec6e0",
+            "tertiary-container": "#00beb1",
+            "on-tertiary-fixed-variant": "#00504a",
+            "surface-container-low": "#f3f4f5",
+            "on-tertiary-container": "#004741",
+            "primary": "#006b5c",
+            "on-secondary": "#ffffff",
+            "surface-container-high": "#e7e8e9",
+            "on-surface": "#191c1d",
+            "on-primary-fixed-variant": "#005145"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-lg": "1.5rem",
+            "gutter-sm": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin-md": "1.5rem",
+            "margin": "1rem",
+            "space-md": "1rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "margin-lg": "2rem"
+          },
+          "fontFamily": {
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-xl-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "headline-xl": ["40px", {"lineHeight": "48px", "fontWeight": "700"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+            "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+            "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+            "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+            "headline-md": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 9999px;
+      background: #00bfa5;
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen pb-28">
+<!-- Mobile Max-Width Container -->
+<div class="max-w-md mx-auto min-h-screen bg-surface flex flex-col relative shadow-sm"><div class="w-full pt-3 pb-1 px-7 flex items-center justify-between z-50 bg-surface select-none relative"><div class="text-[14px] font-semibold tracking-tight text-on-surface w-14">9:41</div><div class="w-[125px] h-[35px] bg-black rounded-full mx-auto flex items-center justify-between px-3 shadow-sm"><div class="w-2.5 h-2.5 rounded-full bg-[#111827] border border-[#1f2937]/50"></div><div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-[#0a1128] border border-[#1f2937]/60"></div><div class="w-2.5 h-2.5 rounded-full bg-[#030712] border border-[#1f2937]/50"></div></div></div><div class="flex items-center justify-end gap-1.5 w-14 text-on-surface"><span class="material-symbols-outlined text-[16px]">signal_cellular_4_bar</span><span class="material-symbols-outlined text-[16px]">wifi</span><span class="material-symbols-outlined text-[20px]">battery_full</span></div></div>
+<!-- Top Status / App Bar -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md px-margin h-14 flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<button aria-label="Back to cards" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-on-surface leading-tight">ComBank Visa Gold</h1>
+<p class="font-label-sm text-label-sm text-secondary">Card Management &amp; Simulators</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button aria-label="Share card report" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">ios_share</span>
+</button>
+<div class="relative inline-block text-left" id="card-menu-container"><!-- Kebab Button -->
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all text-slate-700 bg-surface-container/60" type="button">
+<span class="material-symbols-outlined text-[20px] text-black">more_vert</span>
+</button>
+<!-- Open Dropdown Panel -->
+<div class="absolute right-0 top-12 mt-1 w-60 bg-white border border-slate-100 rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 z-50 overflow-hidden divide-y divide-slate-100">
+<div class="py-1">
+<button class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 font-medium transition-colors flex items-center justify-between">
+<span class="">Edit Card Details</span>
+<span class="material-symbols-outlined text-[18px] text-black">edit</span>
+</button>
+<button class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 font-medium transition-colors flex items-center justify-between">
+<span class="">Clear Balance (Mark as Settled)</span>
+<span class="material-symbols-outlined text-[18px] text-primary">check_circle</span>
+</button>
+<button class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 font-medium transition-colors flex items-center justify-between">
+<span class="">Update Billing Cycle</span>
+<span class="material-symbols-outlined text-[18px] text-amber-600">event_repeat</span>
+</button>
+</div>
+<div class="py-1">
+<button class="w-full text-left px-4 py-3 text-sm text-rose-600 hover:bg-rose-50 font-bold transition-colors flex items-center justify-between">
+<span class="">Delete Card</span>
+<span class="material-symbols-outlined text-[18px] text-rose-600 text-black">delete</span>
+</button>
+</div>
+</div></div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="px-margin flex-1 flex flex-col gap-space-md pt-space-xs">
+<!-- Selected Card Spotlight Card -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/40 shadow-sm relative overflow-hidden">
+<!-- Visual Accent Pill / Bank Brand -->
+<div class="flex justify-between items-start mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-primary font-bold text-xs">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary leading-none">Commercial Bank of Ceylon</p>
+<p class="font-label-lg text-label-lg text-on-surface font-semibold">Visa Gold •••• 4821</p>
+</div>
+</div>
+<!-- Financial Alert / Due Date Chip -->
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span class="">Due in 14 days • 28.0% APR</span>
+</div>
+</div>
+<!-- Balances Grid -->
+<div class="mt-space-sm">
+<p class="font-label-md text-label-md text-secondary">Total outstanding balance</p>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight">LKR 125,000.00</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-0.5">
+<span class="font-label-md text-on-surface">LKR 175,000</span> remaining of LKR 300,000 limit
+          </p>
+</div>
+<!-- Starling Style Utilization Velocity Bar -->
+<div class="mt-space-md pt-space-xs">
+<div class="flex justify-between items-center mb-1.5 font-label-sm text-label-sm">
+<span class="text-on-surface-variant flex items-center gap-1">
+              Credit Utilization
+              <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</span>
+<span class="text-primary font-bold">42% (Target &lt; 30%)</span>
+</div>
+<!-- Dual track progress -->
+<div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden flex relative">
+<div class="h-full bg-primary-container rounded-full transition-all duration-500" style="width: 42%;"></div>
+<!-- Target line at 30% -->
+<div class="absolute top-0 bottom-0 left-[30%] w-0.5 bg-outline/60 z-10" title="Target Limit: 30%"></div>
+</div>
+<div class="flex justify-between items-center mt-1 text-[10px] text-secondary font-label-sm">
+<span class="">0%</span>
+<span class="text-secondary/70">30% Healthy limit</span>
+<span class="">100%</span>
+</div>
+</div>
+</section>
+<!-- Dedicated Tab / Tool Selector -->
+<section class="flex bg-surface-container-low p-1 rounded-xl gap-1">
+<button class="flex-1 py-2 px-space-xs text-center rounded-lg bg-surface-container-lowest text-primary shadow-sm font-label-md text-label-md transition-all">
+          Payoff Simulator
+        </button>
+<button class="flex-1 py-2 px-space-xs text-center rounded-lg text-secondary hover:text-on-surface font-label-md text-label-md transition-all">
+          Cash Advance Check
+        </button>
+<button class="flex-1 py-2 px-space-xs text-center rounded-lg text-secondary hover:text-on-surface font-label-md text-label-md transition-all">
+          0% Surcharge Exposer
+        </button>
+</section>
+<!-- Calculator Section: Minimum Payment Trap -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/40 shadow-sm flex flex-col gap-space-md">
+<!-- Header & Explainer -->
+<div class="flex justify-between items-start">
+<div class="space-y-0.5">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Minimum Payment Trap vs. Optimal Plan</h2>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">
+              Paying only 4% (LKR 5,000) min due locks you in high compounded interest.
+            </p>
+</div>
+<button class="text-secondary hover:text-primary p-1" title="Learn how interest calculation works">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+</div>
+<!-- Comparison Cards Bento Grid -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Tile 1: Warning / Red tone -->
+<div class="bg-rose-50/70 border border-rose-200/70 rounded-xl p-space-sm flex flex-col justify-between">
+<div>
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-label-sm mb-2">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+<span class="">MINIMUM ONLY</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary">Payoff Duration</p>
+<p class="font-headline-sm text-headline-sm text-rose-950 mt-0.5">8 Yrs 2 Mos</p>
+</div>
+<div class="mt-space-md pt-space-xs border-t border-rose-200/50">
+<p class="font-label-sm text-label-sm text-secondary">Total Interest</p>
+<p class="font-label-lg text-label-lg font-bold text-error">LKR 68,400</p>
+</div>
+</div>
+<!-- Tile 2: Optimal / Teal tone -->
+<div class="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-space-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-20 h-20 bg-primary-container/10 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-label-sm mb-2">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+<span class="">FIXED PLAN</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary">Payoff Duration</p>
+<p class="font-headline-sm text-headline-sm text-on-surface mt-0.5" id="payoff-months">12 Months</p>
+</div>
+<div class="mt-space-md pt-space-xs border-t border-emerald-200/50">
+<div class="flex justify-between items-baseline">
+<p class="font-label-sm text-label-sm text-secondary">Total Interest</p>
+<span class="text-[10px] text-emerald-800 font-semibold" id="savings-tag">Save LKR 54,200</span>
+</div>
+<p class="font-label-lg text-label-lg font-bold text-primary" id="plan-interest">LKR 14,200</p>
+</div>
+</div>
+</div>
+<!-- Interactive Monthly Payment Slider Module -->
+<div class="bg-surface-container-low/70 rounded-xl p-space-sm border border-outline-variant/30 space-y-space-sm">
+<div class="flex justify-between items-baseline">
+<label class="font-label-md text-label-md text-secondary" for="monthly-slider">Simulate monthly payment</label>
+<span class="font-headline-sm text-headline-sm text-primary" id="payment-display">LKR 12,500 / mo</span>
+</div>
+<!-- Range Input Slider -->
+<div class="relative py-1">
+<input class="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer focus:outline-none accent-primary-container" id="monthly-slider" max="125000" min="5000" step="2500" type="range" value="12500">
+</div>
+<!-- Slider Step Markers / Anchors -->
+<div class="flex justify-between items-center text-[10px] font-label-sm text-secondary pt-0.5">
+<button class="hover:text-primary transition-colors" onclick="updateSlider(5000)" type="button">Min: 5k</button>
+<button class="text-primary font-bold hover:underline" onclick="updateSlider(15000)" type="button">★ Rec: 15k</button>
+<button class="hover:text-primary transition-colors" onclick="updateSlider(50000)" type="button">50k</button>
+<button class="hover:text-primary transition-colors" onclick="updateSlider(125000)" type="button">Full: 125k</button>
+</div>
+</div>
+<!-- Dynamic Impact Summary Box -->
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-emerald-50 border border-emerald-200/60">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-emerald-950 font-bold" id="impact-headline">
+              Pay LKR 7,500 more per month and be debt-free 7 years earlier!
+            </p>
+<p class="font-body-sm text-body-sm text-emerald-800/90 mt-0.5">
+              Consistent monthly payments dramatically suppress the Sri Lankan banking average 28% daily interest compounding cycle.
+            </p>
+</div>
+</div>
+<!-- Primary Action Trigger -->
+<button class="w-full h-12 bg-primary-container hover:bg-primary-container/90 active:scale-[0.98] text-white rounded-full font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="">Set automated monthly repayment goal</span>
+</button>
+</section>
+<!-- Category Velocity Tracker (Starling Design System Accent) -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/40 shadow-sm space-y-space-sm mb-4">
+<div class="flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Card Spend Distribution</h3>
+<span class="font-label-sm text-label-sm text-primary font-semibold">July Period</span>
+</div>
+<!-- Category Item 1 -->
+<div class="space-y-1.5 pt-1">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Groceries &amp; Supermarkets</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">LKR 48,200 / 60,000</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 80%;"></div>
+</div>
+</div>
+<!-- Category Item 2 -->
+<div class="space-y-1.5 pt-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+<span class="material-symbols-outlined text-[18px]">local_gas_station</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Fuel &amp; Commute</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">LKR 18,500 / 25,000</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-amber-500 rounded-full" style="width: 74%;"></div>
+</div>
+</div>
+<!-- Category Item 3 -->
+<div class="space-y-1.5 pt-2">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Dining &amp; Leisure</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary">LKR 24,000 / 20,000</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-purple-500 rounded-full" style="width: 100%;"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Shared Component Execution) -->
+<!-- Destination count: 5 | Labels: Home, Cards, Simulators, Spaces, Offers -->
+<!-- Active State: 'Cards' is active as this is the detailed Card Management screen -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter-sm py-space-xs bg-surface-container-lowest shadow-md pb-6">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="font-label-sm text-label-sm mt-0.5">Home</span>
+</a>
+<!-- Cards (Active Destination) -->
+<a class="flex flex-col items-center justify-center text-primary font-semibold hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">credit_card</span>
+<span class="font-label-sm text-label-sm mt-0.5">Cards</span>
+</a>
+<!-- Simulators -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#">
+<span class="material-symbols-outlined text-[24px]">calculate</span>
+<span class="font-label-sm text-label-sm mt-0.5">Simulators</span>
+</a>
+<!-- Spaces -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#">
+<span class="material-symbols-outlined text-[24px]">pie_chart</span>
+<span class="font-label-sm text-label-sm mt-0.5">Spaces</span>
+</a>
+<!-- Offers -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#">
+<span class="material-symbols-outlined text-[24px]">local_offer</span>
+<span class="font-label-sm text-label-sm mt-0.5">Offers</span>
+</a>
+<div class="w-full flex justify-center pt-2 pb-1 absolute bottom-1 left-0 right-0 pointer-events-none"><div class="w-[140px] h-[5px] bg-on-surface/30 rounded-full"></div></div></nav>
+</div>
+<!-- Micro-interaction script for interactive slider calculation -->
+<script>
+    const slider = document.getElementById('monthly-slider');
+    const paymentDisplay = document.getElementById('payment-display');
+    const payoffMonths = document.getElementById('payoff-months');
+    const planInterest = document.getElementById('plan-interest');
+    const savingsTag = document.getElementById('savings-tag');
+    const impactHeadline = document.getElementById('impact-headline');
+
+    function calculatePayoff(payment) {
+      const balance = 125000;
+      const monthlyRate = 0.28 / 12;
+      const minPayment = 5000;
+      const minTotalInterest = 68400;
+
+      // Format currency
+      paymentDisplay.innerText = 'LKR ' + Number(payment).toLocaleString() + ' / mo';
+
+      if (payment >= balance) {
+        payoffMonths.innerText = '1 Month';
+        planInterest.innerText = 'LKR 2,916';
+        savingsTag.innerText = 'Save LKR 65,484';
+        impactHeadline.innerText = 'Clear your balance this month and save LKR 65,484 in interest!';
+        return;
+      }
+
+      // Simple amortized duration estimation for UX responsiveness
+      let remaining = balance;
+      let months = 0;
+      let totalInterest = 0;
+
+      while (remaining > 0 && months < 120) {
+        const interest = remaining * monthlyRate;
+        totalInterest += interest;
+        const principal = payment - interest;
+        if (principal <= 0) {
+          months = 98; // Infinite loop prevention for very low inputs
+          break;
+        }
+        remaining -= principal;
+        months++;
+      }
+
+      const years = Math.floor(months / 12);
+      const remMonths = months % 12;
+      const durationText = years > 0 
+        ? `${years} Yr${years > 1 ? 's' : ''} ${remMonths > 0 ? remMonths + ' Mo' : ''}`.trim()
+        : `${months} Months`;
+
+      payoffMonths.innerText = durationText;
+      planInterest.innerText = 'LKR ' + Math.round(totalInterest).toLocaleString();
+
+      const savings = Math.max(0, minTotalInterest - Math.round(totalInterest));
+      savingsTag.innerText = 'Save LKR ' + savings.toLocaleString();
+
+      const extraPerMonth = payment - minPayment;
+      const yearsSaved = Math.max(0, 8 - (months / 12)).toFixed(1);
+      
+      if (extraPerMonth > 0) {
+        impactHeadline.innerText = `Pay LKR ${Number(extraPerMonth).toLocaleString()} more per month and be debt-free ~${yearsSaved} years earlier!`;
+      } else {
+        impactHeadline.innerText = 'Currently simulating the bank minimum. Pay extra to cut years of debt.';
+      }
+    }
+
+    function updateSlider(val) {
+      slider.value = val;
+      calculatePayoff(val);
+    }
+
+    slider.addEventListener('input', (e) => {
+      calculatePayoff(e.target.value);
+    });
+  </script>
+<!-- Delete Confirmation Modal Overlay -->
+
+
+</body></html>

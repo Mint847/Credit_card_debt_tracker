@@ -1,0 +1,338 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Cards Overview - Debt Avalanche Strategy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary": "#006b5c",
+            "tertiary": "#006a63",
+            "surface-container-highest": "#e1e3e4",
+            "on-surface": "#191c1d",
+            "surface-tint": "#006b5c",
+            "on-primary-fixed": "#00201a",
+            "on-secondary-container": "#5c647a",
+            "surface": "#f8f9fa",
+            "on-secondary-fixed-variant": "#3f465c",
+            "secondary": "#565e74",
+            "primary-container": "#00bfa5",
+            "surface-dim": "#d9dadb",
+            "inverse-primary": "#44ddc1",
+            "tertiary-fixed-dim": "#28ddcf",
+            "surface-bright": "#f8f9fa",
+            "error": "#ba1a1a",
+            "on-secondary": "#ffffff",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed": "#131b2e",
+            "inverse-on-surface": "#f0f1f2",
+            "surface-container-low": "#f3f4f5",
+            "error-container": "#ffdad6",
+            "on-surface-variant": "#3c4a46",
+            "on-background": "#191c1d",
+            "inverse-surface": "#2e3132",
+            "surface-container": "#edeeef",
+            "on-tertiary-fixed": "#00201d",
+            "secondary-fixed-dim": "#bec6e0",
+            "secondary-fixed": "#dae2fd",
+            "surface-variant": "#e1e3e4",
+            "primary-fixed-dim": "#44ddc1",
+            "on-tertiary-fixed-variant": "#00504a",
+            "primary-fixed": "#68fadd",
+            "surface-container-high": "#e7e8e9",
+            "outline": "#6c7a76",
+            "on-tertiary-container": "#004741",
+            "secondary-container": "#dae2fd",
+            "tertiary-container": "#00beb1",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#56faeb",
+            "on-primary-fixed-variant": "#005145",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#bbcac4",
+            "surface-container-lowest": "#ffffff",
+            "on-primary-container": "#00473c",
+            "background": "#f8f9fa",
+            "on-error": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-md": "1.5rem",
+            "margin-lg": "2rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem",
+            "gutter-lg": "1.5rem",
+            "gutter-sm": "0.75rem",
+            "gutter": "1rem",
+            "margin": "1rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.fill-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex items-center justify-center p-0 md:p-6 select-none font-body-md">
+<!-- iPhone 16 Pro Max Device Container -->
+<div class="relative w-full max-w-[430px] h-full min-h-[932px] max-h-[932px] bg-surface flex flex-col shadow-2xl rounded-none md:rounded-[52px] border-0 md:border-[10px] md:border-on-surface overflow-hidden">
+<!-- Native iOS 16 Pro Max Status Bar & Dynamic Island -->
+<header class="w-full pt-3 px-7 flex justify-between items-center z-30 shrink-0 select-none">
+<span class="text-on-surface text-[14px] font-bold tracking-tight">9:41</span>
+<!-- Dynamic Island Capsule -->
+<div class="w-[124px] h-[34px] bg-black rounded-full flex items-center justify-between px-3">
+<div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800"></div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+</div>
+</div>
+<!-- System Status Glyphs -->
+<div class="flex items-center gap-1.5 text-on-surface">
+<span class="material-symbols-outlined text-[17px] leading-none" data-icon="signal_cellular_4_bar">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[17px] leading-none" data-icon="wifi">wifi</span>
+<span class="material-symbols-outlined text-[19px] leading-none" data-icon="battery_full">battery_full</span>
+</div>
+</header>
+<!-- Top Navigation Header (Exact Shared Component Headline 'Overview' integrated into context) -->
+<div class="px-margin pt-2 pb-1 shrink-0">
+<div class="flex justify-between items-center w-full h-14"><div>
+<span class="font-label-sm text-label-sm text-secondary tracking-wider">OVERVIEW</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-extrabold tracking-tight -mt-0.5">Credit Cards</h1>
+</div>
+<div class="flex items-center gap-2.5">
+<button aria-label="User profile" class="relative w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center active:scale-95 transition-transform">
+<span class="font-label-md text-label-md font-bold text-primary">SM</span>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
+</button>
+<button aria-label="Menu" class="w-10 h-10 rounded-full bg-surface-container-low border border-outline-variant flex items-center justify-center text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">menu</span>
+</button>
+</div></div>
+<!-- Starling Bank Tab Selector -->
+<div class="flex border-b border-surface-container-highest gap-6 mt-1">
+<button class="relative pb-2.5 font-label-lg text-label-lg text-on-surface font-bold transition-colors">
+          Cards overview
+          <span class="absolute bottom-0 left-0 w-full h-[2.5px] bg-primary-container rounded-full"></span>
+</button>
+<button class="relative pb-2.5 font-label-lg text-label-lg text-secondary transition-colors hover:text-on-surface">
+          All Cards
+        </button>
+</div>
+</div>
+<!-- Scrollable Content Canvas (Bento-Layered Cards) -->
+<main class="flex-1 overflow-y-auto px-margin pt-3 pb-28 space-y-space-md scrollbar-none"><!-- TOTAL AGGREGATE DEBT (Top Section) -->
+<section class="px-1 pt-1 pb-1">
+  <span class="block font-label-sm text-label-sm text-secondary font-semibold uppercase tracking-wider mb-1">TOTAL AGGREGATE DEBT</span>
+  <div class="font-headline-xl text-[36px] leading-tight font-extrabold text-on-surface tracking-tight mb-1.5">
+    LKR 532,000
+  </div>
+  <p class="font-body-md text-body-sm text-secondary font-medium">
+    Total Available Credit Limit: <span class="font-semibold text-on-surface-variant">LKR 1,050,000</span>
+  </p>
+</section>
+
+<!-- MASTER REPAYMENT DIRECTOR (Primary Action Card) -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant shadow-sm relative overflow-hidden">
+  <div class="absolute top-0 left-0 right-0 h-1 bg-primary-container"></div>
+  <div class="flex items-start justify-between gap-2 mb-3 pt-0.5">
+    <div>
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+        <span class="font-label-sm text-label-sm text-primary font-bold tracking-wide">OPTIMIZED ALLOCATION</span>
+      </div>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">This Month's Repayment Strategy</h2>
+    </div>
+    <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-label-sm font-label-sm bg-surface-container text-primary font-bold border border-outline-variant">
+      Debt Avalanche
+    </span>
+  </div>
+  <p class="font-body-sm text-body-sm text-secondary mb-3.5">
+    Priority allocation structured to crush CBSL 28% APR compounding bleed before billing cycle close.
+  </p>
+
+  <!-- 3 Credit Cards List (1st Focus: HNB Platinum, 2nd: Commercial Bank Gold, 3rd: Sampath Ultramiles) -->
+  <div class="space-y-2 mb-4">
+    <!-- 1st Card (Focus Target): HNB Platinum -->
+    <div class="p-3.5 bg-surface-container-low rounded-xl border-2 border-primary-container relative">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[18px]">priority_high</span>
+          </div>
+          <div>
+            <p class="font-label-lg text-label-lg text-on-surface font-bold">HNB Platinum</p>
+            <p class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">Target Payment: LKR 34,880</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-primary text-[22px]">arrow_forward</span>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest border border-primary-container text-primary font-label-sm text-label-sm font-bold">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+        Direct all surplus here • Highest 28.0% APR
+      </div>
+    </div>
+
+    <!-- 2nd Card: Commercial Bank Gold -->
+    <div class="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-outline-variant">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary border border-outline-variant">
+          <span class="material-symbols-outlined text-[18px]">credit_card</span>
+        </div>
+        <div>
+          <p class="font-label-md text-label-md text-on-surface font-semibold">Commercial Bank Gold</p>
+          <p class="font-body-sm text-body-sm text-secondary font-medium">Pay Minimum: LKR 7,000</p>
+        </div>
+      </div>
+      <span class="font-label-sm text-label-sm text-secondary px-2.5 py-1 bg-surface-container rounded-md font-semibold">Min Paid</span>
+    </div>
+
+    <!-- 3rd Card: Sampath Ultramiles -->
+    <div class="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-outline-variant">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary border border-outline-variant">
+          <span class="material-symbols-outlined text-[18px]">credit_card</span>
+        </div>
+        <div>
+          <p class="font-label-md text-label-md text-on-surface font-semibold">Sampath Ultramiles</p>
+          <p class="font-body-sm text-body-sm text-secondary font-medium">Pay Minimum: LKR 3,120</p>
+        </div>
+      </div>
+      <span class="font-label-sm text-label-sm text-secondary px-2.5 py-1 bg-surface-container rounded-md font-semibold">Min Paid</span>
+    </div>
+  </div>
+
+  <!-- Monthly Commitment Summary Badge -->
+  <div class="flex items-center justify-between px-3.5 py-2.5 bg-surface rounded-lg border border-outline-variant">
+    <span class="font-body-sm text-body-sm text-secondary font-medium">Total monthly commitment:</span>
+    <span class="font-label-lg text-label-lg text-on-surface font-extrabold">LKR 45,000</span>
+  </div>
+</section>
+
+<!-- FINANCIAL IMPACT GRID (Split Cards) -->
+<section class="grid grid-cols-2 gap-gutter-sm">
+  <!-- Left Card: Total Interest Bleed -->
+  <div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">Total Interest Bleed</span>
+        <div class="w-7 h-7 rounded-lg bg-error-container text-error flex items-center justify-center">
+          <span class="material-symbols-outlined text-[16px]">trending_down</span>
+        </div>
+      </div>
+      <p class="font-headline-sm text-headline-sm font-extrabold text-error tracking-tight">
+        LKR 12,450
+      </p>
+    </div>
+    <p class="font-body-sm text-body-sm text-secondary mt-2 leading-tight">
+      Vaporizing to 28% APR this month
+    </p>
+  </div>
+
+  <!-- Right Card: Debt-Free Target -->
+  <div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">Debt-Free Target</span>
+        <div class="w-7 h-7 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-[16px]">trending_up</span>
+        </div>
+      </div>
+      <p class="font-headline-sm text-headline-sm font-extrabold text-primary tracking-tight">
+        Oct 2027
+      </p>
+    </div>
+    <p class="font-body-sm text-body-sm text-secondary mt-2 leading-tight">
+      Zero debt at current payment plan
+    </p>
+  </div>
+</section>
+
+<!-- Quick Action Pill Trigger -->
+<button class="w-full h-12 bg-primary-container text-on-primary-container rounded-full font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform">
+  <span class="material-symbols-outlined text-[20px]">payments</span>
+  Execute Monthly Allocations
+</button></main>
+<!-- Global Bottom Navigation Bar (Docked Shared Component Implementation) -->
+<nav class="fixed md:absolute bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter-sm py-space-xs bg-surface-container-lowest shadow-md">
+<!-- Nav Destination 1: Home -->
+<button class="flex flex-col items-center justify-center text-secondary active:scale-95 transition-transform duration-150 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm mt-0.5">Home</span>
+</button>
+<!-- Nav Destination 2: Cards (ACTIVE DESTINATION) -->
+<button class="flex flex-col items-center justify-center text-primary font-semibold active:scale-95 transition-transform duration-150 py-1 flex-1">
+<span class="material-symbols-outlined fill-icon text-[22px]" data-icon="credit_card">credit_card</span>
+<span class="font-label-sm text-label-sm mt-0.5 font-bold">Cards</span>
+</button>
+<!-- Nav Destination 3: Simulators -->
+<button class="flex flex-col items-center justify-center text-secondary active:scale-95 transition-transform duration-150 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="calculate">calculate</span>
+<span class="font-label-sm text-label-sm mt-0.5">Simulators</span>
+</button>
+<!-- Nav Destination 4: Spaces -->
+<button class="flex flex-col items-center justify-center text-secondary active:scale-95 transition-transform duration-150 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="pie_chart">pie_chart</span>
+<span class="font-label-sm text-label-sm mt-0.5">Spaces</span>
+</button>
+<!-- Nav Destination 5: Offers -->
+<button class="flex flex-col items-center justify-center text-secondary active:scale-95 transition-transform duration-150 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]" data-icon="local_offer">local_offer</span>
+<span class="font-label-sm text-label-sm mt-0.5">Offers</span>
+</button>
+</nav>
+<!-- Native iOS Home Indicator Bar -->
+<div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-[140px] h-[5px] bg-on-surface/30 rounded-full z-50 pointer-events-none"></div>
+</div>
+
+
+</body></html>

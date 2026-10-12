@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Serendib Debt Management - Home Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed-dim": "#bec6e0",
+            "primary-fixed-dim": "#44ddc1",
+            "outline-variant": "#bbcac4",
+            "on-tertiary-fixed-variant": "#00504a",
+            "on-secondary-container": "#5c647a",
+            "inverse-primary": "#44ddc1",
+            "on-error-container": "#93000a",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed-variant": "#3f465c",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed": "#131b2e",
+            "on-tertiary-container": "#004741",
+            "error": "#ba1a1a",
+            "tertiary": "#006a63",
+            "surface-dim": "#d9dadb",
+            "surface": "#f8f9fa",
+            "outline": "#6c7a76",
+            "on-primary-fixed": "#00201a",
+            "inverse-on-surface": "#f0f1f2",
+            "on-surface-variant": "#3c4a46",
+            "surface-container-high": "#e7e8e9",
+            "surface-bright": "#f8f9fa",
+            "secondary": "#565e74",
+            "on-secondary": "#ffffff",
+            "on-tertiary-fixed": "#00201d",
+            "tertiary-fixed-dim": "#28ddcf",
+            "on-primary-fixed-variant": "#005145",
+            "surface-container-lowest": "#ffffff",
+            "on-primary": "#ffffff",
+            "surface-container-highest": "#e1e3e4",
+            "surface-variant": "#e1e3e4",
+            "secondary-container": "#dae2fd",
+            "primary-fixed": "#68fadd",
+            "surface-tint": "#006b5c",
+            "tertiary-container": "#00beb1",
+            "secondary-fixed": "#dae2fd",
+            "inverse-surface": "#2e3132",
+            "surface-container": "#edeeef",
+            "primary": "#006b5c",
+            "tertiary-fixed": "#56faeb",
+            "on-surface": "#191c1d",
+            "primary-container": "#00bfa5",
+            "on-primary-container": "#00473c",
+            "on-background": "#191c1d",
+            "background": "#f8f9fa",
+            "surface-container-low": "#f3f4f5",
+            "on-error": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.5rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "margin-lg": "2rem",
+            "margin-md": "1.5rem",
+            "space-lg": "1.5rem",
+            "gutter-sm": "0.75rem",
+            "gutter-lg": "1.5rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "space-xl": "2rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "headline-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Hide scrollbar for clean aesthetics */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex justify-center items-start min-h-screen">
+<!-- Mobile Viewport Canvas (iPhone 16 Pro Max dimension frame) -->
+<main class="w-full max-w-[430px] min-h-screen bg-background relative flex flex-col pb-28 shadow-2xl selection:bg-primary-container selection:text-on-primary-container">
+<!-- 1. Dynamic Island & iOS Status Bar -->
+<header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md pt-3 px-6 pb-2">
+<div class="flex justify-between items-center h-8">
+<span class="text-[15px] font-bold tracking-tight text-on-surface">9:41</span>
+<!-- Centered Dynamic Island -->
+<div class="h-7 w-32 bg-black rounded-full flex items-center justify-between px-3 shadow-inner">
+<div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-950 flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+</div>
+</div>
+<div class="flex items-center space-x-1.5 text-on-surface">
+<span class="material-symbols-outlined text-[17px]">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[17px]">wifi</span>
+<span class="material-symbols-outlined text-[20px] fill-icon">battery_full</span>
+</div>
+</div>
+</header>
+<div class="px-margin flex flex-col space-y-5 mt-2">
+<!-- 2. Top Header Bar -->
+<section class="flex justify-between items-center">
+<div>
+<p class="font-label-md text-label-md text-secondary">Welcome back,</p>
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">Good morning, Seniru</h1>
+</div>
+<div aria-label="User profile photo and settings" class="relative cursor-pointer active:scale-95 transition-transform duration-150">
+<div class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-sm">
+<span class="font-label-lg text-label-lg text-primary font-bold">SK</span>
+</div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
+</div>
+</section>
+<!-- 3. High-Level Financial Snapshot Card (Primary Top Hero Card) -->
+<section class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+<div class="flex justify-between items-center mb-1.5">
+<span class="font-label-sm text-label-sm text-secondary font-bold tracking-wider uppercase">Total Aggregate Debt</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container-low text-secondary font-label-sm text-label-sm">
+            3 Active Cards
+          </span>
+</div>
+<div class="flex items-baseline space-x-1.5">
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight">LKR 410,000</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mt-0.5">
+          Total Available Credit Limit: <span class="font-semibold text-on-surface-variant">LKR 850,000</span>
+</p>
+<!-- Horizontal Credit Utilization Meter -->
+<div class="mt-4 pt-4 border-t border-outline-variant/20">
+<div class="flex justify-between items-center mb-2">
+<div class="flex items-center space-x-1.5">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Credit Utilization:</span>
+<span class="font-label-md text-label-md text-error font-bold">48.2%</span>
+</div>
+<span class="font-label-sm text-label-sm text-error bg-error-container/40 px-2 py-0.5 rounded-full border border-error/20">
+              Target &lt; 30%
+            </span>
+</div>
+<!-- Progress Bar with 30% safe marker -->
+<div class="relative w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
+<!-- Safe Zone background strip -->
+<div class="absolute left-0 top-0 bottom-0 w-[30%] bg-primary-container/20 border-r border-primary-container/40"></div>
+<!-- Actual Fill Bar at 48.2% -->
+<div class="h-full bg-gradient-to-r from-primary-container via-amber-500 to-error rounded-full transition-all duration-500" style="width: 48.2%;"></div>
+</div>
+<div class="flex justify-between items-center mt-1.5 font-body-sm text-body-sm text-secondary">
+<span>0%</span>
+<span class="text-primary font-medium">Safe Limit: LKR 255,000</span>
+<span>100%</span>
+</div>
+</div>
+</section>
+<!-- 4. Urgent Alerts & Exposure Stack -->
+<section class="flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Urgent Alerts &amp; Exposure</h2>
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+</div>
+<span class="font-label-sm text-label-sm text-error bg-error-container/60 px-2 py-0.5 rounded-full font-bold">3 Attention</span>
+</div>
+<!-- Card A (Payment Deadline) -->
+<article class="bg-surface-container-lowest rounded-2xl p-4 border-l-4 border-l-primary-container border-y border-r border-outline-variant/30 shadow-[0_1px_2px_rgba(15,23,42,0.03)] flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex space-x-3 items-start">
+<div class="w-10 h-10 rounded-xl bg-primary-container/15 flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-primary text-[22px]">event_upcoming</span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Next Payment Due in 4 Days</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm text-secondary">28 Aug</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">
+                  Minimum Required: <strong class="text-on-surface">LKR 16,400</strong> to avoid statutory late penalties.
+                </p>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-3 border-t border-surface-container flex justify-end">
+<button class="bg-primary-container hover:bg-primary text-on-primary px-4 py-2 rounded-full font-label-md text-label-md flex items-center space-x-1.5 active:scale-95 transition-all shadow-sm">
+<span>Pay Now</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card B (CRIB Danger Zone) -->
+<article class="bg-[#FEF2F2] rounded-2xl p-4 border border-[#FCA5A5] shadow-[0_1px_2px_rgba(186,26,26,0.05)]">
+<div class="flex items-start space-x-3">
+<div class="w-10 h-10 rounded-xl bg-[#FEE2E2] flex items-center justify-center shrink-0 mt-0.5 text-error">
+<span class="material-symbols-outlined text-error text-[22px] fill-icon">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<h3 class="font-label-lg text-label-lg text-[#991B1B] font-bold">CRIB Default Warning</h3>
+<button class="w-6 h-6 rounded-full bg-white/70 text-[#991B1B] flex items-center justify-center text-xs hover:bg-white active:scale-90 transition-transform" title="What is CRIB Reporting?">
+<span class="material-symbols-outlined text-[16px]">info</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-[#7F1D1D] mt-1.5 leading-snug">
+                Commercial Bank card is <strong>78 days past due</strong>. Only <strong>12 days</strong> before irreversible 90-day CRIB default reporting.
+              </p>
+<div class="mt-2.5 flex items-center space-x-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/80 text-error border border-error/20">
+                  Critical Impact
+                </span>
+<span class="font-label-sm text-label-sm text-[#991B1B] font-semibold underline cursor-pointer">View Remedial Plan</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card C (Interest Bleed - CBSL 28% APR) -->
+<article class="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/30 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+<div class="flex items-start justify-between">
+<div class="flex space-x-3 items-start">
+<div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 mt-0.5 text-amber-600">
+<span class="material-symbols-outlined text-[22px]">trending_up</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center space-x-2">
+<h3 class="font-label-lg text-label-lg text-on-surface font-bold">Monthly Compounding Bleed</h3>
+</div>
+<div class="mt-1">
+<span class="inline-block px-2 py-0.5 bg-amber-100/70 text-amber-900 rounded-md font-label-sm text-label-sm font-semibold mb-1">
+                    CBSL 28.0% APR Ceiling
+                  </span>
+</div>
+<p class="font-headline-sm text-headline-sm text-error font-bold mt-0.5">
+                  LKR 9,566 <span class="font-body-sm text-body-sm text-secondary font-normal">estimated interest this month</span>
+</p>
+<p class="font-body-sm text-body-sm text-secondary mt-1">
+                  Pure interest lost if only paying minimum dues across all accounts.
+                </p>
+</div>
+</div>
+</div>
+</article>
+</section>
+<!-- 5. Quick Action Navigation Hub (2x2 Grid) -->
+<section class="flex flex-col space-y-3">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Calculators &amp; Simulators</h2>
+<span class="font-label-md text-label-md text-primary font-semibold">Explore all</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- 1: Min Payment Trap -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/30 shadow-[0_1px_2px_rgba(15,23,42,0.03)] cursor-pointer active:scale-95 transition-all flex flex-col justify-between h-32 hover:border-primary-container">
+<div class="w-9 h-9 rounded-xl bg-primary-container/15 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">calculate</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold leading-tight">Min Payment Trap</p>
+<p class="font-body-sm text-body-sm text-secondary mt-1">See 18-yr payoff reality</p>
+</div>
+</div>
+<!-- 2: Cash Advance Penalty -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/30 shadow-[0_1px_2px_rgba(15,23,42,0.03)] cursor-pointer active:scale-95 transition-all flex flex-col justify-between h-32 hover:border-primary-container">
+<div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+<span class="material-symbols-outlined text-[20px]">local_atm</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold leading-tight">Cash Advance Trap</p>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Voids 20-55d grace + fee</p>
+</div>
+</div>
+<!-- 3: 0% Surcharge Exposer -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/30 shadow-[0_1px_2px_rgba(15,23,42,0.03)] cursor-pointer active:scale-95 transition-all flex flex-col justify-between h-32 hover:border-primary-container">
+<div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+<span class="material-symbols-outlined text-[20px]">percent</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold leading-tight">0% Surcharge Exposer</p>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Find hidden terminal fees</p>
+</div>
+</div>
+<!-- 4: + Link New Card -->
+<div class="bg-surface-container-lowest p-3.5 rounded-2xl border border-dashed border-outline-variant/70 shadow-[0_1px_2px_rgba(15,23,42,0.03)] cursor-pointer active:scale-95 transition-all flex flex-col justify-between h-32 hover:bg-surface-container-low">
+<div class="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-bold leading-tight">+ Link New Card</p>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Track all bank cards</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Repayment Strategy & Goal Tracking -->
+<section class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] mb-4">
+<div class="flex items-center justify-between mb-3">
+<div>
+<span class="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">Strategy Acceleration</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Target Repayment Pace</h3>
+</div>
+<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-primary-container/15 text-primary text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>Avalanche</span>
+</span>
+</div>
+<!-- Strategy Comparer Card with Meter -->
+<div class="bg-surface-container-low rounded-xl p-3.5 flex items-center justify-between">
+<div class="flex-1 pr-3">
+<div class="flex justify-between text-xs font-semibold mb-1">
+<span class="text-secondary">Mandated Minimum (4%)</span>
+<span class="text-on-surface font-bold">LKR 16,400</span>
+</div>
+<div class="flex justify-between text-xs font-semibold mb-2">
+<span class="text-primary font-bold">Your Target Plan</span>
+<span class="text-primary font-extrabold">LKR 45,000/mo</span>
+</div>
+<!-- Double Track Indicator -->
+<div class="w-full h-3 bg-surface-container-high rounded-full relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 bg-secondary/40 w-[36%] z-0 rounded-l-full"></div>
+<div class="absolute left-0 top-0 bottom-0 bg-primary-container w-[100%] rounded-full opacity-90"></div>
+</div>
+</div>
+<div class="w-14 h-14 rounded-full border-4 border-primary-container flex flex-col items-center justify-center shrink-0 bg-surface-container-lowest">
+<span class="text-[12px] font-bold text-primary leading-none">2.7x</span>
+<span class="text-[9px] text-secondary">Faster</span>
+</div>
+</div>
+<div class="mt-3.5 flex items-start space-x-2">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">verified</span>
+<p class="font-body-sm text-body-sm text-secondary">
+<strong class="text-on-surface">On track:</strong> Debt-free in <span class="text-primary font-bold">11 months</span> (saving approx. <strong class="text-on-surface">LKR 58,200</strong> in cumulative interest).
+          </p>
+</div>
+</section>
+</div>
+<!-- 7. Global Bottom Navigation Bar (Docked Bottom Container) -->
+<!-- Matches Shared Components JSON: [Home, Cards, Simulators, Spaces, Offers] -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter-sm py-space-xs bg-surface-container-lowest border-t border-outline-variant/30 shadow-md max-w-[430px] mx-auto left-0 right-0">
+<!-- Home Tab (ACTIVE) -->
+<a class="flex flex-col items-center justify-center text-primary font-semibold hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#home">
+<span class="material-symbols-outlined fill-icon text-[24px]">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Home</span>
+</a>
+<!-- Cards Tab -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#cards">
+<span class="material-symbols-outlined text-[24px]">credit_card</span>
+<span class="text-label-sm font-label-sm mt-0.5">Cards</span>
+</a>
+<!-- Simulators Tab -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#simulators">
+<span class="material-symbols-outlined text-[24px]">calculate</span>
+<span class="text-label-sm font-label-sm mt-0.5">Simulators</span>
+</a>
+<!-- Spaces Tab -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#spaces">
+<span class="material-symbols-outlined text-[24px]">pie_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Spaces</span>
+</a>
+<!-- Offers Tab -->
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-150 py-1" href="#offers">
+<span class="material-symbols-outlined text-[24px]">local_offer</span>
+<span class="text-label-sm font-label-sm mt-0.5">Offers</span>
+</a>
+</nav>
+<!-- iOS Home Indicator bar -->
+<div class="fixed bottom-1 left-0 right-0 max-w-[430px] mx-auto z-[60] flex justify-center pointer-events-none pb-0.5">
+<div class="w-[140px] h-[5px] bg-slate-300 rounded-full"></div>
+</div>
+</main>
+</body></html>
