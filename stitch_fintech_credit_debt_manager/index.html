@@ -683,12 +683,15 @@
     </div>
     </div>
     <!-- Google Autofill Notice Banner -->
-    <div id="google-autofill-banner" class="hidden mb-1 p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 transition-all animate-fade-in-up">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">check_circle</span>
-        <span class="truncate">Auto-filled from Google: <strong id="google-autofill-email" class="font-semibold text-emerald-700"></strong></span>
+    <div id="google-autofill-banner" class="hidden mb-1 p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex flex-col gap-1 text-xs text-emerald-900 transition-all animate-fade-in-up">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">check_circle</span>
+          <span class="truncate">Auto-filled: <strong id="google-autofill-email" class="font-semibold text-emerald-700"></strong></span>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">Google Connected</span>
       </div>
-      <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">Google Connected</span>
+      <p class="text-[11px] text-emerald-800/90 pl-6.5 font-medium">Profile linked. Please create your required account password below.</p>
     </div>
     <!-- Input Form -->
     <form class="flex flex-col gap-3.5" onsubmit="event.preventDefault(); signupWithEmail(event);">
@@ -710,9 +713,12 @@
     </div>
     <!-- Password Field -->
     <div>
-    <label class="block text-xs text-slate-600 mb-1.5 font-medium" for="signup-password">Password</label>
+    <div class="flex items-center justify-between mb-1.5">
+      <label class="block text-xs text-slate-600 font-medium" for="signup-password">Password <span class="text-rose-600 font-bold">*</span></label>
+      <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
+    </div>
     <div class="relative flex items-center">
-    <input class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password"/>
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password" placeholder="Create strong password" oninput="if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
     <button aria-label="Toggle password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
                     const pwd = document.getElementById('signup-password');
                     const eyeOpen = document.getElementById('eyeIconOpen2');
@@ -739,8 +745,72 @@
     </div>
     <!-- Confirm Password Field -->
     <div>
-    <label class="block text-xs text-slate-600 mb-1.5 font-medium" for="signup-confirm">Confirm Password</label>
-    <input class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password"/>
+    <div class="flex items-center justify-between mb-1.5">
+      <label class="block text-xs text-slate-600 font-medium" for="signup-confirm">Confirm Password <span class="text-rose-600 font-bold">*</span></label>
+      <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
+    </div>
+    <div class="relative flex items-center">
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password" placeholder="Confirm your password" oninput="if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
+    <button aria-label="Toggle confirm password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
+                    const cpwd = document.getElementById('signup-confirm');
+                    const eyeOpen = document.getElementById('eyeIconOpenConfirm');
+                    const eyeClosed = document.getElementById('eyeIconClosedConfirm');
+                    if (cpwd.type === 'password') {
+                      cpwd.type = 'text';
+                      eyeOpen.classList.add('hidden');
+                      eyeClosed.classList.remove('hidden');
+                    } else {
+                      cpwd.type = 'password';
+                      eyeOpen.classList.remove('hidden');
+                      eyeClosed.classList.add('hidden');
+                    }
+                  " type="button">
+    <svg class="w-4 h-4" fill="none" id="eyeIconOpenConfirm" stroke="currentColor" viewbox="0 0 24 24">
+    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+    </svg>
+    <svg class="w-4 h-4 hidden" fill="none" id="eyeIconClosedConfirm" stroke="currentColor" viewbox="0 0 24 24">
+    <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+    </svg>
+    </button>
+    </div>
+    </div>
+
+    <!-- Mainframe / Enterprise Password Requirements Checklist -->
+    <div id="pwd-requirements-box" class="p-3 bg-slate-50 border border-slate-200/90 rounded-xl text-[11px] text-slate-600 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-semibold text-slate-700 tracking-tight flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px] text-slate-500">lock</span>
+          Standard Password Requirements
+        </span>
+        <span id="pwd-overall-badge" class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">Required</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1.5">
+        <div id="pwd-rule-len" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>8+ characters</span>
+        </div>
+        <div id="pwd-rule-upper" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>1 uppercase (A-Z)</span>
+        </div>
+        <div id="pwd-rule-lower" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>1 lowercase (a-z)</span>
+        </div>
+        <div id="pwd-rule-num" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>1 number (0-9)</span>
+        </div>
+        <div id="pwd-rule-special" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>1 special symbol</span>
+        </div>
+        <div id="pwd-rule-match" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+          <span class="material-symbols-outlined text-[13px] shrink-0 text-slate-400">circle</span>
+          <span>Passwords match</span>
+        </div>
+      </div>
     </div>
 
     <!-- Create Account Button -->
@@ -7262,9 +7332,92 @@
         if (target === 'signup') {
             loginView.classList.add('hidden');
             signupView.classList.remove('hidden');
+            if (typeof updatePasswordRequirementsUI === 'function') {
+                updatePasswordRequirementsUI();
+            }
         } else {
             signupView.classList.add('hidden');
             loginView.classList.remove('hidden');
+        }
+    };
+
+    /* ── Mainframe / Enterprise Password Rules Validator ── */
+    window.checkPasswordRules = function(password, confirm) {
+        password = password || "";
+        confirm = confirm || "";
+        const len = password.length >= 8;
+        const upper = /[A-Z]/.test(password);
+        const lower = /[a-z]/.test(password);
+        const num = /[0-9]/.test(password);
+        const special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password);
+        const match = password.length > 0 && password === confirm;
+        const isValid = len && upper && lower && num && special && match;
+        return { len, upper, lower, num, special, match, isValid };
+    };
+
+    window.updatePasswordRequirementsUI = function() {
+        const pwdInput = document.getElementById('signup-password');
+        const confirmInput = document.getElementById('signup-confirm');
+        if (!pwdInput) return;
+        const pwd = pwdInput.value;
+        const conf = confirmInput ? confirmInput.value : '';
+        const res = window.checkPasswordRules(pwd, conf);
+
+        const updateItem = (id, valid) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const icon = el.querySelector('.material-symbols-outlined');
+            if (valid) {
+                el.classList.remove('text-slate-500');
+                el.classList.add('text-emerald-700', 'font-medium');
+                if (icon) {
+                    icon.innerText = 'check_circle';
+                    icon.classList.remove('text-slate-400');
+                    icon.classList.add('text-emerald-600');
+                }
+            } else {
+                el.classList.remove('text-emerald-700', 'font-medium');
+                el.classList.add('text-slate-500');
+                if (icon) {
+                    icon.innerText = 'circle';
+                    icon.classList.remove('text-emerald-600');
+                    icon.classList.add('text-slate-400');
+                }
+            }
+        };
+
+        updateItem('pwd-rule-len', res.len);
+        updateItem('pwd-rule-upper', res.upper);
+        updateItem('pwd-rule-lower', res.lower);
+        updateItem('pwd-rule-num', res.num);
+        updateItem('pwd-rule-special', res.special);
+        updateItem('pwd-rule-match', res.match);
+
+        const badge = document.getElementById('pwd-overall-badge');
+        const box = document.getElementById('pwd-requirements-box');
+        if (badge) {
+            if (res.isValid) {
+                badge.innerText = 'Compliant';
+                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800';
+                if (box) {
+                    box.classList.remove('bg-slate-50', 'border-slate-200/90');
+                    box.classList.add('bg-emerald-50/50', 'border-emerald-300');
+                }
+            } else if (pwd.length > 0) {
+                badge.innerText = 'Incomplete';
+                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800';
+                if (box) {
+                    box.classList.remove('bg-emerald-50/50', 'border-emerald-300');
+                    box.classList.add('bg-slate-50', 'border-slate-200/90');
+                }
+            } else {
+                badge.innerText = 'Required';
+                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700';
+                if (box) {
+                    box.classList.remove('bg-emerald-50/50', 'border-emerald-300');
+                    box.classList.add('bg-slate-50', 'border-slate-200/90');
+                }
+            }
         }
     };
 
@@ -7350,14 +7503,18 @@
                 }
             });
 
-            // Passwords are not mandatory for Google OAuth
+            // Password is non-negotiable and strictly mandatory for sign-up
             if (pwdInput) {
-                pwdInput.required = false;
-                pwdInput.placeholder = "(Optional) Set local password or click below";
+                pwdInput.required = true;
+                pwdInput.placeholder = "Enter strong password (min. 8 chars)";
+                pwdInput.focus();
             }
             if (confirmInput) {
-                confirmInput.required = false;
-                confirmInput.placeholder = "(Optional) Confirm local password";
+                confirmInput.required = true;
+                confirmInput.placeholder = "Confirm your password";
+            }
+            if (typeof updatePasswordRequirementsUI === 'function') {
+                updatePasswordRequirementsUI();
             }
 
             // Show auto-fill banner
@@ -7394,7 +7551,7 @@
             });
 
             if (typeof window.showToast === 'function') {
-                window.showToast('Auto-filled from Google: ' + email, 'info');
+                window.showToast('Profile linked from Google. Please create your secure password.', 'info');
             }
         }).catch((error) => {
             window._isSigningUpWithGoogle = false;
@@ -7411,6 +7568,41 @@
       const email = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
+
+      if (!fname || !lname || !email) {
+          alert("Please fill in first name, last name, and email address.");
+          return;
+      }
+
+      // Password is non-negotiable for all sign-ups
+      if (!password) {
+          alert("Password is required. Setting a secure password is mandatory to sign up.");
+          const pwdInput = document.getElementById('signup-password');
+          if (pwdInput) pwdInput.focus();
+          return;
+      }
+      if (password !== confirm) {
+          alert("Passwords do not match. Please ensure both password fields match exactly.");
+          const confirmInput = document.getElementById('signup-confirm');
+          if (confirmInput) confirmInput.focus();
+          return;
+      }
+
+      // Strict validation according to standard enterprise / mainframe security policy
+      const rules = window.checkPasswordRules(password, confirm);
+      if (!rules.isValid) {
+          const missing = [];
+          if (!rules.len) missing.push("At least 8 characters");
+          if (!rules.upper) missing.push("At least 1 uppercase letter (A-Z)");
+          if (!rules.lower) missing.push("At least 1 lowercase letter (a-z)");
+          if (!rules.num) missing.push("At least 1 numeric digit (0-9)");
+          if (!rules.special) missing.push("At least 1 special character (!@#$%^&*...)");
+          if (!rules.match) missing.push("Passwords must match");
+          alert("Password does not meet standard enterprise security requirements:\n\n• " + missing.join("\n• "));
+          const pwdInput = document.getElementById('signup-password');
+          if (pwdInput) pwdInput.focus();
+          return;
+      }
       
       // If user selected Google on the signup page
       if (window._pendingGoogleUser && window._pendingGoogleUser.user) {
@@ -7421,12 +7613,18 @@
           window._pendingSignupName = { firstName: finalFname, lastName: finalLname };
           window._isSigningUpWithGoogle = false;
 
-          // If the user optionally provided a password, link email/password credentials
-          if (password && password === confirm && password.length >= 6) {
-              try {
-                  const credential = firebase.auth.EmailAuthProvider.credential(gUser.email, password);
-                  gUser.linkWithCredential(credential).catch(console.warn);
-              } catch(err) {}
+          // Secure the user account with the required password
+          try {
+              const credential = firebase.auth.EmailAuthProvider.credential(gUser.email, password);
+              gUser.linkWithCredential(credential).catch(() => {
+                  if (typeof gUser.updatePassword === 'function') {
+                      gUser.updatePassword(password).catch(console.warn);
+                  }
+              });
+          } catch(err) {
+              if (typeof gUser.updatePassword === 'function') {
+                  gUser.updatePassword(password).catch(console.warn);
+              }
           }
 
           // Save profile to users collection and proceed
@@ -7440,17 +7638,7 @@
           return;
       }
 
-      if (!email || !password || !fname || !lname) {
-          alert("Please fill in all fields.");
-          return;
-      }
-      if (password !== confirm) {
-          alert("Passwords do not match.");
-          return;
-      }
-      
-      // Store the name temporarily so onAuthStateChanged can use it
-      // before the Firestore write completes
+      // Standard email/password signup
       window._pendingSignupName = { firstName: fname, lastName: lname };
       
       auth.createUserWithEmailAndPassword(email, password)
@@ -7459,7 +7647,8 @@
               // Save the full name to the users collection
               return db.collection("users").doc(user.uid).set({
                   firstName: fname,
-                  lastName: lname
+                  lastName: lname,
+                  email: email
               }, { merge: true });
           })
           .catch((error) => {
@@ -7467,7 +7656,7 @@
               if (error.code === 'auth/email-already-in-use') {
                   alert("This email is already registered. Please log in instead.");
               } else if (error.code === 'auth/weak-password') {
-                  alert("Your password is too weak. Please use at least 6 characters.");
+                  alert("Your password is too weak. Please use at least 8 characters with uppercase, lowercase, numbers, and symbols.");
               } else if (error.code === 'auth/invalid-email') {
                   alert("Please enter a valid email address.");
               } else {
