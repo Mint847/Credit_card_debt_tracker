@@ -2849,15 +2849,68 @@
 
       function loadCards() { return cards; }
       function saveCards() {
-        if (window.currentUser && typeof db !== 'undefined') {
-          db.collection("users").doc(window.currentUser.uid).set({ cards: cards }, { merge: true }).catch(console.error);
-        }
+        saveUserData();
       }
 
       function loadSpaces() { return spaces; }
       function saveSpaces() {
-        if (window.currentUser && typeof db !== 'undefined') {
-          db.collection("users").doc(window.currentUser.uid).set({ spaces: spaces }, { merge: true }).catch(console.error);
+        saveUserData();
+      }
+
+      function saveUserData() {
+        var user = window.currentUser;
+        var incomeVal = "175000";
+        var elProfileIncome = document.getElementById("profile-income-input");
+        if (elProfileIncome && elProfileIncome.value) {
+            incomeVal = elProfileIncome.value;
+        } else if (window.currentUserData && window.currentUserData.income) {
+            incomeVal = window.currentUserData.income;
+        }
+
+        // Always sync legacy LS_KEY so local guest sessions function smoothly
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify(cards || []));
+            localStorage.setItem("stitch_spaces_v3", JSON.stringify(spaces || []));
+            localStorage.setItem("user_monthly_income", incomeVal);
+            localStorage.setItem("payoff_strategy", window.currentStrategy || "avalanche");
+        } catch(e) {}
+
+        if (!user) return;
+
+        var email = (user.email || '').toLowerCase().trim();
+        var uid = user.uid;
+
+        var userData = {
+            email: email,
+            uid: uid,
+            firstName: (window.currentUserData && window.currentUserData.firstName) || '',
+            lastName: (window.currentUserData && window.currentUserData.lastName) || '',
+            cards: cards || [],
+            spaces: spaces || [],
+            income: incomeVal,
+            strategy: window.currentStrategy || "avalanche",
+            lastUpdated: Date.now()
+        };
+
+        // 1. Persist to localStorage uniquely keyed by the user's email
+        if (email) {
+            try {
+                localStorage.setItem('stitch_user_email_' + email, JSON.stringify(userData));
+            } catch(e) {
+                console.warn("LocalStorage write error for email:", e);
+            }
+        }
+        if (uid) {
+            try {
+                localStorage.setItem('stitch_user_uid_' + uid, JSON.stringify(userData));
+            } catch(e) {}
+        }
+
+        // 2. Persist to Cloud Firestore
+        if (typeof db !== 'undefined' && uid) {
+            db.collection("users").doc(uid).set(userData, { merge: true }).catch(function(err) {
+                console.warn("Cloud Firestore save warning (data is safe locally):", err.message);
+            });
         }
       }
 
@@ -2897,10 +2950,10 @@
         const drawerName = document.getElementById('drawer-portfolio-name');
         if (drawerName) drawerName.innerText = fname + "'s Portfolio";
 
-        cards = data.cards || [];
-        spaces = data.spaces || [];
+        cards = (data && Array.isArray(data.cards)) ? data.cards : [];
+        spaces = (data && Array.isArray(data.spaces)) ? data.spaces : [];
         
-        var incStr = data.income || "175000";
+        var incStr = (data && data.income) ? data.income : "175000";
         var elProfileIncome = document.getElementById("profile-income-input");
         if (elProfileIncome) elProfileIncome.value = incStr;
         
@@ -2908,7 +2961,7 @@
         if (isNaN(inc) || inc <= 0) inc = 175000;
         window.TOTAL_MONTHLY_BUDGET = inc * 0.25;
 
-        var strat = data.strategy || "avalanche";
+        var strat = (data && data.strategy) ? data.strategy : "avalanche";
         window.currentStrategy = strat;
         var checkSnowball = document.getElementById('check-snowball');
         if (checkSnowball) checkSnowball.checked = (strat === 'snowball');
@@ -2926,8 +2979,9 @@
           currentVisibleScreen = targetScreenId; 
           currentActiveTab = targetTabId; 
         }
-        if (targetScreenId === 'screen-list') { renderCardsOverview(); }
+        if (targetScreenId === 'screen-list') { renderCardsOverview(); renderList(); }
         if (targetScreenId === 'screen-home') { renderHomeDashboard(); }
+        if (targetScreenId === 'screen-spaces') { renderSpaces(); }
         if (targetScreenId === 'view-offers') { renderOffers(); }
         // 1. Hide all screens
         appScreens.forEach(function (id) {
@@ -5057,9 +5111,7 @@
 
         var elProfileIncome = document.getElementById("profile-income-input");
         if (elProfileIncome) elProfileIncome.addEventListener("input", function (e) {
-          if (window.currentUser && typeof db !== 'undefined') {
-            db.collection("users").doc(window.currentUser.uid).set({ income: e.target.value }, { merge: true }).catch(console.error);
-          }
+          saveUserData();
           if (typeof updateDTI === 'function') updateDTI();
           if (typeof window.renderDashboard === 'function') window.renderDashboard();
         });
@@ -5077,13 +5129,18 @@
         var elReset = document.getElementById("btn-reset-data");
         if (elReset) elReset.addEventListener("click", function () {
           if (confirm("Are you sure you want to permanently delete all card data?")) {
-            if (window.currentUser && typeof db !== 'undefined') {
-                db.collection("users").doc(window.currentUser.uid).delete().then(() => {
-                    window.location.reload();
-                });
-            } else {
-                window.location.reload();
+            if (window.currentUser) {
+                var email = (window.currentUser.email || '').toLowerCase().trim();
+                if (email) localStorage.removeItem('stitch_user_email_' + email);
+                if (window.currentUser.uid) {
+                    localStorage.removeItem('stitch_user_uid_' + window.currentUser.uid);
+                    if (typeof db !== 'undefined') {
+                        db.collection("users").doc(window.currentUser.uid).delete().catch(console.error);
+                    }
+                }
             }
+            localStorage.removeItem(LS_KEY);
+            window.location.reload();
           }
         });
 
@@ -5118,11 +5175,9 @@
         var currentStrategy = window.currentStrategy || 'avalanche';
 
         function updateStrategyUI(strategy) {
-          if (window.currentUser && typeof db !== 'undefined') {
-            db.collection("users").doc(window.currentUser.uid).set({ strategy: strategy }, { merge: true }).catch(console.error);
-          }
           currentStrategy = strategy;
           window.currentStrategy = strategy;
+          saveUserData();
 
           if (strategy === 'avalanche') {
             if (avalancheCard) {
@@ -5234,13 +5289,18 @@
         document.getElementById('btn-menu-reset')?.addEventListener('click', () => {
             const isConfirmed = window.confirm("Are you sure you want to wipe all saved cards and plans? This cannot be undone.");
             if (isConfirmed) {
-                if (window.currentUser && typeof db !== 'undefined') {
-                    db.collection("users").doc(window.currentUser.uid).delete().then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    window.location.reload();
+                if (window.currentUser) {
+                    var email = (window.currentUser.email || '').toLowerCase().trim();
+                    if (email) localStorage.removeItem('stitch_user_email_' + email);
+                    if (window.currentUser.uid) {
+                        localStorage.removeItem('stitch_user_uid_' + window.currentUser.uid);
+                        if (typeof db !== 'undefined') {
+                            db.collection("users").doc(window.currentUser.uid).delete().catch(console.error);
+                        }
+                    }
                 }
+                localStorage.removeItem(LS_KEY);
+                window.location.reload();
             }
         });
       }
@@ -5954,7 +6014,7 @@
           closeAddFundsModal();
       };
 
-      return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData };
+      return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData, saveUserData: saveUserData };
     })();
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -7303,26 +7363,109 @@
           if (signupScreen && signupScreen.querySelector('h1')) {
               signupScreen.querySelector('h1').innerText = "Loading data...";
           }
+
+          var email = (user.email || '').toLowerCase().trim();
+          var uid = user.uid;
+
+          // 1. Check local storage for this specific email first (instant load)
+          var localData = null;
+          if (email) {
+              try {
+                  var rawEmail = localStorage.getItem('stitch_user_email_' + email);
+                  if (rawEmail) localData = JSON.parse(rawEmail);
+              } catch(e) {}
+          }
+          if (!localData && uid) {
+              try {
+                  var rawUid = localStorage.getItem('stitch_user_uid_' + uid);
+                  if (rawUid) localData = JSON.parse(rawUid);
+              } catch(e) {}
+          }
+
+          if (localData) {
+              App.setCloudData(localData);
+          }
+
+          // 2. Fetch and synchronize with Cloud Firestore
           try {
               const doc = await db.collection("users").doc(user.uid).get();
               if (doc.exists) {
-                  App.setCloudData(doc.data());
-              } else if (window._pendingSignupName) {
-                  // Use the pending signup name if Firestore doc doesn't exist yet
-                  App.setCloudData(window._pendingSignupName);
+                  const cloudData = doc.data() || {};
+                  
+                  let resolvedCards = (cloudData.cards && Array.isArray(cloudData.cards) && cloudData.cards.length > 0)
+                      ? cloudData.cards
+                      : (localData && localData.cards && localData.cards.length > 0 ? localData.cards : []);
+
+                  let resolvedSpaces = (cloudData.spaces && Array.isArray(cloudData.spaces) && cloudData.spaces.length > 0)
+                      ? cloudData.spaces
+                      : (localData && localData.spaces && localData.spaces.length > 0 ? localData.spaces : []);
+
+                  // Fallback: If no cards exist in cloud or email cache, check legacy storage to migrate
+                  if (resolvedCards.length === 0) {
+                      try {
+                          var legacy = JSON.parse(localStorage.getItem(LS_KEY));
+                          if (legacy && Array.isArray(legacy) && legacy.length > 0) resolvedCards = legacy;
+                      } catch(e) {}
+                  }
+
+                  const resolvedIncome = cloudData.income || (localData ? localData.income : "175000");
+                  const resolvedStrategy = cloudData.strategy || (localData ? localData.strategy : "avalanche");
+                  const resolvedFname = cloudData.firstName || (localData ? localData.firstName : "") || (window._pendingSignupName ? window._pendingSignupName.firstName : "");
+                  const resolvedLname = cloudData.lastName || (localData ? localData.lastName : "") || (window._pendingSignupName ? window._pendingSignupName.lastName : "");
+
+                  const mergedData = {
+                      ...cloudData,
+                      firstName: resolvedFname,
+                      lastName: resolvedLname,
+                      cards: resolvedCards,
+                      spaces: resolvedSpaces,
+                      income: resolvedIncome,
+                      strategy: resolvedStrategy
+                  };
+
+                  App.setCloudData(mergedData);
                   window._pendingSignupName = null;
+                  if (typeof App.saveUserData === 'function') App.saveUserData();
               } else {
-                  App.setCloudData({});
+                  // Document doesn't exist in Firestore yet (new account or offline first run)
+                  let resolvedCards = (localData && localData.cards) ? localData.cards : [];
+                  let resolvedSpaces = (localData && localData.spaces) ? localData.spaces : [];
+
+                  if (resolvedCards.length === 0) {
+                      try {
+                          var legacy = JSON.parse(localStorage.getItem(LS_KEY));
+                          if (legacy && Array.isArray(legacy) && legacy.length > 0) resolvedCards = legacy;
+                      } catch(e) {}
+                  }
+
+                  const initialData = {
+                      email: email,
+                      uid: uid,
+                      firstName: (window._pendingSignupName && window._pendingSignupName.firstName) || (localData && localData.firstName) || "",
+                      lastName: (window._pendingSignupName && window._pendingSignupName.lastName) || (localData && localData.lastName) || "",
+                      cards: resolvedCards,
+                      spaces: resolvedSpaces,
+                      income: (localData && localData.income) || "175000",
+                      strategy: (localData && localData.strategy) || "avalanche"
+                  };
+                  window._pendingSignupName = null;
+
+                  App.setCloudData(initialData);
+                  if (typeof App.saveUserData === 'function') App.saveUserData();
               }
           } catch(e) {
-              console.error("Firestore fetch failed", e);
-              if (window._pendingSignupName) {
+              console.warn("Firestore fetch notice (using per-email local cache):", e);
+              if (localData) {
+                  App.setCloudData(localData);
+              } else if (window._pendingSignupName) {
                   App.setCloudData(window._pendingSignupName);
                   window._pendingSignupName = null;
               } else {
                   App.setCloudData({});
               }
+              if (typeof App.saveUserData === 'function') App.saveUserData();
           }
+
           if (loginScreen.querySelector('h1')) {
               loginScreen.querySelector('h1').innerText = "Log in to Serendib";
           }
@@ -7336,11 +7479,12 @@
           appShell.classList.add("animate-fade-in-up");
           if (globalNav) globalNav.classList.remove("hidden");
           
-          // Always start at home screen on login
+          // Render all application views with the user's data
+          if (typeof window.renderDashboard === 'function') {
+              window.renderDashboard();
+          }
           if (typeof navigateTo === 'function') {
               navigateTo('screen-home', 'btn-nav-home');
-          } else if (typeof renderHomeDashboard === "function") {
-              renderHomeDashboard();
           }
         }
       } else {
@@ -7349,6 +7493,14 @@
         window.currentUserData = null;
         window._pendingSignupName = null;
         
+        // Reset in-memory state so another user logging in starts fresh
+        if (typeof App !== 'undefined' && typeof App.setCloudData === 'function') {
+            App.setCloudData({});
+        }
+        if (typeof window.renderDashboard === 'function') {
+            window.renderDashboard();
+        }
+
         if (loginScreen && appShell) {
           appShell.classList.add("hidden");
           appShell.classList.remove("animate-fade-in-up");
