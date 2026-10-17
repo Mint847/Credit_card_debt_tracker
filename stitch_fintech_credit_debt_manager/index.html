@@ -682,17 +682,6 @@
     <div class="border-t border-slate-200/80 flex-grow"></div>
     </div>
     </div>
-    <!-- Google Autofill Notice Banner -->
-    <div id="google-autofill-banner" class="hidden mb-1 p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex flex-col gap-1 text-xs text-emerald-900 transition-all animate-fade-in-up">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">check_circle</span>
-          <span class="truncate">Auto-filled: <strong id="google-autofill-email" class="font-semibold text-emerald-700"></strong></span>
-        </div>
-        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">Google Connected</span>
-      </div>
-      <p class="text-[11px] text-emerald-800/90 pl-6.5 font-medium">Profile linked. Please create your required account password below.</p>
-    </div>
     <!-- Input Form -->
     <form class="flex flex-col gap-3.5" onsubmit="event.preventDefault(); signupWithEmail(event);">
     <!-- Name Fields -->
@@ -714,11 +703,11 @@
     <!-- Password Field -->
     <div>
     <div class="flex items-center justify-between mb-1.5">
-      <label class="block text-xs text-slate-600 font-medium" for="signup-password">Password <span class="text-rose-600 font-bold">*</span></label>
-      <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
+      <label class="block text-xs text-slate-600 font-medium" for="signup-password">Password</label>
+      <span id="pwd-required-tag" class="hidden text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
     </div>
     <div class="relative flex items-center">
-    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password" placeholder="Create strong password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password" placeholder="Create strong password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); const t=document.getElementById('pwd-required-tag'); if(t) t.classList.add('hidden'); this.classList.remove('border-rose-500','ring-1','ring-rose-500'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
     <button aria-label="Toggle password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
                     const pwd = document.getElementById('signup-password');
                     const eyeOpen = document.getElementById('eyeIconOpen2');
@@ -746,11 +735,11 @@
     <!-- Confirm Password Field -->
     <div>
     <div class="flex items-center justify-between mb-1.5">
-      <label class="block text-xs text-slate-600 font-medium" for="signup-confirm">Confirm Password <span class="text-rose-600 font-bold">*</span></label>
-      <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
+      <label class="block text-xs text-slate-600 font-medium" for="signup-confirm">Confirm Password</label>
+      <span id="confirm-required-tag" class="hidden text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
     </div>
     <div class="relative flex items-center">
-    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password" placeholder="Confirm your password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password" placeholder="Confirm your password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); const t=document.getElementById('confirm-required-tag'); if(t) t.classList.add('hidden'); this.classList.remove('border-rose-500','ring-1','ring-rose-500'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
     <button aria-label="Toggle confirm password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
                     const cpwd = document.getElementById('signup-confirm');
                     const eyeOpen = document.getElementById('eyeIconOpenConfirm');
@@ -7331,6 +7320,14 @@
             signupView.classList.remove('hidden');
             const box = document.getElementById('pwd-requirements-box');
             if (box) box.classList.add('hidden');
+            const pTag = document.getElementById('pwd-required-tag');
+            if (pTag) pTag.classList.add('hidden');
+            const cTag = document.getElementById('confirm-required-tag');
+            if (cTag) cTag.classList.add('hidden');
+            const pIn = document.getElementById('signup-password');
+            if (pIn) pIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+            const cIn = document.getElementById('signup-confirm');
+            if (cIn) cIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
             if (typeof updatePasswordRequirementsUI === 'function') {
                 updatePasswordRequirementsUI();
             }
@@ -7500,14 +7497,6 @@
                 updatePasswordRequirementsUI();
             }
 
-            // Show auto-fill banner
-            const banner = document.getElementById('google-autofill-banner');
-            const bannerEmail = document.getElementById('google-autofill-email');
-            if (banner) {
-                if (bannerEmail) bannerEmail.innerText = email;
-                banner.classList.remove('hidden');
-            }
-
             // Update submit button
             const submitBtn = document.getElementById('btn-signup-submit');
             const submitBtnText = document.getElementById('btn-signup-submit-text');
@@ -7559,15 +7548,42 @@
 
       // Password is non-negotiable for all sign-ups
       if (!password) {
-          alert("Password is required. Setting a secure password is mandatory to sign up.");
+          const pwdTag = document.getElementById('pwd-required-tag');
+          if (pwdTag) pwdTag.classList.remove('hidden');
           const pwdInput = document.getElementById('signup-password');
-          if (pwdInput) pwdInput.focus();
+          if (pwdInput) {
+              pwdInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+              pwdInput.focus();
+          }
+          const box = document.getElementById('pwd-requirements-box');
+          if (box) box.classList.remove('hidden');
+          alert("Password is required. Setting a secure password is mandatory to sign up.");
+          return;
+      }
+      if (!confirm) {
+          const confirmTag = document.getElementById('confirm-required-tag');
+          if (confirmTag) confirmTag.classList.remove('hidden');
+          const confirmInput = document.getElementById('signup-confirm');
+          if (confirmInput) {
+              confirmInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+              confirmInput.focus();
+          }
+          const box = document.getElementById('pwd-requirements-box');
+          if (box) box.classList.remove('hidden');
+          alert("Please confirm your password.");
           return;
       }
       if (password !== confirm) {
-          alert("Passwords do not match. Please ensure both password fields match exactly.");
+          const confirmTag = document.getElementById('confirm-required-tag');
+          if (confirmTag) confirmTag.classList.remove('hidden');
           const confirmInput = document.getElementById('signup-confirm');
-          if (confirmInput) confirmInput.focus();
+          if (confirmInput) {
+              confirmInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+              confirmInput.focus();
+          }
+          const box = document.getElementById('pwd-requirements-box');
+          if (box) box.classList.remove('hidden');
+          alert("Passwords do not match. Please ensure both password fields match exactly.");
           return;
       }
 
@@ -7873,6 +7889,16 @@
             var el = document.getElementById(id);
             if (el) el.value = '';
         });
+        var pTag = document.getElementById('pwd-required-tag');
+        if (pTag) pTag.classList.add('hidden');
+        var cTag = document.getElementById('confirm-required-tag');
+        if (cTag) cTag.classList.add('hidden');
+        var pBox = document.getElementById('pwd-requirements-box');
+        if (pBox) pBox.classList.add('hidden');
+        var pIn = document.getElementById('signup-password');
+        if (pIn) pIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+        var cIn = document.getElementById('signup-confirm');
+        if (cIn) cIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
       }
     });
   </script>
