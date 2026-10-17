@@ -666,7 +666,7 @@
     </svg>
     </button>
     <!-- Google -->
-    <button aria-label="Sign in with Google" onclick="loginWithGoogle()" class="h-11 bg-white border border-slate-200 hover:border-slate-300 rounded-xl flex items-center justify-center transition-all shadow-xs active:scale-95 group" type="button">
+    <button aria-label="Sign up with Google" onclick="signupWithGoogle()" class="h-11 bg-white border border-slate-200 hover:border-slate-300 rounded-xl flex items-center justify-center transition-all shadow-xs active:scale-95 group cursor-pointer" type="button">
     <svg class="w-4 h-4 shrink-0 group-hover:scale-105 transition-transform" viewbox="0 0 24 24">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
@@ -681,6 +681,14 @@
     <span class="text-[11px] text-slate-400 mx-3 font-normal">or</span>
     <div class="border-t border-slate-200/80 flex-grow"></div>
     </div>
+    </div>
+    <!-- Google Autofill Notice Banner -->
+    <div id="google-autofill-banner" class="hidden mb-1 p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 transition-all animate-fade-in-up">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">check_circle</span>
+        <span class="truncate">Auto-filled from Google: <strong id="google-autofill-email" class="font-semibold text-emerald-700"></strong></span>
+      </div>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">Google Connected</span>
     </div>
     <!-- Input Form -->
     <form class="flex flex-col gap-3.5" onsubmit="event.preventDefault(); signupWithEmail(event);">
@@ -736,8 +744,8 @@
     </div>
 
     <!-- Create Account Button -->
-    <button class="w-full mt-2 py-3 bg-[#1a1f2e] hover:bg-slate-800 text-white font-medium rounded-xl active:scale-98 transition-all text-sm shadow-xs flex items-center justify-center" type="submit">
-    <span>Create Account</span>
+    <button id="btn-signup-submit" class="w-full mt-2 py-3 bg-[#1a1f2e] hover:bg-slate-800 text-white font-medium rounded-xl active:scale-98 transition-all text-sm shadow-xs flex items-center justify-center cursor-pointer" type="submit">
+    <span id="btn-signup-submit-text">Create Account</span>
     </button>
     </form>
     <!-- Routing Footer -->
@@ -7260,6 +7268,142 @@
         }
     };
 
+    function completeUserEntry(user, fname, lname) {
+        var loginScreen = document.getElementById("screen-login");
+        var signupScreen = document.getElementById("view-signup");
+        var appShell = document.getElementById("app-shell");
+        var globalNav = document.getElementById("global-nav");
+
+        window._isSigningUpWithGoogle = false;
+        window._pendingGoogleUser = null;
+
+        if (loginScreen && loginScreen.querySelector('h1')) {
+            loginScreen.querySelector('h1').innerText = "Log in to Serendib";
+        }
+        if (signupScreen && signupScreen.querySelector('h1')) {
+            signupScreen.querySelector('h1').innerText = "Create your account";
+        }
+
+        if (loginScreen) loginScreen.classList.add("hidden");
+        if (signupScreen) signupScreen.classList.add("hidden");
+        if (appShell) {
+            appShell.classList.remove("hidden");
+            appShell.classList.add("animate-fade-in-up");
+        }
+        if (globalNav) globalNav.classList.remove("hidden");
+
+        if (typeof window.renderDashboard === 'function') {
+            window.renderDashboard();
+        }
+        if (typeof navigateTo === 'function') {
+            navigateTo('screen-home', 'btn-nav-home');
+        }
+    }
+
+    window.signupWithGoogle = function() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        window._isSigningUpWithGoogle = true;
+
+        auth.signInWithPopup(provider).then((result) => {
+            const user = result.user;
+            let firstName = "";
+            let lastName = "";
+            const email = (user.email || "").trim();
+
+            if (result.additionalUserInfo && result.additionalUserInfo.profile) {
+                firstName = result.additionalUserInfo.profile.given_name || "";
+                lastName = result.additionalUserInfo.profile.family_name || "";
+            }
+            if (!firstName && user.displayName) {
+                const parts = user.displayName.trim().split(/\s+/);
+                firstName = parts[0] || "";
+                if (parts.length > 1) {
+                    lastName = parts.slice(1).join(" ");
+                }
+            }
+            if (!firstName && email) {
+                const localPart = email.split("@")[0];
+                const nameParts = localPart.replace(/[0-9_.-]+/g, ' ').trim().split(/\s+/);
+                firstName = nameParts[0] ? (nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)) : "User";
+                if (nameParts.length > 1) {
+                    lastName = nameParts.slice(1).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
+                }
+            }
+
+            // Auto-fill form fields
+            const fnameInput = document.getElementById('signup-fname');
+            const lnameInput = document.getElementById('signup-lname');
+            const emailInput = document.getElementById('signup-email');
+            const pwdInput = document.getElementById('signup-password');
+            const confirmInput = document.getElementById('signup-confirm');
+
+            if (fnameInput) fnameInput.value = firstName;
+            if (lnameInput) lnameInput.value = lastName;
+            if (emailInput) emailInput.value = email;
+
+            // Visual highlight ring on auto-filled inputs
+            [fnameInput, lnameInput, emailInput].forEach(el => {
+                if (el) {
+                    el.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/40');
+                    setTimeout(() => el.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/40'), 3500);
+                }
+            });
+
+            // Passwords are not mandatory for Google OAuth
+            if (pwdInput) {
+                pwdInput.required = false;
+                pwdInput.placeholder = "(Optional) Set local password or click below";
+            }
+            if (confirmInput) {
+                confirmInput.required = false;
+                confirmInput.placeholder = "(Optional) Confirm local password";
+            }
+
+            // Show auto-fill banner
+            const banner = document.getElementById('google-autofill-banner');
+            const bannerEmail = document.getElementById('google-autofill-email');
+            if (banner) {
+                if (bannerEmail) bannerEmail.innerText = email;
+                banner.classList.remove('hidden');
+            }
+
+            // Update submit button
+            const submitBtn = document.getElementById('btn-signup-submit');
+            const submitBtnText = document.getElementById('btn-signup-submit-text');
+            if (submitBtnText) {
+                submitBtnText.innerHTML = `Complete Sign Up as ${firstName || 'User'} &rarr;`;
+            }
+            if (submitBtn) {
+                submitBtn.classList.remove('bg-[#1a1f2e]');
+                submitBtn.classList.add('bg-emerald-700', 'hover:bg-emerald-800');
+            }
+
+            window._pendingGoogleUser = {
+                user: user,
+                firstName: firstName,
+                lastName: lastName,
+                email: email
+            };
+
+            // Also configure in-memory data
+            App.setCloudData({
+                firstName: firstName,
+                lastName: lastName,
+                email: email
+            });
+
+            if (typeof window.showToast === 'function') {
+                window.showToast('Auto-filled from Google: ' + email, 'info');
+            }
+        }).catch((error) => {
+            window._isSigningUpWithGoogle = false;
+            if (error.code !== 'auth/popup-closed-by-user') {
+                alert("Google Sign Up error: " + error.message);
+            }
+        });
+    };
+
     window.signupWithEmail = function(e) {
       if(e) e.preventDefault();
       const fname = document.getElementById('signup-fname').value.trim();
@@ -7268,6 +7412,34 @@
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
       
+      // If user selected Google on the signup page
+      if (window._pendingGoogleUser && window._pendingGoogleUser.user) {
+          const gUser = window._pendingGoogleUser.user;
+          const finalFname = fname || window._pendingGoogleUser.firstName || "User";
+          const finalLname = lname || window._pendingGoogleUser.lastName || "";
+
+          window._pendingSignupName = { firstName: finalFname, lastName: finalLname };
+          window._isSigningUpWithGoogle = false;
+
+          // If the user optionally provided a password, link email/password credentials
+          if (password && password === confirm && password.length >= 6) {
+              try {
+                  const credential = firebase.auth.EmailAuthProvider.credential(gUser.email, password);
+                  gUser.linkWithCredential(credential).catch(console.warn);
+              } catch(err) {}
+          }
+
+          // Save profile to users collection and proceed
+          db.collection("users").doc(gUser.uid).set({
+              firstName: finalFname,
+              lastName: finalLname,
+              email: gUser.email
+          }, { merge: true }).finally(() => {
+              completeUserEntry(gUser, finalFname, finalLname);
+          });
+          return;
+      }
+
       if (!email || !password || !fname || !lname) {
           alert("Please fill in all fields.");
           return;
@@ -7327,7 +7499,10 @@
     };
 
     window.loginWithGoogle = function() {
+        window._isSigningUpWithGoogle = false;
+        window._pendingGoogleUser = null;
         const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
         auth.signInWithPopup(provider).catch((error) => {
             alert("Google login error: " + error.message);
         });
@@ -7355,6 +7530,11 @@
       
       if (user) {
         window.currentUser = user; // expose globally
+
+        // If the user selected Google on the signup page, hold transition so they see the auto-filled fields!
+        if (window._isSigningUpWithGoogle) {
+            return;
+        }
         if (loginScreen && appShell) {
           
           if (loginScreen.querySelector('h1')) {
