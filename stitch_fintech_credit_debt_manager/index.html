@@ -718,7 +718,7 @@
       <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
     </div>
     <div class="relative flex items-center">
-    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password" placeholder="Create strong password" oninput="if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-password" required="" type="password" placeholder="Create strong password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
     <button aria-label="Toggle password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
                     const pwd = document.getElementById('signup-password');
                     const eyeOpen = document.getElementById('eyeIconOpen2');
@@ -750,7 +750,7 @@
       <span class="text-[10px] font-semibold text-rose-600 uppercase tracking-wider">Required</span>
     </div>
     <div class="relative flex items-center">
-    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password" placeholder="Confirm your password" oninput="if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
+    <input autocomplete="new-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="signup-confirm" required="" type="password" placeholder="Confirm your password" onfocus="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" onclick="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden');" oninput="const b=document.getElementById('pwd-requirements-box'); if(b) b.classList.remove('hidden'); if(typeof updatePasswordRequirementsUI==='function')updatePasswordRequirementsUI()"/>
     <button aria-label="Toggle confirm password visibility" class="absolute right-3 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" onclick="
                     const cpwd = document.getElementById('signup-confirm');
                     const eyeOpen = document.getElementById('eyeIconOpenConfirm');
@@ -777,13 +777,10 @@
     </div>
 
     <!-- Mainframe / Enterprise Password Requirements Checklist -->
-    <div id="pwd-requirements-box" class="p-3 bg-slate-50 border border-slate-200/90 rounded-xl text-[11px] text-slate-600 transition-all">
-      <div class="flex items-center justify-between mb-2">
-        <span class="font-semibold text-slate-700 tracking-tight flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[15px] text-slate-500">lock</span>
-          Standard Password Requirements
-        </span>
-        <span id="pwd-overall-badge" class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">Required</span>
+    <div id="pwd-requirements-box" class="hidden p-3 bg-slate-50 border border-slate-200/90 rounded-xl text-[11px] text-slate-600 transition-all">
+      <div class="flex items-center gap-1.5 mb-2">
+        <span class="material-symbols-outlined text-[15px] text-slate-500">lock</span>
+        <span class="font-semibold text-slate-700 tracking-tight">Standard Password Requirements</span>
       </div>
       <div class="grid grid-cols-2 gap-x-2 gap-y-1.5">
         <div id="pwd-rule-len" class="flex items-center gap-1.5 text-slate-500 transition-colors">
@@ -7332,6 +7329,8 @@
         if (target === 'signup') {
             loginView.classList.add('hidden');
             signupView.classList.remove('hidden');
+            const box = document.getElementById('pwd-requirements-box');
+            if (box) box.classList.add('hidden');
             if (typeof updatePasswordRequirementsUI === 'function') {
                 updatePasswordRequirementsUI();
             }
@@ -7393,30 +7392,14 @@
         updateItem('pwd-rule-special', res.special);
         updateItem('pwd-rule-match', res.match);
 
-        const badge = document.getElementById('pwd-overall-badge');
         const box = document.getElementById('pwd-requirements-box');
-        if (badge) {
+        if (box) {
             if (res.isValid) {
-                badge.innerText = 'Compliant';
-                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800';
-                if (box) {
-                    box.classList.remove('bg-slate-50', 'border-slate-200/90');
-                    box.classList.add('bg-emerald-50/50', 'border-emerald-300');
-                }
-            } else if (pwd.length > 0) {
-                badge.innerText = 'Incomplete';
-                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800';
-                if (box) {
-                    box.classList.remove('bg-emerald-50/50', 'border-emerald-300');
-                    box.classList.add('bg-slate-50', 'border-slate-200/90');
-                }
+                box.classList.remove('bg-slate-50', 'border-slate-200/90');
+                box.classList.add('bg-emerald-50/50', 'border-emerald-300');
             } else {
-                badge.innerText = 'Required';
-                badge.className = 'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700';
-                if (box) {
-                    box.classList.remove('bg-emerald-50/50', 'border-emerald-300');
-                    box.classList.add('bg-slate-50', 'border-slate-200/90');
-                }
+                box.classList.remove('bg-emerald-50/50', 'border-emerald-300');
+                box.classList.add('bg-slate-50', 'border-slate-200/90');
             }
         }
     };
