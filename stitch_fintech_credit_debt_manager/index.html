@@ -576,7 +576,7 @@
     <div>
     <div class="flex items-center justify-between mb-1.5">
     <label class="block text-xs text-slate-600 font-medium" for="password">Password</label>
-    <a class="text-[11px] text-slate-400 hover:text-slate-600 transition-colors" href="#">Forgot?</a>
+    <a class="cursor-pointer text-[11px] text-slate-400 hover:text-emerald-700 transition-colors" onclick="toggleAuthView('forgot')">Forgot Password?</a>
     </div>
     <div class="relative flex items-center">
     <input autocomplete="current-password" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="password" placeholder="Enter your password" required="" type="password" value=""/>
@@ -614,6 +614,75 @@
     <p class="text-xs text-slate-500 font-medium">
               Don't have an account? 
               <a class="cursor-pointer font-semibold text-slate-900 hover:text-emerald-700 transition-colors" onclick="toggleAuthView('signup')">Sign up</a>
+    </p>
+    </div>
+    </div>
+    <!-- Bottom Illustration Section (Dissolves seamlessly into white top) -->
+    <div class="absolute inset-x-0 bottom-0 w-full h-[250px] overflow-hidden select-none pointer-events-none">
+    <!-- Top Seamless Gradient Fade (dissolves into pure white card background above) -->
+    <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/80 to-transparent z-10"></div>
+    <!-- Ambient Floating Illustration Container -->
+    <div class="w-full h-full animate-ambient-breathe origin-bottom">
+    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
+    </div>
+    <!-- Subtle Vignette / Edge Softening -->
+    <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-emerald-950/5 to-transparent"></div>
+    </div>
+    </div>
+    </main>
+  </div>
+  
+  <div id="view-forgot" class="hidden w-full min-h-[100dvh] flex flex-col relative bg-white">
+    <!-- Main Content Wrapper -->
+    <main class="w-full flex flex-col flex-1 relative overflow-hidden">
+    <!-- Top Area: Main Content -->
+    <div class="relative z-10 flex flex-col flex-1">
+    <!-- Header & Branding -->
+    <div class="pt-7 pb-4 px-6 text-center">
+    <!-- Brand Logo -->
+    <div class="inline-flex items-center justify-center gap-2 mb-4">
+    <div class="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center text-white shadow-xs">
+    <span class="material-symbols-outlined text-[17px]">eco</span>
+    </div>
+    <span class="text-sm font-semibold tracking-tight text-slate-800 font-sans">Serendib</span>
+    </div>
+    <!-- Editorial Serif Title matching reference -->
+    <h1 class="font-serif text-[28px] leading-tight text-slate-900 font-normal tracking-tight">Reset your password</h1>
+    <p class="text-xs text-slate-500 mt-1.5 font-normal tracking-normal max-w-[280px] mx-auto">Enter your registered email address to receive password reset instructions</p>
+    </div>
+
+    <!-- Input Form -->
+    <form class="px-6 flex flex-col gap-3.5" onsubmit="event.preventDefault(); sendPasswordReset(event);">
+    <!-- Email Field -->
+    <div>
+    <label class="block text-xs text-slate-600 mb-1.5 font-medium" for="forgot-email">Email address</label>
+    <input autocomplete="email" class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all shadow-2xs placeholder:text-slate-400" id="forgot-email" placeholder="Enter your email" required="" type="email" value=""/>
+    </div>
+    <!-- Send Reset Email Button (Black Charcoal / Reference Style) -->
+    <button id="btn-forgot-submit" class="w-full mt-2 py-3 bg-[#1a1f2e] hover:bg-slate-800 text-white font-medium rounded-xl active:scale-[0.98] transition-all text-sm shadow-xs flex items-center justify-center cursor-pointer" type="submit">
+    <span id="btn-forgot-submit-text">Send Reset Email</span>
+    </button>
+    </form>
+
+    <!-- Confirmation / Success Card -->
+    <div id="forgot-success-card" class="hidden mx-6 mt-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200/90 flex flex-col gap-1.5 text-xs text-emerald-950 animate-fade-in-up">
+      <div class="flex items-center gap-2 font-semibold text-emerald-800 text-sm">
+        <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">mark_email_read</span>
+        <span>Confirmation Email Sent</span>
+      </div>
+      <p class="text-slate-600 text-[11px] leading-relaxed">
+        We sent a password reset link to <strong id="forgot-sent-email" class="text-emerald-800 font-semibold"></strong>. Check your inbox and spam folder.
+      </p>
+      <button type="button" onclick="sendPasswordReset()" id="btn-forgot-resend" class="text-left text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 cursor-pointer underline mt-0.5">
+        Didn't receive it? Resend email
+      </button>
+    </div>
+
+    <!-- Routing Footer -->
+    <div class="mt-4 text-center">
+    <p class="text-xs text-slate-500 font-medium">
+              Remember your password? 
+              <a class="cursor-pointer font-semibold text-slate-900 hover:text-emerald-700 transition-colors" onclick="toggleAuthView('login')">Log in</a>
     </p>
     </div>
     </div>
@@ -7314,10 +7383,12 @@
     window.toggleAuthView = function(target) {
         const loginView = document.getElementById('screen-login');
         const signupView = document.getElementById('view-signup');
+        const forgotView = document.getElementById('view-forgot');
         
         if (target === 'signup') {
-            loginView.classList.add('hidden');
-            signupView.classList.remove('hidden');
+            if (loginView) loginView.classList.add('hidden');
+            if (forgotView) forgotView.classList.add('hidden');
+            if (signupView) signupView.classList.remove('hidden');
             const box = document.getElementById('pwd-requirements-box');
             if (box) box.classList.add('hidden');
             const pTag = document.getElementById('pwd-required-tag');
@@ -7331,10 +7402,76 @@
             if (typeof updatePasswordRequirementsUI === 'function') {
                 updatePasswordRequirementsUI();
             }
+        } else if (target === 'forgot') {
+            if (loginView) loginView.classList.add('hidden');
+            if (signupView) signupView.classList.add('hidden');
+            if (forgotView) {
+                forgotView.classList.remove('hidden');
+                // Pre-fill email from login input if already entered
+                const loginEmail = document.getElementById('email');
+                const forgotEmail = document.getElementById('forgot-email');
+                if (loginEmail && forgotEmail && loginEmail.value.trim()) {
+                    forgotEmail.value = loginEmail.value.trim();
+                }
+                const successCard = document.getElementById('forgot-success-card');
+                if (successCard) successCard.classList.add('hidden');
+                const submitBtn = document.getElementById('btn-forgot-submit');
+                const submitBtnText = document.getElementById('btn-forgot-submit-text');
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitBtnText) submitBtnText.innerText = "Send Reset Email";
+                if (forgotEmail) forgotEmail.focus();
+            }
         } else {
-            signupView.classList.add('hidden');
-            loginView.classList.remove('hidden');
+            // target === 'login'
+            if (signupView) signupView.classList.add('hidden');
+            if (forgotView) forgotView.classList.add('hidden');
+            if (loginView) loginView.classList.remove('hidden');
         }
+    };
+
+    window.sendPasswordReset = function(e) {
+        if (e) e.preventDefault();
+        const emailInput = document.getElementById('forgot-email');
+        const email = (emailInput ? emailInput.value : "").trim();
+
+        if (!email) {
+            alert("Please enter your email address.");
+            if (emailInput) emailInput.focus();
+            return;
+        }
+
+        const submitBtn = document.getElementById('btn-forgot-submit');
+        const submitText = document.getElementById('btn-forgot-submit-text');
+        if (submitBtn) submitBtn.disabled = true;
+        if (submitText) submitText.innerText = "Sending confirmation email...";
+
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                const successCard = document.getElementById('forgot-success-card');
+                const sentEmail = document.getElementById('forgot-sent-email');
+                if (sentEmail) sentEmail.innerText = email;
+                if (successCard) successCard.classList.remove('hidden');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitText) submitText.innerText = "Resend Reset Email";
+                }
+                if (typeof window.showToast === 'function') {
+                    window.showToast("Confirmation email sent to " + email, "info");
+                }
+            })
+            .catch((error) => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitText) submitText.innerText = "Send Reset Email";
+                if (error.code === 'auth/user-not-found') {
+                    alert("No account found with this email. Please check your spelling or sign up.");
+                } else if (error.code === 'auth/invalid-email') {
+                    alert("Please enter a valid email address.");
+                } else if (error.code === 'auth/too-many-requests') {
+                    alert("Too many attempts. Please wait a few minutes before trying again.");
+                } else {
+                    alert("Could not send password reset email: " + error.message);
+                }
+            });
     };
 
     /* ── Mainframe / Enterprise Password Rules Validator ── */
@@ -7404,6 +7541,7 @@
     function completeUserEntry(user, fname, lname) {
         var loginScreen = document.getElementById("screen-login");
         var signupScreen = document.getElementById("view-signup");
+        var forgotScreen = document.getElementById("view-forgot");
         var appShell = document.getElementById("app-shell");
         var globalNav = document.getElementById("global-nav");
 
@@ -7419,6 +7557,7 @@
 
         if (loginScreen) loginScreen.classList.add("hidden");
         if (signupScreen) signupScreen.classList.add("hidden");
+        if (forgotScreen) forgotScreen.classList.add("hidden");
         if (appShell) {
             appShell.classList.remove("hidden");
             appShell.classList.add("animate-fade-in-up");
@@ -7713,6 +7852,7 @@
     auth.onAuthStateChanged(async (user) => {
       var loginScreen = document.getElementById("screen-login");
       var signupScreen = document.getElementById("view-signup");
+      var forgotScreen = document.getElementById("view-forgot");
       var appShell = document.getElementById("app-shell");
       var globalNav = document.getElementById("global-nav");
       
@@ -7843,6 +7983,7 @@
           
           loginScreen.classList.add("hidden");
           if (signupScreen) signupScreen.classList.add("hidden");
+          if (forgotScreen) forgotScreen.classList.add("hidden");
           appShell.classList.remove("hidden");
           appShell.classList.add("animate-fade-in-up");
           if (globalNav) globalNav.classList.remove("hidden");
@@ -7874,6 +8015,7 @@
           appShell.classList.remove("animate-fade-in-up");
           if (globalNav) globalNav.classList.add("hidden");
           if (signupScreen) signupScreen.classList.add("hidden");
+          if (forgotScreen) forgotScreen.classList.add("hidden");
           loginScreen.classList.remove("hidden");
         }
         
@@ -7899,6 +8041,12 @@
         if (pIn) pIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
         var cIn = document.getElementById('signup-confirm');
         if (cIn) cIn.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+
+        // Clear forgot password inputs
+        var forgotEmail = document.getElementById('forgot-email');
+        if (forgotEmail) forgotEmail.value = '';
+        var forgotCard = document.getElementById('forgot-success-card');
+        if (forgotCard) forgotCard.classList.add('hidden');
       }
     });
   </script>
