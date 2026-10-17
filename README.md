@@ -131,49 +131,14 @@ Credit card debt often compounds quickly due to complex interest rate calculatio
 
 ## 📂 Repository Structure
 
-```text
-Credit_card_debt_tracker/
-│
-├── 🚀 app/                       # Production Web Application
-│   ├── index.html                # Complete Single Page Application (UI + Engine)
-│   ├── serve.py                  # Lightweight local Python HTTP server
-│   ├── firebase.json             # Firebase Hosting deployment config
-│   ├── .firebaserc               # Firebase project association
-│   └── .gitignore                # Application-level ignore rules
-│
-├── 🎨 prototypes/                # Modular UI Screen Prototypes & Mockups
-│   ├── 0%_surcharge/             # Surcharge exposer screen mockup
-│   ├── card_detail_payoff_simulator/
-│   ├── card_overview/            # Card detail inspection view
-│   ├── cash_advance/             # Cash advance calculator mockup
-│   ├── credit_cards_list_starling_style/
-│   ├── edit_card_details/        # Card editor modal component
-│   ├── home_page/                # Home dashboard mockup
-│   ├── kebab_menu/ & kebab2/     # Overflow options menu prototypes
-│   ├── login_page/               # Login screen prototype
-│   ├── markassetteled/           # Settled card indicator prototype
-│   ├── offers_page/              # Deals and promotions directory
-│   ├── sandwich_menu/            # Global navigation drawer prototype
-│   ├── serendib_neo_fintech/     # Theme & design tokens
-│   ├── signup_page/              # Account registration mockup
-│   ├── simulators1/              # Repayment engine prototypes
-│   ├── spaces_page/              # Category spaces layout
-│   ├── update_billing_cycle/     # Cycle date editor modal
-│   └── user_account/             # User profile settings view
-│
-├── 📄 docs/                      # Reference Specifications, Rates & Guides
-│   ├── Sri Lanka Credit Card App.pdf
-│   ├── Sri Lanka Credit Card App.txt
-│   ├── sri_lanka_credit_card_cash_advance_fees.xlsx
-│   └── Web design/               # Design inspiration and UI asset guidelines
-│
-├── 📦 archives/                  # Preserved .zip Archives & Export Bundles
-│   └── (All original component .zip files)
-│
-├── .gitignore                    # Root repository ignore rules
-├── LICENSE                       # MIT License
-└── README.md                     # Comprehensive project documentation
-```
+- **`stitch_fintech_credit_debt_manager/`**: The primary production web application.
+  - `index.html`: The core Single Page Application containing all views, components, and logic.
+  - `serve.py`: Lightweight Python local HTTP server script.
+  - `firebase.json` & `.firebaserc`: Firebase hosting and project deployment configuration.
+- **UI Prototypes & Modular Views:**
+  - `0%_surcharge/`, `card_overview/`, `cash_advance/`, `home_page/`, `login_page/`, `signup_page/`, `simulators1/`, `spaces_page/`, `offers_page/`, `update_billing_cycle/`, `user_account/`, etc.
+- **Documentation & Reference Files:**
+  - `Sri Lanka Credit Card App.pdf`, `Sri Lanka Credit Card App.txt`, `sri_lanka_credit_card_cash_advance_fees.xlsx`, `Web design/`.
 
 ---
 
@@ -204,7 +169,7 @@ Credit_card_debt_tracker/
 
 2. **Run the local development server:**
    ```bash
-   python app/serve.py
+   python stitch_fintech_credit_debt_manager/serve.py
    ```
 
 3. **Open the application:**
@@ -213,7 +178,7 @@ Credit_card_debt_tracker/
    http://localhost:8080
    ```
 
-*(Alternative: You can simply navigate into the `app/` folder and double-click `index.html` to open it directly in your browser without any server).*
+*(Alternative: You can simply navigate into `stitch_fintech_credit_debt_manager` and double-click `index.html` to open it directly in your browser without any server).*
 
 ---
 
@@ -226,9 +191,9 @@ The project includes pre-configured Firebase Hosting settings. To deploy:
    npm install -g firebase-tools
    ```
 
-2. Navigate to the `app/` directory and log in:
+2. Navigate to `stitch_fintech_credit_debt_manager` and log in:
    ```bash
-   cd app
+   cd stitch_fintech_credit_debt_manager
    firebase login
    ```
 
