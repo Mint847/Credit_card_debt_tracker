@@ -1765,8 +1765,8 @@
           <h1 class="text-[18px] font-semibold text-on-surface tracking-tight leading-none">Profile &amp; Settings</h1>
           <p class="text-[11px] font-semibold text-secondary mt-0.5">Financial Health &amp; Regulatory Rules</p>
         </div>
-        <button
-          class="w-10 h-10 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary active:scale-95 transition-all">
+        <button type="button" onclick="startVisualGuideTour(true)" aria-label="Replay Visual Guide" title="Replay Visual Guide"
+          class="w-10 h-10 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary active:scale-95 transition-all cursor-pointer">
           <span class="material-symbols-outlined text-[20px]" data-icon="help_outline">help_outline</span>
         </button>
       </section>
@@ -1991,6 +1991,23 @@
               </button>
             </div>
           </div>
+        </section>
+
+        <!-- Section: Guided Tour & Support -->
+        <section class="space-y-2 mt-4">
+          <button type="button" onclick="startVisualGuideTour(true)"
+            class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container active:scale-[0.98] transition-all app-card-shadow text-left cursor-pointer group">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-700 group-hover:scale-105 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">explore</span>
+              </div>
+              <div>
+                <span class="text-[13px] font-semibold text-on-surface block">Replay Visual App Guide</span>
+                <span class="text-[11px] text-secondary block mt-0.5">Explore key features, menus & calculation metrics</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-secondary text-[18px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+          </button>
         </section>
 
         <!-- Section 5: Account Actions -->
@@ -2667,6 +2684,73 @@
       <div class="home-bar"></div>
     </div>
   </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       INTERACTIVE VISUAL GUIDE TOUR OVERLAY
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="app-tour-overlay" class="hidden fixed inset-0 z-[120] flex flex-col justify-end sm:justify-center items-center p-4 bg-slate-950/50 backdrop-blur-[2px] transition-opacity duration-300">
+    <div id="app-tour-card" class="w-full max-w-md bg-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200/90 animate-fade-in-up relative flex flex-col gap-3.5" style="box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.4);">
+      
+      <!-- Top Header: Step Indicator & Skip Button -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span id="tour-badge-step" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            Step 1 of 7
+          </span>
+          <span id="tour-badge-screen" class="text-xs text-slate-500 font-medium truncate max-w-[180px]">Home Dashboard</span>
+        </div>
+        <button type="button" onclick="skipVisualGuideTour()" class="text-xs text-slate-400 hover:text-slate-700 font-medium cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-slate-100 flex items-center gap-1">
+          <span>Skip Tour</span>
+          <span class="material-symbols-outlined text-[14px]">close</span>
+        </button>
+      </div>
+
+      <!-- Title & Explanation -->
+      <div>
+        <h3 id="tour-title" class="font-serif text-[20px] font-semibold text-slate-900 tracking-tight leading-snug">
+          Welcome to Serendib
+        </h3>
+        <p id="tour-description" class="text-xs text-slate-600 mt-1 leading-relaxed">
+          Your real-time command center for credit card debt elimination, interest tracking, and financial freedom.
+        </p>
+      </div>
+
+      <!-- Important Calculation Metrics Highlight Box -->
+      <div id="tour-metrics-box" class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3 flex flex-col gap-1.5 text-xs text-slate-700">
+        <div class="flex items-center gap-1.5 font-semibold text-emerald-900 text-xs">
+          <span class="material-symbols-outlined text-[17px] text-emerald-700">calculate</span>
+          <span id="tour-metrics-label">Important Calculation Metric</span>
+        </div>
+        <ul id="tour-metrics-list" class="space-y-1 text-[11px] text-slate-600 pl-0.5">
+          <!-- Injected dynamically per step -->
+        </ul>
+        <p id="tour-metrics-tip" class="text-[10px] text-emerald-800/90 italic font-medium mt-1 border-t border-emerald-200/60 pt-1 leading-normal">
+          <!-- Dynamic helpful tip -->
+        </p>
+      </div>
+
+      <!-- Step Progress Dots & Navigation Actions -->
+      <div class="flex items-center justify-between pt-1">
+        <!-- Back Button -->
+        <button id="btn-tour-back" type="button" onclick="prevVisualGuideStep()" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer flex items-center gap-1">
+          <span class="material-symbols-outlined text-[15px]">arrow_back</span>
+          <span>Back</span>
+        </button>
+
+        <!-- Step Dots Indicator -->
+        <div id="tour-dots-container" class="flex items-center gap-1.5">
+          <!-- 7 indicator dots -->
+        </div>
+
+        <!-- Next / Finish Button -->
+        <button id="btn-tour-next" type="button" onclick="nextVisualGuideStep()" class="px-4 py-2 text-xs font-semibold bg-[#1a1f2e] hover:bg-slate-800 text-white rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5">
+          <span id="btn-tour-next-text">Next Step</span>
+          <span id="btn-tour-next-icon" class="material-symbols-outlined text-[15px]">arrow_forward</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Info Bottom Sheet (shared, populated on demand) -->
   <div id="info-sheet-overlay" role="dialog" aria-modal="true" aria-labelledby="info-sheet-title">
@@ -7538,6 +7622,285 @@
         }
     };
 
+    /* ── Interactive Visual Guide Walkthrough Engine ── */
+    window.visualGuideSteps = [
+      {
+        step: 1,
+        screenId: 'screen-home',
+        tabId: 'btn-nav-home',
+        badge: 'Home Dashboard',
+        title: 'Welcome to Serendib',
+        description: 'Your real-time command center for credit card debt elimination, interest tracking, and financial freedom in Sri Lanka.',
+        highlightId: null,
+        metricsLabel: 'Key Real-Time Overview Metrics',
+        metrics: [
+          '<strong>Total Outstanding Balance</strong>: Aggregate debt across all linked cards',
+          '<strong>Monthly Accruing Interest</strong>: Real-time cost of carrying balances under CBSL caps',
+          '<strong>Debt-Free Target Date</strong>: Dynamic countdown based on your payments and strategy'
+        ],
+        tip: '💡 Every metric recalculates automatically whenever you update your cards, income, or payment amounts.'
+      },
+      {
+        step: 2,
+        screenId: 'screen-profile',
+        tabId: null,
+        badge: 'Profile & Settings',
+        title: 'Income Engine & Strategy Selector',
+        description: 'This is where you set the foundation for all financial calculations and choose your payoff strategy in Serendib.',
+        highlightId: 'profile-income-input',
+        metricsLabel: 'Crucial Calculations Configured Here',
+        metrics: [
+          '<strong>Monthly Net Take-Home Income</strong>: Essential for calculating your Debt-to-Income (DTI) health ratio and safe repayment capacity.',
+          '<strong>Debt Avalanche Method</strong>: Targets your highest APR card first to mathematically save the maximum interest.',
+          '<strong>Debt Snowball Method</strong>: Targets your lowest balance card first to build fast psychological wins and momentum.'
+        ],
+        tip: '💡 Enter your take-home pay in LKR and choose Avalanche or Snowball to customize how Serendib prioritizes your debts.'
+      },
+      {
+        step: 3,
+        screenId: 'screen-list',
+        tabId: 'btn-nav-cards',
+        badge: 'Cards Inventory',
+        title: 'Manage Cards & Debt Details',
+        description: 'Add and track all your credit cards in one central hub to monitor balances, limits, and interest rates.',
+        highlightId: 'btn-add-card',
+        metricsLabel: 'Important Metrics Required Per Card',
+        metrics: [
+          '<strong>Current Balance</strong>: The exact amount owed on the card today',
+          '<strong>APR % (Annual Percentage Rate)</strong>: Drives daily compounding interest calculations',
+          '<strong>Minimum Monthly Payment</strong>: Statutory floor (CBSL mandated 4% min) to avoid bank late penalties',
+          '<strong>Credit Limit</strong>: Determines your credit utilization ratio'
+        ],
+        tip: '💡 Tap "Link new credit card" anytime to input a card balance and its APR.'
+      },
+      {
+        step: 4,
+        screenId: 'screen-simulators',
+        tabId: 'btn-nav-simulators',
+        badge: 'Payoff Optimizer',
+        title: 'Simulators & Debt Strategies',
+        description: 'Test different monthly acceleration budgets and see the exact month and year you will become 100% debt-free.',
+        highlightId: 'ps-slider',
+        metricsLabel: 'Optimization Metrics Simulated Here',
+        metrics: [
+          '<strong>Monthly Repayment Slider</strong>: Simulate paying extra beyond minimum payments',
+          '<strong>Total Interest Saved</strong>: Difference in interest paid between minimums vs acceleration',
+          '<strong>Cash Advance Cost Calculator</strong>: Shows the immediate 4% fee and instant 28% daily compounding interest on ATM withdrawals'
+        ],
+        tip: '💡 Adding even LKR 5,000 extra per month can wipe out months of high-interest debt!'
+      },
+      {
+        step: 5,
+        screenId: 'screen-spaces',
+        tabId: 'btn-nav-spaces',
+        badge: 'Financial Buffers',
+        title: 'Spaces & Sinking Funds',
+        description: 'Protect your debt payoff journey by isolating dedicated reserve funds for emergencies, bills, and lifestyle goals.',
+        highlightId: 'btn-create-space-top',
+        metricsLabel: 'Safety Metrics Tracked in Spaces',
+        metrics: [
+          '<strong>Emergency Buffer Reserve</strong>: Prevents unexpected medical or repair costs from going onto credit cards',
+          '<strong>Sinking Fund Targets</strong>: Ring-fences money for fixed upcoming expenses so debt progress is never reversed'
+        ],
+        tip: '💡 Having a small emergency buffer is the #1 secret to staying out of debt permanently.'
+      },
+      {
+        step: 6,
+        screenId: 'view-offers',
+        tabId: 'btn-nav-offers',
+        badge: 'Consolidation Deals',
+        title: '0% APR & Balance Transfers',
+        description: 'Explore verified Sri Lankan credit card balance transfer opportunities and debt consolidation deals.',
+        highlightId: null,
+        metricsLabel: 'Transfer Savings Metrics',
+        metrics: [
+          '<strong>0% Introductory Promotional Rates</strong>: 0% APR for 6 to 12 months',
+          '<strong>Interest Elimination Math</strong>: Shifts 28% APR debt to 0%, ensuring 100% of your payment goes towards reducing principal'
+        ],
+        tip: '💡 A 0% balance transfer can freeze interest while you aggressively eliminate the principal.'
+      },
+      {
+        step: 7,
+        screenId: 'screen-home',
+        tabId: 'btn-nav-home',
+        badge: 'Ready to Start',
+        title: 'You Are All Set!',
+        description: 'You now know how every menu and metric works together to eliminate your debt faster.',
+        highlightId: null,
+        metricsLabel: 'Your 3-Step Action Plan',
+        metrics: [
+          '1. <strong>Set your Net Monthly Income</strong> in Profile & Settings',
+          '2. <strong>Add your credit cards</strong> with their balances and APRs in Cards',
+          '3. <strong>Pick your payoff strategy</strong> and simulate acceleration in Simulators'
+        ],
+        tip: '💡 You can replay this visual guide anytime from Profile & Settings or the Help icon.'
+      }
+    ];
+
+    window._currentTourStepIndex = 0;
+    window._tourHighlightedEl = null;
+
+    window.startVisualGuideTour = function(isManualReplay) {
+      window._currentTourStepIndex = 0;
+      const overlay = document.getElementById('app-tour-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+      window.renderVisualGuideStep();
+    };
+
+    window.renderVisualGuideStep = function() {
+      if (!window.visualGuideSteps || window.visualGuideSteps.length === 0) return;
+      const step = window.visualGuideSteps[window._currentTourStepIndex];
+      if (!step) return;
+
+      // Clear previous element highlight
+      if (window._tourHighlightedEl) {
+        window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
+        window._tourHighlightedEl = null;
+      }
+
+      // 1. Physically navigate to the target screen & tab
+      if (typeof navigateTo === 'function') {
+        navigateTo(step.screenId, step.tabId);
+      }
+
+      // If on profile screen, ensure canvas is at top
+      if (step.screenId === 'screen-profile') {
+        const canvas = document.querySelector('#screen-profile .overflow-y-auto');
+        if (canvas) canvas.scrollTop = 0;
+      }
+
+      // 2. Highlight target element if specified
+      if (step.highlightId) {
+        setTimeout(() => {
+          const el = document.getElementById(step.highlightId);
+          if (el) {
+            el.classList.add('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
+            window._tourHighlightedEl = el;
+            try {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch(e) {}
+          }
+        }, 120);
+      }
+
+      // 3. Update Text Content
+      const stepBadge = document.getElementById('tour-badge-step');
+      if (stepBadge) stepBadge.innerText = `Step ${step.step} of ${window.visualGuideSteps.length}`;
+
+      const screenBadge = document.getElementById('tour-badge-screen');
+      if (screenBadge) screenBadge.innerText = step.badge;
+
+      const titleEl = document.getElementById('tour-title');
+      if (titleEl) titleEl.innerText = step.title;
+
+      const descEl = document.getElementById('tour-description');
+      if (descEl) descEl.innerText = step.description;
+
+      const metricsLabelEl = document.getElementById('tour-metrics-label');
+      if (metricsLabelEl) metricsLabelEl.innerText = step.metricsLabel;
+
+      const metricsListEl = document.getElementById('tour-metrics-list');
+      if (metricsListEl) {
+        metricsListEl.innerHTML = step.metrics.map(m => `<li class="flex items-start gap-1.5 leading-snug"><span class="material-symbols-outlined text-[13px] text-emerald-600 shrink-0 mt-0.5">check_circle</span><span>${m}</span></li>`).join('');
+      }
+
+      const tipEl = document.getElementById('tour-metrics-tip');
+      if (tipEl) tipEl.innerText = step.tip;
+
+      // 4. Update Navigation Controls
+      const backBtn = document.getElementById('btn-tour-back');
+      if (backBtn) {
+        if (window._currentTourStepIndex === 0) {
+          backBtn.classList.add('invisible');
+        } else {
+          backBtn.classList.remove('invisible');
+        }
+      }
+
+      const nextBtnText = document.getElementById('btn-tour-next-text');
+      const nextBtnIcon = document.getElementById('btn-tour-next-icon');
+      if (nextBtnText && nextBtnIcon) {
+        if (window._currentTourStepIndex === window.visualGuideSteps.length - 1) {
+          nextBtnText.innerText = 'Get Started';
+          nextBtnIcon.innerText = 'celebration';
+        } else {
+          nextBtnText.innerText = 'Next Step';
+          nextBtnIcon.innerText = 'arrow_forward';
+        }
+      }
+
+      // 5. Update Progress Dots
+      const dotsContainer = document.getElementById('tour-dots-container');
+      if (dotsContainer) {
+        dotsContainer.innerHTML = window.visualGuideSteps.map((_, i) => {
+          if (i === window._currentTourStepIndex) {
+            return '<div class="w-5 h-1.5 rounded-full bg-emerald-600 transition-all duration-300"></div>';
+          } else {
+            return '<div class="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all duration-300"></div>';
+          }
+        }).join('');
+      }
+    };
+
+    window.nextVisualGuideStep = function() {
+      if (window._currentTourStepIndex < window.visualGuideSteps.length - 1) {
+        window._currentTourStepIndex++;
+        window.renderVisualGuideStep();
+      } else {
+        window.completeVisualGuideTour(false);
+      }
+    };
+
+    window.prevVisualGuideStep = function() {
+      if (window._currentTourStepIndex > 0) {
+        window._currentTourStepIndex--;
+        window.renderVisualGuideStep();
+      }
+    };
+
+    window.skipVisualGuideTour = function() {
+      window.completeVisualGuideTour(true);
+    };
+
+    window.completeVisualGuideTour = function(isSkipped) {
+      // Clear element highlight
+      if (window._tourHighlightedEl) {
+        window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
+        window._tourHighlightedEl = null;
+      }
+
+      // Hide Tour Overlay
+      const overlay = document.getElementById('app-tour-overlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      // Return to home dashboard
+      if (typeof navigateTo === 'function') {
+        navigateTo('screen-home', 'btn-nav-home');
+      }
+
+      // Persist tour completion
+      if (window.currentUserData) window.currentUserData.hasCompletedTour = true;
+      if (window.currentUser && window.currentUser.email) {
+        localStorage.setItem('stitch_tour_completed_' + window.currentUser.email.toLowerCase().trim(), 'true');
+      }
+      if (window.currentUser && window.currentUser.uid && typeof db !== 'undefined') {
+        db.collection("users").doc(window.currentUser.uid).set({ hasCompletedTour: true }, { merge: true }).catch(console.warn);
+      }
+      if (typeof App !== 'undefined' && typeof App.saveUserData === 'function') {
+        App.saveUserData();
+      }
+
+      if (isSkipped) {
+        if (typeof window.showToast === 'function') {
+          window.showToast("Guide skipped. You can replay it anytime from Profile.", "info");
+        }
+      } else {
+        if (typeof window.showToast === 'function') {
+          window.showToast("You're all set! Welcome to Serendib.", "info");
+        }
+      }
+    };
+
     function completeUserEntry(user, fname, lname) {
         var loginScreen = document.getElementById("screen-login");
         var signupScreen = document.getElementById("view-signup");
@@ -7570,12 +7933,23 @@
         if (typeof navigateTo === 'function') {
             navigateTo('screen-home', 'btn-nav-home');
         }
+
+        // Trigger visual guide tour if first-time sign-up
+        if (window._isFirstTimeSignup) {
+            window._isFirstTimeSignup = false;
+            setTimeout(function() {
+                if (typeof window.startVisualGuideTour === 'function') {
+                    window.startVisualGuideTour();
+                }
+            }, 800);
+        }
     }
 
     window.signupWithGoogle = function() {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         window._isSigningUpWithGoogle = true;
+        window._isFirstTimeSignup = true;
 
         auth.signInWithPopup(provider).then((result) => {
             const user = result.user;
@@ -7777,6 +8151,7 @@
       }
 
       // Standard email/password signup
+      window._isFirstTimeSignup = true;
       window._pendingSignupName = { firstName: fname, lastName: lname };
       
       auth.createUserWithEmailAndPassword(email, password)
@@ -7995,6 +8370,19 @@
           if (typeof navigateTo === 'function') {
               navigateTo('screen-home', 'btn-nav-home');
           }
+
+          // Trigger visual guide walkthrough for first-time signups
+          var emailKey = (user.email || '').toLowerCase().trim();
+          var localTourDone = localStorage.getItem('stitch_tour_completed_' + emailKey) === 'true';
+          var cloudTourDone = cloudData && (cloudData.hasCompletedTour === true);
+          if (window._isFirstTimeSignup || (!localTourDone && !cloudTourDone && window._isFirstTimeSignup)) {
+              window._isFirstTimeSignup = false;
+              setTimeout(function() {
+                  if (typeof window.startVisualGuideTour === 'function') {
+                      window.startVisualGuideTour();
+                  }
+              }, 800);
+          }
         }
       } else {
         // ── SIGNED OUT ──
@@ -8008,6 +8396,14 @@
         }
         if (typeof window.renderDashboard === 'function') {
             window.renderDashboard();
+        }
+
+        // Close guide tour if active
+        var tourOverlay = document.getElementById('app-tour-overlay');
+        if (tourOverlay) tourOverlay.classList.add('hidden');
+        if (window._tourHighlightedEl) {
+            window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
+            window._tourHighlightedEl = null;
         }
 
         if (loginScreen && appShell) {
