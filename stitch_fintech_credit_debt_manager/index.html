@@ -473,6 +473,22 @@
       border-radius: 9999px;
       margin: 6px auto 0
     }
+
+    /* ── Interactive Visual Tour Styles ── */
+    #app-tour-card {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      opacity: 1 !important;
+    }
+
+    body.tour-active #screen-home,
+    body.tour-active #screen-list,
+    body.tour-active #screen-profile,
+    body.tour-active #screen-simulators,
+    body.tour-active #screen-spaces,
+    body.tour-active #screen-profile > div.flex-1 {
+      padding-bottom: 240px !important;
+    }
   </style>
 
   <!-- Firebase App (the core Firebase SDK) -->
@@ -2089,7 +2105,7 @@
         <!-- Input Fields -->
         <div class="flex flex-col gap-3.5">
           <!-- Input 1: Simulated Balance -->
-          <div class="bg-surface-container-low rounded-xl px-3 py-3 border border-outline-variant/30 relative">
+          <div id="sim-balance-section" class="bg-surface-container-low rounded-xl px-3 py-3 border border-outline-variant/30 relative">
             <div class="flex justify-between items-center mb-1">
               <span class="text-[11px] font-semibold text-secondary">Simulated Balance</span>
               <button id="btn-edit-balance" class="w-8 h-8 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 active:scale-90 transition-all cursor-pointer shrink-0">
@@ -2686,69 +2702,55 @@
   </nav>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       INTERACTIVE VISUAL GUIDE TOUR OVERLAY
+       INTERACTIVE VISUAL GUIDE TOUR (CRYSTAL-CLEAR, ZERO BLUR)
   ═══════════════════════════════════════════════════════════════ -->
-  <div id="app-tour-overlay" class="hidden fixed inset-0 z-[120] flex flex-col justify-end sm:justify-center items-center p-4 bg-slate-950/50 backdrop-blur-[2px] transition-opacity duration-300">
-    <div id="app-tour-card" class="w-full max-w-md bg-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200/90 animate-fade-in-up relative flex flex-col gap-3.5" style="box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.4);">
-      
-      <!-- Top Header: Step Indicator & Skip Button -->
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <div class="flex items-center gap-2">
-          <span id="tour-badge-step" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-            Step 1 of 7
-          </span>
-          <span id="tour-badge-screen" class="text-xs text-slate-500 font-medium truncate max-w-[180px]">Home Dashboard</span>
-        </div>
-        <button type="button" onclick="skipVisualGuideTour()" class="text-xs text-slate-400 hover:text-slate-700 font-medium cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-slate-100 flex items-center gap-1">
-          <span>Skip Tour</span>
-          <span class="material-symbols-outlined text-[14px]">close</span>
-        </button>
+  <!-- Animated Floating Pointer Badge (anchored above target element) -->
+  <div id="tour-target-pointer" class="hidden fixed z-[145] pointer-events-none" style="transition: top 0.35s cubic-bezier(.4,0,.2,1), left 0.35s cubic-bezier(.4,0,.2,1);">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div id="tour-pointer-badge" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:11px;font-weight:700;box-shadow:0 4px 16px rgba(16,185,129,0.45);white-space:nowrap;letter-spacing:0.01em;">
+        <span id="tour-pointer-icon" class="material-symbols-outlined" style="font-size:14px;">touch_app</span>
+        <span id="tour-pointer-text">Tap Here</span>
       </div>
+      <div style="width:2px;height:10px;background:linear-gradient(to bottom,#10b981,transparent);border-radius:2px;"></div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #10b981;"></div>
+    </div>
+  </div>
 
-      <!-- Title & Explanation -->
-      <div>
-        <h3 id="tour-title" class="font-serif text-[20px] font-semibold text-slate-900 tracking-tight leading-snug">
-          Welcome to Serendib
-        </h3>
-        <p id="tour-description" class="text-xs text-slate-600 mt-1 leading-relaxed">
-          Your real-time command center for credit card debt elimination, interest tracking, and financial freedom.
-        </p>
-      </div>
+  <!-- Main Coachmark Card (no dark overlay, crystal-clear app behind) -->
+  <div id="app-tour-overlay" class="hidden fixed z-[140] pointer-events-none" style="inset:0;">
+    <!-- Floating bottom coachmark card wrapper (pointer-events-none so touches around card pass through to scroll the page) -->
+    <div class="fixed bottom-[72px] inset-x-0 flex justify-center px-4 pointer-events-none" style="z-index:141;">
+      <div id="app-tour-card" class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-[0_8px_32px_rgba(15,23,42,0.18)] flex flex-col gap-2 pointer-events-auto" style="background:#ffffff !important;background-color:#ffffff !important;opacity:1 !important;padding:14px 16px 12px;touch-action:pan-y;">
 
-      <!-- Important Calculation Metrics Highlight Box -->
-      <div id="tour-metrics-box" class="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3 flex flex-col gap-1.5 text-xs text-slate-700">
-        <div class="flex items-center gap-1.5 font-semibold text-emerald-900 text-xs">
-          <span class="material-symbols-outlined text-[17px] text-emerald-700">calculate</span>
-          <span id="tour-metrics-label">Important Calculation Metric</span>
-        </div>
-        <ul id="tour-metrics-list" class="space-y-1 text-[11px] text-slate-600 pl-0.5">
-          <!-- Injected dynamically per step -->
-        </ul>
-        <p id="tour-metrics-tip" class="text-[10px] text-emerald-800/90 italic font-medium mt-1 border-t border-emerald-200/60 pt-1 leading-normal">
-          <!-- Dynamic helpful tip -->
-        </p>
-      </div>
-
-      <!-- Step Progress Dots & Navigation Actions -->
-      <div class="flex items-center justify-between pt-1">
-        <!-- Back Button -->
-        <button id="btn-tour-back" type="button" onclick="prevVisualGuideStep()" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer flex items-center gap-1">
-          <span class="material-symbols-outlined text-[15px]">arrow_back</span>
-          <span>Back</span>
-        </button>
-
-        <!-- Step Dots Indicator -->
-        <div id="tour-dots-container" class="flex items-center gap-1.5">
-          <!-- 7 indicator dots -->
+        <!-- Top Row: Step badge + Feature name + Skip -->
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="tour-badge-step" style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;letter-spacing:.04em;text-transform:uppercase;">1 of 6</span>
+            <span id="tour-title" style="font-size:13px;font-weight:700;color:#0f172a;">Link Your Credit Cards</span>
+          </div>
+          <button type="button" onclick="skipVisualGuideTour()" style="display:flex;align-items:center;gap:2px;font-size:11px;color:#94a3b8;font-weight:600;background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#475569';" onmouseout="this.style.background='none';this.style.color='#94a3b8';">
+            <span>Skip</span>
+            <span class="material-symbols-outlined" style="font-size:13px;">close</span>
+          </button>
         </div>
 
-        <!-- Next / Finish Button -->
-        <button id="btn-tour-next" type="button" onclick="nextVisualGuideStep()" class="px-4 py-2 text-xs font-semibold bg-[#1a1f2e] hover:bg-slate-800 text-white rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5">
-          <span id="btn-tour-next-text">Next Step</span>
-          <span id="btn-tour-next-icon" class="material-symbols-outlined text-[15px]">arrow_forward</span>
-        </button>
-      </div>
+        <!-- One-sentence crisp description -->
+        <p id="tour-description" style="font-size:12px;color:#475569;line-height:1.55;margin:0;">This is where you add your credit cards. Enter your balance, APR &amp; limit so Serendib can track your debt.</p>
 
+        <!-- Bottom Row: Back + Dots + Next -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
+          <button id="btn-tour-back" type="button" onclick="prevVisualGuideStep()" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#64748b;background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='none';">
+            <span class="material-symbols-outlined" style="font-size:14px;">arrow_back</span>
+            <span>Back</span>
+          </button>
+          <div id="tour-dots-container" style="display:flex;align-items:center;gap:5px;"></div>
+          <button id="btn-tour-next" type="button" onclick="nextVisualGuideStep()" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#fff;background:#1a1f2e;border:none;cursor:pointer;padding:6px 14px;border-radius:9px;box-shadow:0 2px 8px rgba(26,31,46,.18);transition:background .15s,transform .1s;" onmouseover="this.style.background='#2d3548';" onmouseout="this.style.background='#1a1f2e';" onmousedown="this.style.transform='scale(0.96)';" onmouseup="this.style.transform='scale(1)';">
+            <span id="btn-tour-next-text">Next</span>
+            <span id="btn-tour-next-icon" class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -2917,8 +2919,8 @@
         
         while (minBal > 0 && minMonths < 600) {
             let interest = minBal * monthlyRate;
-            // CBSL 4% rule with a 500 LKR hard floor
-            let payment = Math.max(minBal * 0.04, 500); 
+            // CBSL 4% rule with the app-wide hard floor
+            let payment = Math.max(minBal * MIN_PMT_PCT, MIN_PMT_FLOOR);
             
             if (minBal + interest < payment) payment = minBal + interest;
             
@@ -2929,7 +2931,9 @@
 
         // --- SCENARIO B: DYNAMIC FIXED PAYMENT (~12 months) ---
         const targetMonths = 12;
-        const rawFixedPayment = (monthlyRate * balance) / (1 - Math.pow(1 + monthlyRate, -targetMonths));
+        const rawFixedPayment = monthlyRate === 0
+            ? balance / targetMonths
+            : (monthlyRate * balance) / (1 - Math.pow(1 + monthlyRate, -targetMonths));
         const targetFixedPayment = Math.ceil(rawFixedPayment / 1000) * 1000;
         
         let fixedBal = balance;
@@ -2951,11 +2955,14 @@
     };
 
     // Fixed-payment amortisation: returns { months, totalInterest }
-    function calcPayoff(balance, payment) {
-      if (payment <= balance * MONTHLY_RATE) return { months: Infinity, totalInterest: Infinity };
+    function calcPayoff(balance, payment, apr) {
+      var rate = (apr !== undefined) ? (apr / 100 / 12) : MONTHLY_RATE;
+      if (payment <= 0) return { months: Infinity, totalInterest: Infinity };
+      if (rate === 0) return { months: Math.ceil(balance / payment), totalInterest: 0 };
+      if (payment <= balance * rate) return { months: Infinity, totalInterest: Infinity };
       var remaining = balance, months = 0, totalInterest = 0;
       while (remaining > 0.01 && months < 1200) {
-        var interest = remaining * MONTHLY_RATE;
+        var interest = remaining * rate;
         totalInterest += interest;
         if (remaining <= payment) { months++; break; }
         remaining -= (payment - interest);
@@ -2964,9 +2971,87 @@
       return { months: months, totalInterest: totalInterest };
     }
 
+    // Logged-in user's income wins over the browser-wide localStorage value
+    function getUserIncome() {
+      var incStr = (window.currentUserData && window.currentUserData.income !== undefined && window.currentUserData.income !== "")
+        ? window.currentUserData.income
+        : (localStorage.getItem('user_monthly_income') || "175000");
+      var inc = parseFloat(incStr);
+      if (isNaN(inc) || inc <= 0) inc = 175000;
+      return inc;
+    }
+
+    function getStrategy() {
+      return window.currentStrategy || localStorage.getItem("payoff_strategy") || "avalanche";
+    }
+
+    // Minimum payment, never more than what is owed
+    function minPaymentFor(c) {
+      return Math.min(c.balance, Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR));
+    }
+
+    // Card APR in %; 0 is a valid value, so never use `||` here
+    function cardApr(c) {
+      if (!c) return 28.0;
+      if (c.isZeroPercent) return 0;
+      var a = parseFloat(c.apr);
+      return isFinite(a) && a >= 0 ? a : 28.0;
+    }
+
+    // Clamp a day-of-month to the last day of the given month (e.g. 31 -> 30 in April)
+    function clampDay(year, month, day) {
+      var last = new Date(year, month + 1, 0).getDate();
+      return Math.min(day, last);
+    }
+
+    function isValidDay(d) {
+      var n = parseInt(d, 10);
+      return !isNaN(n) && n >= 1 && n <= 31;
+    }
+
+    // Custom targets (capped at balance) if any are set, otherwise 25% of income
+    function computeMonthlyBudget(cardList) {
+      var budget = 0;
+      var hasCustomTarget = false;
+      cardList.forEach(function (c) {
+        if (c.balance > 0) {
+          if (c.targetPayment) {
+            budget += Math.min(c.targetPayment, c.balance);
+            hasCustomTarget = true;
+          } else {
+            budget += minPaymentFor(c);
+          }
+        }
+      });
+      if (!hasCustomTarget) budget = getUserIncome() * 0.25;
+      return budget;
+    }
+
+    // Minimums on every card, then cascade surplus in priority order, each capped at its balance
+    function allocateMonthlyPayments(sortedActiveCards, budget) {
+      var alloc = {};
+      var remaining = budget;
+      sortedActiveCards.forEach(function (c) {
+        var minPmt = minPaymentFor(c);
+        alloc[c.id] = minPmt;
+        remaining -= minPmt;
+      });
+      sortedActiveCards.forEach(function (c) {
+        if (remaining <= 0) return;
+        var extra = Math.min(c.balance - alloc[c.id], remaining);
+        if (extra > 0) {
+          alloc[c.id] += extra;
+          remaining -= extra;
+        }
+      });
+      var total = 0;
+      sortedActiveCards.forEach(function (c) { total += alloc[c.id]; });
+      return { alloc: alloc, total: total };
+    }
+
     // Minimum-only path (4% of balance, floor Rs.500)
-    function calcMinPayoff(balance) {
-      var res = window.calculateCBSLAmortization(balance, 28);
+    function calcMinPayoff(balance, apr) {
+      var res = window.calculateCBSLAmortization(balance, apr !== undefined ? apr : 28);
       if (!res || res.minMonths >= 600) return { months: Infinity, totalInterest: Infinity };
       return { months: res.minMonths, totalInterest: res.minTotalInterest };
     }
@@ -2978,10 +3063,11 @@
         var sd = parseInt(statementDayInt, 10);
         if (isNaN(sd) || sd < 1 || sd > 31) sd = 28;
         
-        var nextStatementDate = new Date(today.getFullYear(), today.getMonth(), sd);
-        
-        if (today.getDate() >= sd) {
-            nextStatementDate.setMonth(nextStatementDate.getMonth() + 1);
+        var y = today.getFullYear(), m = today.getMonth();
+        var nextStatementDate = new Date(y, m, clampDay(y, m, sd));
+
+        if (today >= nextStatementDate) {
+            nextStatementDate = new Date(y, m + 1, clampDay(y, m + 1, sd));
         }
         
         var diffTime = nextStatementDate.getTime() - today.getTime();
@@ -2998,7 +3084,7 @@
       const type = c?.feeType || 'greater';
       const pct = c?.feePercent !== undefined ? c.feePercent : 4.0;
       const fixed = c?.feeFixed !== undefined ? c.feeFixed : 500;
-      const apr = c?.apr !== undefined ? c.apr : 28.0;
+      const apr = cardApr(c);
       const p = pct / 100;
       
       let advanceFee = 0;
@@ -3059,6 +3145,12 @@
     /* APPLICATION */
     var App = (function () {
       var cards = [], spaces = [], activeId = null, scTenure = 6;
+
+      // Card ids are uid() strings (older seed data may be numbers), so always compare as strings
+      function findCard(id) {
+        if (id === null || id === undefined) return null;
+        return cards.find(function (c) { return String(c.id) === String(id); }) || null;
+      }
       let previousScreen = 'screen-home', previousTab = 'btn-nav-home';
       let currentVisibleScreen = 'screen-home', currentActiveTab = 'btn-nav-home';
 
@@ -3078,10 +3170,19 @@
         var user = window.currentUser;
         var incomeVal = "175000";
         var elProfileIncome = document.getElementById("profile-income-input");
-        if (elProfileIncome && elProfileIncome.value) {
-            incomeVal = elProfileIncome.value;
-        } else if (window.currentUserData && window.currentUserData.income) {
+        if (elProfileIncome) {
+            if (document.activeElement === elProfileIncome) {
+                incomeVal = elProfileIncome.value;
+            } else {
+                incomeVal = elProfileIncome.value !== "" ? elProfileIncome.value : (localStorage.getItem("user_monthly_income") || "175000");
+            }
+        } else if (window.currentUserData && window.currentUserData.income !== undefined) {
             incomeVal = window.currentUserData.income;
+        } else {
+            incomeVal = localStorage.getItem("user_monthly_income") || "175000";
+        }
+        if (window.currentUserData) {
+            window.currentUserData.income = incomeVal;
         }
 
         // Always sync legacy LS_KEY so local guest sessions function smoothly
@@ -3172,7 +3273,7 @@
         
         var incStr = (data && data.income) ? data.income : "175000";
         var elProfileIncome = document.getElementById("profile-income-input");
-        if (elProfileIncome) elProfileIncome.value = incStr;
+        if (elProfileIncome && document.activeElement !== elProfileIncome) elProfileIncome.value = incStr;
         
         var inc = parseFloat(incStr);
         if (isNaN(inc) || inc <= 0) inc = 175000;
@@ -3180,6 +3281,12 @@
 
         var strat = (data && data.strategy) ? data.strategy : "avalanche";
         window.currentStrategy = strat;
+
+        // Keep browser-wide keys in sync with this account so legacy readers don't see another user's values
+        try {
+            localStorage.setItem("user_monthly_income", incStr);
+            localStorage.setItem("payoff_strategy", strat);
+        } catch(e) {}
         var checkSnowball = document.getElementById('check-snowball');
         if (checkSnowball) checkSnowball.checked = (strat === 'snowball');
       }
@@ -3504,10 +3611,12 @@
             var nextPaymentDateObj = null;
 
             activeCardsArray.forEach(function(c) {
-                var d = c.dueDay || 1;
+                // Only cards with a configured billing cycle produce a due-date alert
+                if (!isValidDay(c.dueDay)) return;
+                var d = parseInt(c.dueDay, 10);
                 var currentYear = today.getFullYear();
                 var currentMonth = today.getMonth();
-                var dueThisMonth = new Date(currentYear, currentMonth, d);
+                var dueThisMonth = new Date(currentYear, currentMonth, clampDay(currentYear, currentMonth, d));
                 
                 // Set time to midnight for accurate day comparison
                 dueThisMonth.setHours(0,0,0,0);
@@ -3515,7 +3624,7 @@
                 todayMidnight.setHours(0,0,0,0);
                 
                 if (dueThisMonth < todayMidnight) {
-                    dueThisMonth = new Date(currentYear, currentMonth + 1, d);
+                    dueThisMonth = new Date(currentYear, currentMonth + 1, clampDay(currentYear, currentMonth + 1, d));
                 }
                 var diffTime = dueThisMonth.getTime() - todayMidnight.getTime();
                 var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -3576,7 +3685,7 @@
         var totalBleed = 0;
         cards.forEach(function (c) {
           if (c.balance > 0) {
-              var apr = c.apr !== undefined ? c.apr : 28.0;
+              var apr = cardApr(c);
               totalBleed += c.balance * (apr / 100 / 12);
           }
         });
@@ -3607,33 +3716,17 @@
             }
         }
         
-        var strategy = localStorage.getItem("payoff_strategy") || "avalanche";
+        var strategy = getStrategy();
         var badgeStrategyHome = document.getElementById("badge-strategy-home");
         if (badgeStrategyHome) {
             badgeStrategyHome.innerHTML = "&#10003; " + (strategy === "snowball" ? "Snowball" : "Avalanche");
         }
 
-        var TOTAL_MONTHLY_BUDGET = 0;
-        var hasCustomTarget = false;
+        var TOTAL_MONTHLY_BUDGET = computeMonthlyBudget(cards);
         var totalMinPayment = 0;
         cards.forEach(function (c) {
-            if (c.balance > 0) {
-                var minPmt = Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-                totalMinPayment += minPmt;
-                if (c.targetPayment) {
-                    TOTAL_MONTHLY_BUDGET += c.targetPayment;
-                    hasCustomTarget = true;
-                } else {
-                    TOTAL_MONTHLY_BUDGET += minPmt;
-                }
-            }
+            if (c.balance > 0) totalMinPayment += minPaymentFor(c);
         });
-        if (!hasCustomTarget) {
-            var incStr = localStorage.getItem('user_monthly_income') || "175000";
-            var inc = parseFloat(incStr);
-            if (isNaN(inc) || inc <= 0) inc = 175000;
-            TOTAL_MONTHLY_BUDGET = inc * 0.25;
-        }
 
         var elMinVal = document.getElementById("home-strategy-min-val");
         if (elMinVal) elMinVal.innerText = fmtLKR(totalMinPayment);
@@ -3656,7 +3749,7 @@
         var baselineTotalInterest = 0;
         var baselineMaxMonths = 0;
         portfolioBaseline.forEach(function(c) {
-            var res = window.calculateCBSLAmortization ? window.calculateCBSLAmortization(c.balance, c.apr || 28.0) : {minMonths: Infinity, minTotalInterest: Infinity};
+            var res = window.calculateCBSLAmortization ? window.calculateCBSLAmortization(c.balance, cardApr(c)) : {minMonths: Infinity, minTotalInterest: Infinity};
             if (res.minMonths === Infinity || res.minMonths >= 1200) {
                 baselineMaxMonths = Infinity;
             } else {
@@ -3676,7 +3769,7 @@
             // Add interest and calc minimums
             portfolioTarget.forEach(function(c) {
                 if (c.balance > 0.01) {
-                    var interest = c.balance * ((c.apr || 28.0) / 100 / 12);
+                    var interest = c.balance * (cardApr(c) / 100 / 12);
                     c.balance += interest;
                     targetTotalInterest += interest;
                     monthMinReq += Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
@@ -3705,7 +3798,7 @@
                 portfolioTarget.sort(function(a, b) { return a.balance - b.balance; });
             } else {
                 portfolioTarget.sort(function(a, b) {
-                    var aprA = a.apr || 28.0; var aprB = b.apr || 28.0;
+                    var aprA = cardApr(a); var aprB = cardApr(b);
                     if (aprB !== aprA) return aprB - aprA;
                     return a.balance - b.balance;
                 });
@@ -3763,7 +3856,7 @@
         if (elDebt) elDebt.innerText = fmtLKR(totalDebt);
         if (elLimit) elLimit.innerText = fmtLKR(totalLimit);
         
-        var strategy = localStorage.getItem("payoff_strategy") || "avalanche";
+        var strategy = getStrategy();
         var activeCards = cards.filter(function(c) { return c.balance > 0; });
         var settledCards = cards.filter(function(c) { return c.balance === 0; });
         
@@ -3771,8 +3864,8 @@
           activeCards.sort(function(a, b) { return a.balance - b.balance; });
         } else {
           activeCards.sort(function(a, b) {
-            var aprA = a.apr !== undefined ? a.apr : 28;
-            var aprB = b.apr !== undefined ? b.apr : 28;
+            var aprA = cardApr(a);
+            var aprB = cardApr(b);
             if (aprB !== aprA) return aprB - aprA;
             return a.balance - b.balance;
           });
@@ -3791,39 +3884,9 @@
 
         container.innerHTML = "";
         
-        var TOTAL_MONTHLY_BUDGET = 0;
-        var hasCustomTarget = false;
-        cards.forEach(function (c) {
-            if (c.balance > 0) {
-                if (c.targetPayment) {
-                    TOTAL_MONTHLY_BUDGET += c.targetPayment;
-                    hasCustomTarget = true;
-                } else {
-                    TOTAL_MONTHLY_BUDGET += Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-                }
-            }
-        });
-        if (!hasCustomTarget) {
-            var incStr = localStorage.getItem('user_monthly_income') || "175000";
-            var inc = parseFloat(incStr);
-            if (isNaN(inc) || inc <= 0) inc = 175000;
-            TOTAL_MONTHLY_BUDGET = inc * 0.25;
-        }
-        var otherCardsMinSum = 0;
-        activeCards.forEach(function (c, idx) {
-            if(idx !== 0) otherCardsMinSum += Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-        });
-        
-        var targetPaymentAmount = TOTAL_MONTHLY_BUDGET - otherCardsMinSum;
-        if (activeCards.length > 0) {
-            var minForTarget = Math.max(activeCards[0].balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-            if (targetPaymentAmount < minForTarget) {
-                targetPaymentAmount = minForTarget;
-            }
-        } else {
-            targetPaymentAmount = 0;
-        }
-        var totalMonthlyCommitment = targetPaymentAmount + otherCardsMinSum;
+        var TOTAL_MONTHLY_BUDGET = computeMonthlyBudget(cards);
+        var allocation = allocateMonthlyPayments(activeCards, TOTAL_MONTHLY_BUDGET);
+        var totalMonthlyCommitment = allocation.total;
         
         var elCommitment = document.getElementById("overview-total-commitment");
         if (elCommitment) {
@@ -3834,7 +3897,7 @@
         var totalBleed = 0;
         cards.forEach(function (c) {
           if (c.balance > 0) {
-              var apr = c.apr !== undefined ? c.apr : 28.0;
+              var apr = cardApr(c);
               totalBleed += c.balance * (apr / 100 / 12);
           }
         });
@@ -3881,20 +3944,25 @@
                   '</div>' +
                   '<div>' +
                     '<p class="text-[14px] text-slate-900 font-bold">' + card.bank + ' ' + card.nick + '</p>' +
-                    '<p class="text-[18px] text-teal-800 font-bold tracking-tight">Target Payment: ' + fmtLKR(targetPaymentAmount) + '</p>' +
+                    '<p class="text-[18px] text-teal-800 font-bold tracking-tight">Target Payment: ' + fmtLKR(allocation.alloc[card.id]) + '</p>' +
                   '</div>' +
                 '</div>' +
                 '<span class="material-symbols-outlined text-teal-700 text-[22px]">arrow_forward</span>' +
               '</div>' +
               '<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-teal-200 text-teal-700 text-[11px] font-bold">' +
                 '<span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>' +
-                'Direct all surplus here • ' + (card.apr !== undefined ? card.apr + '%' : '28.0%') + ' APR' +
+                'Direct all surplus here • ' + (cardApr(card) + '%') + ' APR' +
               '</div>';
           } else {
-            var badgeHtml = isSettled 
+            var cardMin = isSettled ? 0 : minPaymentFor(card);
+            var cardAlloc = isSettled ? 0 : allocation.alloc[card.id];
+            var getsSurplus = cardAlloc > cardMin + 0.5;
+            var badgeHtml = isSettled
                 ? '<span class="text-[11px] px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-lg font-semibold shrink-0">Settled</span>'
-                : '<span class="text-[11px] text-slate-500 px-2.5 py-1 bg-slate-200/70 rounded-lg font-semibold shrink-0">Min Paid</span>';
-            var pmtText = isSettled ? "Settled" : 'Pay Minimum: ' + fmtLKR(Math.max(card.balance * MIN_PMT_PCT, MIN_PMT_FLOOR));
+                : (getsSurplus
+                    ? '<span class="text-[11px] text-teal-700 px-2.5 py-1 bg-teal-50 rounded-lg font-semibold shrink-0">+ Surplus</span>'
+                    : '<span class="text-[11px] text-slate-500 px-2.5 py-1 bg-slate-200/70 rounded-lg font-semibold shrink-0">Min Paid</span>');
+            var pmtText = isSettled ? "Settled" : (getsSurplus ? 'Pay: ' + fmtLKR(cardAlloc) : 'Pay Minimum: ' + fmtLKR(cardMin));
             div.innerHTML =
               '<div class="flex items-center gap-2.5">' +
                 '<div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-slate-500 border border-slate-200">' +
@@ -3967,8 +4035,9 @@
           var util = Math.min(100, (card.balance / card.limit) * 100);
           var theme = themeMap[card.color] || themeMap['teal'];
           
-          var result = calculateNextStatement(card.statementDay || 28);
-          if (!isSettled && result.daysLeft < closestDays) {
+          var hasBilling = isValidDay(card.statementDay);
+          var result = hasBilling ? calculateNextStatement(card.statementDay) : null;
+          if (!isSettled && result && result.daysLeft < closestDays) {
               closestDays = result.daysLeft;
               closestDateStr = result.dateString;
           }
@@ -3994,8 +4063,11 @@
             '</div></div>' +
             badge + '</div>' +
             '<div class="mt-4 flex justify-between items-center">' +
-            '<span class="text-secondary text-[12px]">Billing cycle resets in</span>' +
-            '<span class="font-bold text-slate-900">' + result.daysLeft + ' days, on ' + result.dateString + '</span>' +
+            (result
+              ? '<span class="text-secondary text-[12px]">Billing cycle resets in</span>' +
+                '<span class="font-bold text-slate-900">' + result.daysLeft + ' days, on ' + result.dateString + '</span>'
+              : '<span class="text-secondary text-[12px]">Billing cycle</span>' +
+                '<span class="text-slate-400 text-[12px] font-medium">Not set</span>') +
             '</div>' +
             '<div class="mt-2 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">' +
             '<div class="' + theme.barFill + ' h-full rounded-full transition-all duration-500" style="width:' + util.toFixed(1) + '%"></div></div>' +
@@ -4012,6 +4084,8 @@
         if (elBillingDays) {
             if (closestDays !== Infinity) {
                 elBillingDays.innerHTML = '<span class="font-bold text-slate-900">' + closestDays + ' days, on ' + closestDateStr + '</span>';
+            } else if (cards.some(function (c) { return c.balance > 0; })) {
+                elBillingDays.innerHTML = '<span class="text-slate-400 text-[16px] font-medium">Not configured</span>';
             } else {
                 elBillingDays.innerHTML = '<span class="text-slate-400 text-[16px] font-medium">All settled</span>';
             }
@@ -4055,6 +4129,17 @@
         var utilDot = document.getElementById("detail-util-dot");
         if (utilDot) {
             utilDot.className = "w-1.5 h-1.5 rounded-full " + theme.barFill;
+        }
+
+        var aprBadge = document.getElementById("btn-info-apr");
+        if (aprBadge) {
+            var aprVal = cardApr(c);
+            var aprLabel = aprVal === 0 ? "0% Plan" : aprVal.toFixed(1) + "% APR";
+            aprBadge.setAttribute("aria-label", "About " + aprLabel);
+            aprBadge.innerHTML = '<span class="material-symbols-outlined text-[14px]">' + (aprVal === 0 ? 'percent' : 'schedule') + '</span><span>' + aprLabel + '</span>';
+            aprBadge.className = aprVal === 0
+                ? "inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-semibold hover:bg-emerald-100 active:scale-95 transition-all"
+                : "inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-semibold hover:bg-amber-100 active:scale-95 transition-all";
         }
 
         var fill = document.getElementById("detail-util-fill");
@@ -4129,7 +4214,7 @@
                 const type = c.feeType || 'greater';
                 const pct = c.feePercent !== undefined ? c.feePercent : 4.0;
                 const fixed = c.feeFixed !== undefined ? c.feeFixed : 500;
-                const apr = c.apr !== undefined ? c.apr : 28.0;
+                const apr = cardApr(c);
                 
                 let feeString = '';
                 let breakdownString = '';
@@ -4153,13 +4238,13 @@
       function runPayoffSim(card, payment) {
         var balance = card.balance;
         var minPmt = Math.max(balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-        var minRes = calcMinPayoff(balance);
+        var minRes = calcMinPayoff(balance, cardApr(card));
         document.getElementById("ps-min-duration").textContent =
           !isFinite(minRes.months) ? "Never clears!" : fmtMonths(minRes.months);
         document.getElementById("ps-min-interest").textContent =
           !isFinite(minRes.totalInterest) ? "Unending" : fmtLKR(Math.round(minRes.totalInterest));
         document.getElementById("ps-payment-display").textContent = fmtLKR(payment) + " / mo";
-        var planRes = calcPayoff(balance, payment);
+        var planRes = calcPayoff(balance, payment, cardApr(card));
         if (!isFinite(planRes.months)) {
           document.getElementById("ps-plan-duration").textContent = "Too low to pay down";
           document.getElementById("ps-plan-interest").textContent = "N/A";
@@ -4345,6 +4430,8 @@
             limit: limit, 
             balance: balance, 
             color: color,
+            apr: 28.0,
+            isZeroPercent: false,
             feeType: match.type,
             feePercent: match.percent,
             feeFixed: match.fixed
@@ -4382,26 +4469,28 @@
               dropdown.innerHTML = '<option value="custom">Custom Scenario</option>';
               cards.forEach((card, index) => {
                   const option = document.createElement('option');
-                  option.value = index;
+                  option.value = card.id;
                   option.textContent = card.bank + ' ' + card.nick + (card.balance === 0 ? ' - Settled' : '');
                   option.dataset.balance = card.balance;
-                  option.dataset.apr = card.apr || 28;
+                  option.dataset.apr = cardApr(card);
                   if (card.balance === 0) option.disabled = true;
                   dropdown.appendChild(option);
               });
               
               if (currentVal !== 'custom' && currentVal !== "") {
-                  const selectedCard = cards[parseInt(currentVal)];
-                  if (selectedCard && selectedCard.balance === 0) {
+                  const selectedCard = findCard(currentVal);
+                  if (!selectedCard || selectedCard.balance === 0) {
                       dropdown.value = 'custom';
                       const inputBalance = document.getElementById('sim-input-balance');
                       if (inputBalance) inputBalance.value = 0;
                       dropdown.dispatchEvent(new Event('change'));
                       if (typeof window.showToast === 'function') {
-                          window.showToast('Card settled. Simulator reset.', 'info');
+                          window.showToast(selectedCard ? 'Card settled. Simulator reset.' : 'Card removed. Simulator reset.', 'info');
                       }
                   } else {
+                      // Re-select and re-run so edited balance/APR flow into the simulator
                       dropdown.value = currentVal;
+                      dropdown.dispatchEvent(new Event('change'));
                   }
               }
           }
@@ -4411,24 +4500,25 @@
               advDropdown.innerHTML = '<option value="custom">Custom Scenario</option>';
               cards.forEach((card, index) => {
                   const option = document.createElement('option');
-                  option.value = index;
+                  option.value = card.id;
                   option.textContent = card.bank + ' ' + card.nick + (card.balance === 0 ? ' - Settled' : '');
                   option.dataset.balance = card.balance;
-                  option.dataset.apr = card.apr || 28;
+                  option.dataset.apr = cardApr(card);
                   option.dataset.bankName = card.bankName || card.bank || '';
                   if (card.balance === 0) option.disabled = true;
                   advDropdown.appendChild(option);
               });
               
               if (advCurrentVal !== 'custom' && advCurrentVal !== "") {
-                  const selectedCard = cards[parseInt(advCurrentVal)];
-                  if (selectedCard && selectedCard.balance === 0) {
+                  const selectedCard = findCard(advCurrentVal);
+                  if (!selectedCard || selectedCard.balance === 0) {
                       advDropdown.value = 'custom';
                       const advInputBalance = document.getElementById('sim-adv-input-balance');
                       if (advInputBalance) advInputBalance.value = 0;
                       advDropdown.dispatchEvent(new Event('change'));
                   } else {
                       advDropdown.value = advCurrentVal;
+                      advDropdown.dispatchEvent(new Event('change'));
                   }
               }
           }
@@ -4512,7 +4602,7 @@
                           else if (tariff.type === 'flat') minLabel.textContent = `Flat fee (No %)`;
                       }
                       
-                      let targetApr = selectedOption.dataset.apr || 28.0;
+                      let targetApr = selectedOption.dataset.apr !== undefined ? parseFloat(selectedOption.dataset.apr) : 28.0;
                       if (aprDisplay) aprDisplay.textContent = `${targetApr}%`;
                       if (aprInput) aprInput.value = targetApr;
                       if (balanceInput) balanceInput.value = selectedOption.dataset.balance || 0;
@@ -4777,7 +4867,11 @@
           // 1. Get raw values, strip any "LKR " or commas if the user typed them
           const rawBalance = document.getElementById('sim-input-balance')?.value || '0';
           const cleanBalance = parseFloat(rawBalance.replace(/[^0-9.]/g, '')) || 0;
-          const apr = 28.0; // CBSL Ceiling
+          // Use the selected card's APR (0% plans included); custom scenarios use the CBSL ceiling
+          const simSource = document.getElementById('sim-data-source');
+          const simOpt = simSource && simSource.value !== 'custom' ? simSource.options[simSource.selectedIndex] : null;
+          const simApr = simOpt && simOpt.dataset.apr !== undefined ? parseFloat(simOpt.dataset.apr) : NaN;
+          const apr = isFinite(simApr) ? simApr : 28.0;
           
           if (cleanBalance <= 0) {
               safeSetText('sim-min-time', '--');
@@ -5083,8 +5177,8 @@
           if (incomeStr === null) incomeStr = "175000"; // default on first load
 
           var incomeInput = document.getElementById("profile-income-input");
-          // Only update visual input if it diverges (prevents cursor jumping while typing)
-          if (incomeInput && incomeInput.value !== incomeStr) {
+          // Only update visual input if not currently focused by user and values diverge
+          if (incomeInput && document.activeElement !== incomeInput && incomeInput.value !== incomeStr) {
             incomeInput.value = incomeStr;
           }
 
@@ -5327,11 +5421,21 @@
         navigateTo('screen-home', 'btn-nav-home');
 
         var elProfileIncome = document.getElementById("profile-income-input");
-        if (elProfileIncome) elProfileIncome.addEventListener("input", function (e) {
-          saveUserData();
-          if (typeof updateDTI === 'function') updateDTI();
-          if (typeof window.renderDashboard === 'function') window.renderDashboard();
-        });
+        if (elProfileIncome) {
+          elProfileIncome.addEventListener("input", function (e) {
+            saveUserData();
+            if (typeof updateDTI === 'function') updateDTI();
+            if (typeof window.renderDashboard === 'function') window.renderDashboard();
+          });
+          elProfileIncome.addEventListener("blur", function () {
+            if (!this.value.trim() || parseFloat(this.value) <= 0) {
+              this.value = "175000";
+              saveUserData();
+              if (typeof updateDTI === 'function') updateDTI();
+              if (typeof window.renderDashboard === 'function') window.renderDashboard();
+            }
+          });
+        }
 
         var elExport = document.getElementById("btn-export-data");
         if (elExport) elExport.addEventListener("click", function () {
@@ -5487,8 +5591,9 @@
         // Drawer Action: Export Data
         document.getElementById('btn-menu-export')?.addEventListener('click', () => {
             const data = {
-                cards: JSON.parse(localStorage.getItem('stitch_cards_v3')) || [],
-                strategy: localStorage.getItem('payoff_strategy') || 'avalanche',
+                cards: cards || [],
+                income: getUserIncome(),
+                strategy: getStrategy(),
                 exportDate: new Date().toISOString()
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
@@ -5547,19 +5652,14 @@
 
       window.confirmDeleteCard = function() {
           if (activeId !== null && cards) {
-              cards = cards.filter(c => c.id !== activeId);
+              const deletedId = activeId;
+              cards = cards.filter(c => String(c.id) !== String(deletedId));
+              activeId = null;
               saveCards();
               
               closeDeleteCardModal();
               
-              if (typeof window.renderDashboard === 'function') {
-                  window.renderDashboard();
-              } else {
-                  renderList();
-                  renderHomeDashboard();
-                  renderCardsOverview();
-                  if (typeof populateSimulatorDropdown === 'function') populateSimulatorDropdown();
-              }
+              window.renderDashboard();
               
               goList();
               
@@ -5606,13 +5706,13 @@
 
       window.confirmSettleCard = function() {
           const confirmBtn = document.getElementById('btn-confirm-settle');
-          if (!confirmBtn || !confirmBtn.dataset.targetId) return;
-          const targetId = parseInt(confirmBtn.dataset.targetId) || confirmBtn.dataset.targetId;
+          const targetId = (confirmBtn && confirmBtn.dataset.targetId) ? confirmBtn.dataset.targetId : activeId;
           
           if (cards) {
-              const card = cards.find(c => c.id == targetId);
+              const card = findCard(targetId);
               if (card) {
                   card.balance = 0;
+                  delete card.targetPayment;
                   saveCards();
                   
                   closeSettleModal();
@@ -5650,11 +5750,12 @@
           const saveBtn = document.getElementById('btn-save-billing');
           if (saveBtn) saveBtn.dataset.targetId = card.id;
           
-          const todayStr = new Date().toISOString().split('T')[0];
           const inputStatement = document.getElementById('input-billing-statement');
           const inputDue = document.getElementById('input-billing-due');
-          if (inputStatement) inputStatement.value = todayStr;
-          if (inputDue) inputDue.value = todayStr;
+          if (inputStatement) inputStatement.value = isValidDay(card.statementDay) ? parseInt(card.statementDay, 10) : '';
+          if (inputDue) inputDue.value = isValidDay(card.dueDay) ? parseInt(card.dueDay, 10) : '';
+          const billingErr = document.getElementById('billing-modal-error');
+          if (billingErr) billingErr.classList.add('hidden');
           
           const modal = document.getElementById('modal-billing-cycle');
           if (modal) {
@@ -5680,35 +5781,34 @@
 
       window.saveBillingCycle = function() {
           const saveBtn = document.getElementById('btn-save-billing');
-          if (!saveBtn || !saveBtn.dataset.targetId) return;
-          const targetId = parseInt(saveBtn.dataset.targetId) || saveBtn.dataset.targetId;
+          const targetId = (saveBtn && saveBtn.dataset.targetId) ? saveBtn.dataset.targetId : activeId;
+          const card = findCard(targetId);
+          if (!card) return;
           
           const inputStatement = document.getElementById('input-billing-statement');
           const inputDue = document.getElementById('input-billing-due');
+          const errEl = document.getElementById('billing-modal-error');
+          const statementVal = inputStatement ? inputStatement.value.trim() : '';
+          const dueVal = inputDue ? inputDue.value.trim() : '';
           
-          if (inputStatement && inputDue && inputStatement.value && inputDue.value) {
-              const statementDateObj = new Date(inputStatement.value);
-              const dueDateObj = new Date(inputDue.value);
-              
-              const statementDayInt = statementDateObj.getDate();
-              const dueDayInt = dueDateObj.getDate();
-              
-              const cardIndex = cards.findIndex(c => c.id == targetId);
-              if (cardIndex !== -1) {
-                  cards[cardIndex].statementDay = statementDayInt;
-                  cards[cardIndex].dueDay = dueDayInt;
-                  saveCards();
-                  
-                  if (typeof window.renderDashboard === 'function') window.renderDashboard();
-                  
-                  closeBillingModal();
-                  
-                  closeBillingModal();
-                  
-                  if (typeof window.showToast === 'function') {
-                      window.showToast('Billing cycle updated', 'calendar');
-                  }
+          if (!/^\d{1,2}$/.test(statementVal) || !isValidDay(statementVal) || !/^\d{1,2}$/.test(dueVal) || !isValidDay(dueVal)) {
+              if (errEl) {
+                  errEl.textContent = 'Enter a day between 1 and 31 for both fields.';
+                  errEl.classList.remove('hidden');
               }
+              return;
+          }
+          if (errEl) errEl.classList.add('hidden');
+          
+          card.statementDay = parseInt(statementVal, 10);
+          card.dueDay = parseInt(dueVal, 10);
+          saveCards();
+          
+          window.renderDashboard();
+          closeBillingModal();
+          
+          if (typeof window.showToast === 'function') {
+              window.showToast('Billing cycle updated: statement on day ' + card.statementDay + ', due on day ' + card.dueDay, 'calendar');
           }
       };
 
@@ -5724,7 +5824,14 @@
                   document.getElementById('edit-input-bank').value = currentViewedCard.bank || '';
                   document.getElementById('edit-input-tier').value = currentViewedCard.nick || '';
                   document.getElementById('edit-input-limit').value = currentViewedCard.limit || '';
+                  document.getElementById('edit-input-balance').value = currentViewedCard.balance !== undefined ? currentViewedCard.balance : '';
                   document.getElementById('edit-input-zero-percent').checked = currentViewedCard.isZeroPercent || false;
+                  // Show the card's real (non-0%) APR so toggling 0% off restores it
+                  const storedApr = parseFloat(currentViewedCard.apr);
+                  document.getElementById('edit-input-apr').value = (isFinite(storedApr) && storedApr > 0) ? storedApr : (currentViewedCard.isZeroPercent ? 28.0 : cardApr(currentViewedCard));
+                  window.syncEditAprField();
+                  const editErr = document.getElementById('edit-modal-error');
+                  if (editErr) editErr.classList.add('hidden');
                   
                   const colorMap = {
                     'teal': { text: 'Teal (default)', bg: 'bg-teal-500' },
@@ -5780,56 +5887,68 @@
           }
       };
 
+      // Disable the APR field while the 0% toggle is on
+      window.syncEditAprField = function() {
+          const toggle = document.getElementById('edit-input-zero-percent');
+          const aprInput = document.getElementById('edit-input-apr');
+          if (!toggle || !aprInput) return;
+          aprInput.disabled = toggle.checked;
+          aprInput.classList.toggle('opacity-50', toggle.checked);
+      };
+
       window.saveCardDetails = function() {
-          if (activeId !== null && cards) {
-              const card = cards.find(c => c.id === activeId);
-              if (card) {
-                  const bank = document.getElementById('edit-input-bank').value.trim();
-                  const nick = document.getElementById('edit-input-tier').value.trim();
-                  let limitStr = document.getElementById('edit-input-limit').value.replace(/,/g, '');
-                  const limit = parseFloat(limitStr);
-                  const color = document.getElementById('edit-input-color').value;
-                  const isZeroPercent = document.getElementById('edit-input-zero-percent').checked;
-                  
-                  if (bank) {
-                      card.bank = bank;
-                      // Recalculate tariff
-                      if (typeof window.resolveCardTariff === 'function') {
-                          const tariff = window.resolveCardTariff(card.bank);
-                          card.feeType = tariff.type;
-                          card.feePercent = tariff.percent;
-                          card.feeFixed = tariff.fixed;
-                      }
-                  }
-                  if (nick) card.nick = nick;
-                  if (!isNaN(limit) && limit > 0) {
-                      card.limit = limit;
-                  }
-                  if (color) {
-                      card.color = color;
-                  }
-                  
-                  card.isZeroPercent = isZeroPercent;
-                  card.apr = isZeroPercent ? 0 : 28.0;
-                  
-                  saveCards();
-                  
-                  // Refresh the active card detail view
-                  goDetail(activeId);
-                  
-                  // Synchronize background screens
-                  if (typeof renderList === 'function') renderList();
-                  if (typeof renderCardsOverview === 'function') renderCardsOverview();
-                  if (typeof populateSimulatorDropdown === 'function') populateSimulatorDropdown();
-                  
-                  if (typeof window.showToast === 'function') {
-                      if (isZeroPercent) {
-                          window.showToast('0% Installment Plan applied', 'percent');
-                      } else {
-                          window.showToast('Card details updated', 'info');
-                      }
-                  }
-              }
+          const card = findCard(activeId);
+          if (!card) { closeEditCardModal(); return; }
+          
+          const errEl = document.getElementById('edit-modal-error');
+          function showErr(msg) {
+              if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+          }
+          
+          const bank = document.getElementById('edit-input-bank').value.trim();
+          const nick = document.getElementById('edit-input-tier').value.trim();
+          const limit = parseFloat(document.getElementById('edit-input-limit').value.replace(/,/g, ''));
+          const balanceStr = document.getElementById('edit-input-balance').value.replace(/,/g, '').trim();
+          const balance = parseFloat(balanceStr);
+          const aprStr = document.getElementById('edit-input-apr').value.replace(/%/g, '').trim();
+          const isZeroPercent = document.getElementById('edit-input-zero-percent').checked;
+          const apr = aprStr === '' ? 28.0 : parseFloat(aprStr);
+          const color = document.getElementById('edit-input-color').value;
+          
+          // Validate everything before touching the card so a save is all-or-nothing
+          if (!bank || !nick) return showErr('Please enter the bank name and card tier.');
+          if (isNaN(limit) || limit <= 0) return showErr('Please enter a valid credit limit.');
+          if (balanceStr === '' || isNaN(balance) || balance < 0) return showErr('Please enter a valid outstanding balance.');
+          if (balance > limit) return showErr('Balance cannot exceed the credit limit.');
+          if (!isZeroPercent && (isNaN(apr) || apr <= 0 || apr > 60)) return showErr('APR must be between 0.1% and 60%.');
+          if (errEl) errEl.classList.add('hidden');
+          
+          if (bank !== card.bank) {
+              card.bank = bank;
+              const tariff = window.resolveCardTariff(card.bank);
+              card.feeType = tariff.type;
+              card.feePercent = tariff.percent;
+              card.feeFixed = tariff.fixed;
+          }
+          card.nick = nick;
+          card.limit = limit;
+          card.balance = Math.round(balance * 100) / 100;
+          if (color) card.color = color;
+          
+          card.isZeroPercent = isZeroPercent;
+          // Keep the real APR stored even on a 0% plan; cardApr() returns 0 while the flag is on
+          if (!isZeroPercent) card.apr = apr;
+          else if (!(parseFloat(card.apr) > 0)) card.apr = 28.0;
+          
+          // Saved monthly target must stay within the new balance
+          if (card.balance === 0) delete card.targetPayment;
+          else if (card.targetPayment && card.targetPayment > card.balance) card.targetPayment = card.balance;
+          
+          saveCards();
+          window.renderDashboard();
+          
+          if (typeof window.showToast === 'function') {
+              window.showToast(isZeroPercent ? '0% Installment Plan applied' : 'Card details updated', isZeroPercent ? 'percent' : 'info');
           }
           closeEditCardModal();
       };
@@ -6840,12 +6959,13 @@
       <div class="flex flex-col gap-5">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">STATEMENT GENERATION (DAY OF MONTH)</label>
-          <input id="input-billing-statement" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="date">
+          <input id="input-billing-statement" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="e.g. 25">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">PAYMENT DUE (DAY OF MONTH)</label>
-          <input id="input-billing-due" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="date">
+          <input id="input-billing-due" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="e.g. 10">
         </div>
+        <p id="billing-modal-error" class="text-[12px] text-rose-600 font-medium hidden"></p>
       </div>
       <div class="flex gap-3 mt-8 w-full">
         <button onclick="closeBillingModal()" class="w-1/3 py-3.5 bg-slate-50 border border-slate-100 text-slate-700 font-semibold rounded-xl text-sm text-center transition-colors hover:bg-slate-100" type="button">Cancel</button>
@@ -6882,10 +7002,10 @@
               <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 mt-2">
                 <div>
                     <p class="text-sm font-semibold text-slate-900">0% Installment Plan</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Bypass 28% APR calculation for this card</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Treat this card as 0% interest</p>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="edit-input-zero-percent" class="sr-only peer">
+                  <input type="checkbox" id="edit-input-zero-percent" class="sr-only peer" onchange="syncEditAprField()">
                   <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
               </div>
@@ -6952,9 +7072,24 @@
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Total Credit Limit (LKR)</label>
                   <div class="relative flex items-center">
                       <span class="absolute left-4 text-xs font-bold text-slate-400 select-none">LKR</span>
-                      <input id="edit-input-limit" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" />
+                      <input id="edit-input-limit" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" inputmode="decimal" />
                   </div>
               </div>
+              <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5" for="edit-input-balance">Current Outstanding Balance (LKR)</label>
+                  <div class="relative flex items-center">
+                      <span class="absolute left-4 text-xs font-bold text-slate-400 select-none">LKR</span>
+                      <input id="edit-input-balance" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" inputmode="decimal" />
+                  </div>
+              </div>
+              <div>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5" for="edit-input-apr">Interest Rate (APR %)</label>
+                  <div class="relative flex items-center">
+                      <span class="absolute left-4 text-xs font-bold text-slate-400 select-none">%</span>
+                      <input id="edit-input-apr" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" inputmode="decimal" placeholder="28.0" />
+                  </div>
+              </div>
+              <p id="edit-modal-error" class="text-[12px] text-rose-600 font-medium hidden"></p>
           </div>
           
           <div class="flex items-center gap-3 pt-2">
@@ -7622,222 +7757,213 @@
         }
     };
 
-    /* ── Interactive Visual Guide Walkthrough Engine ── */
+    /* ══════════════════════════════════════════════════════════════
+       REDESIGNED VISUAL-FIRST COACHMARK TOUR ENGINE
+       - Zero blur / zero dark overlay
+       - Glowing box-shadow spotlight on target elements
+       - Animated floating pointer badge anchored above target
+       - 6 action-oriented steps, auto-launched on first signup
+    ══════════════════════════════════════════════════════════════ */
     window.visualGuideSteps = [
       {
         step: 1,
-        screenId: 'screen-home',
-        tabId: 'btn-nav-home',
-        badge: 'Home Dashboard',
-        title: 'Welcome to Serendib',
-        description: 'Your real-time command center for credit card debt elimination, interest tracking, and financial freedom in Sri Lanka.',
-        highlightId: null,
-        metricsLabel: 'Key Real-Time Overview Metrics',
-        metrics: [
-          '<strong>Total Outstanding Balance</strong>: Aggregate debt across all linked cards',
-          '<strong>Monthly Accruing Interest</strong>: Real-time cost of carrying balances under CBSL caps',
-          '<strong>Debt-Free Target Date</strong>: Dynamic countdown based on your payments and strategy'
-        ],
-        tip: '💡 Every metric recalculates automatically whenever you update your cards, income, or payment amounts.'
+        screenId: 'screen-list',
+        tabId: 'btn-nav-cards',
+        title: 'Link Your Credit Cards',
+        description: 'This is where you add your credit cards. Enter your balance, APR & limit so Serendib can track your debt.',
+        highlightId: 'btn-add-card',
+        pointerText: '💳 Add Cards Here',
+        pointerIcon: 'credit_card'
       },
       {
         step: 2,
         screenId: 'screen-profile',
         tabId: null,
-        badge: 'Profile & Settings',
-        title: 'Income Engine & Strategy Selector',
-        description: 'This is where you set the foundation for all financial calculations and choose your payoff strategy in Serendib.',
+        title: 'Enter Your Monthly Income',
+        description: 'Type your monthly take-home salary here — it powers your safe debt limits and DTI health score.',
         highlightId: 'profile-income-input',
-        metricsLabel: 'Crucial Calculations Configured Here',
-        metrics: [
-          '<strong>Monthly Net Take-Home Income</strong>: Essential for calculating your Debt-to-Income (DTI) health ratio and safe repayment capacity.',
-          '<strong>Debt Avalanche Method</strong>: Targets your highest APR card first to mathematically save the maximum interest.',
-          '<strong>Debt Snowball Method</strong>: Targets your lowest balance card first to build fast psychological wins and momentum.'
-        ],
-        tip: '💡 Enter your take-home pay in LKR and choose Avalanche or Snowball to customize how Serendib prioritizes your debts.'
+        pointerText: '💰 Enter Salary Here',
+        pointerIcon: 'payments'
       },
       {
         step: 3,
-        screenId: 'screen-list',
-        tabId: 'btn-nav-cards',
-        badge: 'Cards Inventory',
-        title: 'Manage Cards & Debt Details',
-        description: 'Add and track all your credit cards in one central hub to monitor balances, limits, and interest rates.',
-        highlightId: 'btn-add-card',
-        metricsLabel: 'Important Metrics Required Per Card',
-        metrics: [
-          '<strong>Current Balance</strong>: The exact amount owed on the card today',
-          '<strong>APR % (Annual Percentage Rate)</strong>: Drives daily compounding interest calculations',
-          '<strong>Minimum Monthly Payment</strong>: Statutory floor (CBSL mandated 4% min) to avoid bank late penalties',
-          '<strong>Credit Limit</strong>: Determines your credit utilization ratio'
-        ],
-        tip: '💡 Tap "Link new credit card" anytime to input a card balance and its APR.'
+        screenId: 'screen-profile',
+        tabId: null,
+        title: 'Pick Your Payoff Strategy',
+        description: 'Choose Avalanche (saves the most interest) or Snowball (fastest psychological wins) to match your style.',
+        highlightId: 'section-payoff-method',
+        pointerText: '⚡ Choose Strategy',
+        pointerIcon: 'bolt'
       },
       {
         step: 4,
         screenId: 'screen-simulators',
         tabId: 'btn-nav-simulators',
-        badge: 'Payoff Optimizer',
-        title: 'Simulators & Debt Strategies',
-        description: 'Test different monthly acceleration budgets and see the exact month and year you will become 100% debt-free.',
-        highlightId: 'ps-slider',
-        metricsLabel: 'Optimization Metrics Simulated Here',
-        metrics: [
-          '<strong>Monthly Repayment Slider</strong>: Simulate paying extra beyond minimum payments',
-          '<strong>Total Interest Saved</strong>: Difference in interest paid between minimums vs acceleration',
-          '<strong>Cash Advance Cost Calculator</strong>: Shows the immediate 4% fee and instant 28% daily compounding interest on ATM withdrawals'
-        ],
-        tip: '💡 Adding even LKR 5,000 extra per month can wipe out months of high-interest debt!'
+        title: 'Simulate Debt Payoff',
+        description: 'Enter any balance or pick quick presets (100k, 250k, 500k) to see the trap of minimum payments vs. fixed payoff savings.',
+        highlightId: 'sim-balance-section',
+        pointerText: '🧮 Test Balance & Presets',
+        pointerIcon: 'calculate'
       },
       {
         step: 5,
         screenId: 'screen-spaces',
         tabId: 'btn-nav-spaces',
-        badge: 'Financial Buffers',
-        title: 'Spaces & Sinking Funds',
-        description: 'Protect your debt payoff journey by isolating dedicated reserve funds for emergencies, bills, and lifestyle goals.',
+        title: 'Create an Emergency Buffer',
+        description: 'Set aside a reserve fund here so unexpected costs never push you back into credit card debt.',
         highlightId: 'btn-create-space-top',
-        metricsLabel: 'Safety Metrics Tracked in Spaces',
-        metrics: [
-          '<strong>Emergency Buffer Reserve</strong>: Prevents unexpected medical or repair costs from going onto credit cards',
-          '<strong>Sinking Fund Targets</strong>: Ring-fences money for fixed upcoming expenses so debt progress is never reversed'
-        ],
-        tip: '💡 Having a small emergency buffer is the #1 secret to staying out of debt permanently.'
+        pointerText: '🛡️ Create Space',
+        pointerIcon: 'savings'
       },
       {
         step: 6,
-        screenId: 'view-offers',
-        tabId: 'btn-nav-offers',
-        badge: 'Consolidation Deals',
-        title: '0% APR & Balance Transfers',
-        description: 'Explore verified Sri Lankan credit card balance transfer opportunities and debt consolidation deals.',
-        highlightId: null,
-        metricsLabel: 'Transfer Savings Metrics',
-        metrics: [
-          '<strong>0% Introductory Promotional Rates</strong>: 0% APR for 6 to 12 months',
-          '<strong>Interest Elimination Math</strong>: Shifts 28% APR debt to 0%, ensuring 100% of your payment goes towards reducing principal'
-        ],
-        tip: '💡 A 0% balance transfer can freeze interest while you aggressively eliminate the principal.'
-      },
-      {
-        step: 7,
         screenId: 'screen-home',
         tabId: 'btn-nav-home',
-        badge: 'Ready to Start',
-        title: 'You Are All Set!',
-        description: 'You now know how every menu and metric works together to eliminate your debt faster.',
-        highlightId: null,
-        metricsLabel: 'Your 3-Step Action Plan',
-        metrics: [
-          '1. <strong>Set your Net Monthly Income</strong> in Profile & Settings',
-          '2. <strong>Add your credit cards</strong> with their balances and APRs in Cards',
-          '3. <strong>Pick your payoff strategy</strong> and simulate acceleration in Simulators'
-        ],
-        tip: '💡 You can replay this visual guide anytime from Profile & Settings or the Help icon.'
+        title: 'Your Live Debt Dashboard',
+        description: 'This is your command center — total debt, daily interest, and payoff countdown all update in real time. You are ready!',
+        highlightId: 'home-total-debt',
+        pointerText: '🎯 Live Dashboard',
+        pointerIcon: 'dashboard'
       }
     ];
 
     window._currentTourStepIndex = 0;
     window._tourHighlightedEl = null;
+    window._tourPointerInterval = null;
+    window._tourScrollHandler = null;
 
+    /* ── Start or replay the tour ── */
     window.startVisualGuideTour = function(isManualReplay) {
       window._currentTourStepIndex = 0;
+      document.body.classList.add('tour-active');
       const overlay = document.getElementById('app-tour-overlay');
       if (overlay) overlay.classList.remove('hidden');
       window.renderVisualGuideStep();
     };
 
+    /* ── Clear previous spotlight + pointer ── */
+    function _tourClearHighlight() {
+      if (window._tourHighlightedEl) {
+        window._tourHighlightedEl.style.removeProperty('box-shadow');
+        window._tourHighlightedEl.style.removeProperty('transform');
+        window._tourHighlightedEl.style.removeProperty('transition');
+        window._tourHighlightedEl.style.removeProperty('position');
+        window._tourHighlightedEl.style.removeProperty('z-index');
+        window._tourHighlightedEl = null;
+      }
+      const ptr = document.getElementById('tour-target-pointer');
+      if (ptr) ptr.classList.add('hidden');
+      if (window._tourPointerInterval) {
+        clearInterval(window._tourPointerInterval);
+        window._tourPointerInterval = null;
+      }
+      if (window._tourScrollHandler) {
+        window.removeEventListener('scroll', window._tourScrollHandler, true);
+        window.removeEventListener('resize', window._tourScrollHandler);
+        window._tourScrollHandler = null;
+      }
+    }
+
+    /* ── Position pointer badge above target element ── */
+    function _tourPositionPointer(el) {
+      const ptr = document.getElementById('tour-target-pointer');
+      if (!ptr || !el) return;
+      function _update() {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return;
+        ptr.style.left = (rect.left + rect.width / 2) + 'px';
+        ptr.style.top = (rect.top - 58) + 'px';
+        ptr.style.transform = 'translateX(-50%)';
+      }
+      ptr.classList.remove('hidden');
+      _update();
+      // Re-position on scroll/resize in real-time
+      if (window._tourPointerInterval) clearInterval(window._tourPointerInterval);
+      window._tourPointerInterval = setInterval(_update, 100);
+
+      if (window._tourScrollHandler) {
+        window.removeEventListener('scroll', window._tourScrollHandler, true);
+        window.removeEventListener('resize', window._tourScrollHandler);
+      }
+      window._tourScrollHandler = _update;
+      window.addEventListener('scroll', _update, { capture: true, passive: true });
+      window.addEventListener('resize', _update, { passive: true });
+    }
+
+    /* ── Main render function ── */
     window.renderVisualGuideStep = function() {
       if (!window.visualGuideSteps || window.visualGuideSteps.length === 0) return;
       const step = window.visualGuideSteps[window._currentTourStepIndex];
       if (!step) return;
 
-      // Clear previous element highlight
-      if (window._tourHighlightedEl) {
-        window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
-        window._tourHighlightedEl = null;
-      }
+      // 0. Clear previous highlights
+      _tourClearHighlight();
 
-      // 1. Physically navigate to the target screen & tab
+      // 1. Navigate to target screen & tab
       if (typeof navigateTo === 'function') {
         navigateTo(step.screenId, step.tabId);
       }
 
-      // If on profile screen, ensure canvas is at top
-      if (step.screenId === 'screen-profile') {
-        const canvas = document.querySelector('#screen-profile .overflow-y-auto');
-        if (canvas) canvas.scrollTop = 0;
-      }
-
-      // 2. Highlight target element if specified
+      // 2. Spotlight target element with glowing box-shadow (no Tailwind ring, no blur)
       if (step.highlightId) {
-        setTimeout(() => {
+        setTimeout(function() {
           const el = document.getElementById(step.highlightId);
           if (el) {
-            el.classList.add('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
+            // Glow spotlight
+            el.style.boxShadow = '0 0 0 3px #10b981, 0 0 28px rgba(16,185,129,0.50)';
+            el.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+            el.style.position = 'relative';
+            el.style.zIndex = '135';
             window._tourHighlightedEl = el;
-            try {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } catch(e) {}
+            // Scroll into view
+            try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+            // Anchor animated pointer badge
+            setTimeout(function() { _tourPositionPointer(el); }, 180);
           }
-        }, 120);
+        }, 150);
       }
 
-      // 3. Update Text Content
-      const stepBadge = document.getElementById('tour-badge-step');
-      if (stepBadge) stepBadge.innerText = `Step ${step.step} of ${window.visualGuideSteps.length}`;
+      // 3. Update pointer badge text & icon
+      const ptrText = document.getElementById('tour-pointer-text');
+      const ptrIcon = document.getElementById('tour-pointer-icon');
+      if (ptrText) ptrText.textContent = step.pointerText || '';
+      if (ptrIcon) ptrIcon.textContent = step.pointerIcon || 'touch_app';
 
-      const screenBadge = document.getElementById('tour-badge-screen');
-      if (screenBadge) screenBadge.innerText = step.badge;
+      // 4. Update coachmark card content
+      const stepBadgeEl = document.getElementById('tour-badge-step');
+      if (stepBadgeEl) stepBadgeEl.textContent = (window._currentTourStepIndex + 1) + ' of ' + window.visualGuideSteps.length;
 
       const titleEl = document.getElementById('tour-title');
-      if (titleEl) titleEl.innerText = step.title;
+      if (titleEl) titleEl.textContent = step.title;
 
       const descEl = document.getElementById('tour-description');
-      if (descEl) descEl.innerText = step.description;
+      if (descEl) descEl.textContent = step.description;
 
-      const metricsLabelEl = document.getElementById('tour-metrics-label');
-      if (metricsLabelEl) metricsLabelEl.innerText = step.metricsLabel;
-
-      const metricsListEl = document.getElementById('tour-metrics-list');
-      if (metricsListEl) {
-        metricsListEl.innerHTML = step.metrics.map(m => `<li class="flex items-start gap-1.5 leading-snug"><span class="material-symbols-outlined text-[13px] text-emerald-600 shrink-0 mt-0.5">check_circle</span><span>${m}</span></li>`).join('');
-      }
-
-      const tipEl = document.getElementById('tour-metrics-tip');
-      if (tipEl) tipEl.innerText = step.tip;
-
-      // 4. Update Navigation Controls
+      // 5. Update navigation controls
       const backBtn = document.getElementById('btn-tour-back');
       if (backBtn) {
-        if (window._currentTourStepIndex === 0) {
-          backBtn.classList.add('invisible');
-        } else {
-          backBtn.classList.remove('invisible');
-        }
+        backBtn.style.visibility = window._currentTourStepIndex === 0 ? 'hidden' : 'visible';
       }
 
       const nextBtnText = document.getElementById('btn-tour-next-text');
       const nextBtnIcon = document.getElementById('btn-tour-next-icon');
       if (nextBtnText && nextBtnIcon) {
         if (window._currentTourStepIndex === window.visualGuideSteps.length - 1) {
-          nextBtnText.innerText = 'Get Started';
-          nextBtnIcon.innerText = 'celebration';
+          nextBtnText.textContent = "Let's Go!";
+          nextBtnIcon.textContent = 'celebration';
         } else {
-          nextBtnText.innerText = 'Next Step';
-          nextBtnIcon.innerText = 'arrow_forward';
+          nextBtnText.textContent = 'Next';
+          nextBtnIcon.textContent = 'arrow_forward';
         }
       }
 
-      // 5. Update Progress Dots
+      // 6. Update progress dots
       const dotsContainer = document.getElementById('tour-dots-container');
       if (dotsContainer) {
-        dotsContainer.innerHTML = window.visualGuideSteps.map((_, i) => {
-          if (i === window._currentTourStepIndex) {
-            return '<div class="w-5 h-1.5 rounded-full bg-emerald-600 transition-all duration-300"></div>';
-          } else {
-            return '<div class="w-1.5 h-1.5 rounded-full bg-slate-200 transition-all duration-300"></div>';
-          }
+        dotsContainer.innerHTML = window.visualGuideSteps.map(function(_, i) {
+          return i === window._currentTourStepIndex
+            ? '<div style="width:20px;height:5px;border-radius:3px;background:#10b981;transition:all .3s;"></div>'
+            : '<div style="width:5px;height:5px;border-radius:50%;background:#cbd5e1;transition:all .3s;"></div>';
         }).join('');
       }
     };
@@ -7863,17 +7989,15 @@
     };
 
     window.completeVisualGuideTour = function(isSkipped) {
-      // Clear element highlight
-      if (window._tourHighlightedEl) {
-        window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
-        window._tourHighlightedEl = null;
-      }
+      document.body.classList.remove('tour-active');
+      // Clear spotlight & pointer
+      _tourClearHighlight();
 
-      // Hide Tour Overlay
+      // Hide overlay
       const overlay = document.getElementById('app-tour-overlay');
       if (overlay) overlay.classList.add('hidden');
 
-      // Return to home dashboard
+      // Return home
       if (typeof navigateTo === 'function') {
         navigateTo('screen-home', 'btn-nav-home');
       }
@@ -7884,22 +8008,59 @@
         localStorage.setItem('stitch_tour_completed_' + window.currentUser.email.toLowerCase().trim(), 'true');
       }
       if (window.currentUser && window.currentUser.uid && typeof db !== 'undefined') {
-        db.collection("users").doc(window.currentUser.uid).set({ hasCompletedTour: true }, { merge: true }).catch(console.warn);
+        db.collection('users').doc(window.currentUser.uid).set({ hasCompletedTour: true }, { merge: true }).catch(console.warn);
       }
       if (typeof App !== 'undefined' && typeof App.saveUserData === 'function') {
         App.saveUserData();
       }
 
-      if (isSkipped) {
-        if (typeof window.showToast === 'function') {
-          window.showToast("Guide skipped. You can replay it anytime from Profile.", "info");
-        }
-      } else {
-        if (typeof window.showToast === 'function') {
-          window.showToast("You're all set! Welcome to Serendib.", "info");
-        }
+      if (typeof window.showToast === 'function') {
+        window.showToast(
+          isSkipped ? "Guide skipped. Replay anytime from Profile." : "You're all set! Welcome to Serendib. 🎉",
+          'info'
+        );
       }
     };
+
+    // Forward touch scroll & wheel from tour card so page scrolling is seamless even if gestures start over the card
+    (function initTourCardScroll() {
+      const tourCard = document.getElementById('app-tour-card');
+      if (!tourCard || tourCard._hasScrollInit) return;
+      tourCard._hasScrollInit = true;
+
+      let tourTouchStartY = 0;
+      tourCard.addEventListener('touchstart', function(e) {
+        if (e.target.closest('button')) return;
+        tourTouchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      tourCard.addEventListener('touchmove', function(e) {
+        if (e.target.closest('button')) return;
+        const currentY = e.touches[0].clientY;
+        const diff = tourTouchStartY - currentY;
+        tourTouchStartY = currentY;
+
+        const currentStep = window.visualGuideSteps && window.visualGuideSteps[window._currentTourStepIndex];
+        const currentScreen = currentStep ? document.getElementById(currentStep.screenId) : null;
+        const scrollableChild = currentScreen ? currentScreen.querySelector('.overflow-y-auto') : null;
+        if (scrollableChild) {
+          scrollableChild.scrollTop += diff;
+        } else {
+          window.scrollBy(0, diff);
+        }
+      }, { passive: true });
+
+      tourCard.addEventListener('wheel', function(e) {
+        const currentStep = window.visualGuideSteps && window.visualGuideSteps[window._currentTourStepIndex];
+        const currentScreen = currentStep ? document.getElementById(currentStep.screenId) : null;
+        const scrollableChild = currentScreen ? currentScreen.querySelector('.overflow-y-auto') : null;
+        if (scrollableChild) {
+          scrollableChild.scrollTop += e.deltaY;
+        } else {
+          window.scrollBy(0, e.deltaY);
+        }
+      }, { passive: true });
+    })();
 
     function completeUserEntry(user, fname, lname) {
         var loginScreen = document.getElementById("screen-login");
@@ -8401,6 +8562,7 @@
         // Close guide tour if active
         var tourOverlay = document.getElementById('app-tour-overlay');
         if (tourOverlay) tourOverlay.classList.add('hidden');
+        document.body.classList.remove('tour-active');
         if (window._tourHighlightedEl) {
             window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
             window._tourHighlightedEl = null;
