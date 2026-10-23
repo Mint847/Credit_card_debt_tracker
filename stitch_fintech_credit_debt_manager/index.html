@@ -2990,6 +2990,14 @@
       return Math.min(c.balance, Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR));
     }
 
+    // The amount this card is guaranteed each month: a saved per-card target (clamped to its
+    // balance), or just the regulatory minimum if no target has been saved.
+    function cardFloor(c) {
+      var minPmt = minPaymentFor(c);
+      if (c.targetPayment) return Math.max(Math.min(c.targetPayment, c.balance), minPmt);
+      return minPmt;
+    }
+
     // Card APR in %; 0 is a valid value, so never use `||` here
     function cardApr(c) {
       if (!c) return 28.0;
@@ -3009,32 +3017,45 @@
       return !isNaN(n) && n >= 1 && n <= 31;
     }
 
-    // Custom targets (capped at balance) if any are set, otherwise 25% of income
-    function computeMonthlyBudget(cardList) {
-      var budget = 0;
-      var hasCustomTarget = false;
-      cardList.forEach(function (c) {
-        if (c.balance > 0) {
-          if (c.targetPayment) {
-            budget += Math.min(c.targetPayment, c.balance);
-            hasCustomTarget = true;
-          } else {
-            budget += minPaymentFor(c);
-          }
-        }
-      });
-      if (!hasCustomTarget) budget = getUserIncome() * 0.25;
-      return budget;
+    // Build a "YYYY-MM-DD" string (for a date <input>) for the given day in the current month,
+    // formatted from local date parts so it never shifts a day via UTC conversion.
+    function dayToLocalDateStr(day) {
+      var today = new Date();
+      var y = today.getFullYear(), m = today.getMonth();
+      var d = clampDay(y, m, parseInt(day, 10) || 1);
+      var dt = new Date(y, m, d);
+      var mm = String(dt.getMonth() + 1).padStart(2, '0');
+      var dd = String(dt.getDate()).padStart(2, '0');
+      return dt.getFullYear() + '-' + mm + '-' + dd;
     }
 
-    // Minimums on every card, then cascade surplus in priority order, each capped at its balance
+    // Read the day-of-month back out of a date <input>'s "YYYY-MM-DD" value by splitting the
+    // string directly, instead of `new Date(str)`, which parses as UTC and can shift the day.
+    function localDateStrToDay(value) {
+      if (!value) return NaN;
+      var parts = value.split('-');
+      return parts.length === 3 ? parseInt(parts[2], 10) : NaN;
+    }
+
+    // Custom targets (capped at balance) if any are set, otherwise 25% of income
+    function computeMonthlyBudget(cardList) {
+      var totalFloor = 0;
+      cardList.forEach(function (c) {
+        if (c.balance > 0) totalFloor += cardFloor(c);
+      });
+      // Income sets the budget; a saved per-card target only ever raises it, never shrinks it.
+      return Math.max(totalFloor, getUserIncome() * 0.25);
+    }
+
+    // Each card's floor (its saved target, or just the minimum) first, then cascade surplus in
+    // priority order, each capped at its balance
     function allocateMonthlyPayments(sortedActiveCards, budget) {
       var alloc = {};
       var remaining = budget;
       sortedActiveCards.forEach(function (c) {
-        var minPmt = minPaymentFor(c);
-        alloc[c.id] = minPmt;
-        remaining -= minPmt;
+        var floor = cardFloor(c);
+        alloc[c.id] = floor;
+        remaining -= floor;
       });
       sortedActiveCards.forEach(function (c) {
         if (remaining <= 0) return;
@@ -5499,6 +5520,9 @@
           currentStrategy = strategy;
           window.currentStrategy = strategy;
           saveUserData();
+          // Recompute Home/Overview immediately so every saved card's numbers reflect the new
+          // strategy right away, not just on the next navigation to those screens.
+          if (typeof window.renderDashboard === 'function') window.renderDashboard();
 
           if (strategy === 'avalanche') {
             if (avalancheCard) {
@@ -5752,8 +5776,9 @@
           
           const inputStatement = document.getElementById('input-billing-statement');
           const inputDue = document.getElementById('input-billing-due');
-          if (inputStatement) inputStatement.value = isValidDay(card.statementDay) ? parseInt(card.statementDay, 10) : '';
-          if (inputDue) inputDue.value = isValidDay(card.dueDay) ? parseInt(card.dueDay, 10) : '';
+          var todayStr = dayToLocalDateStr(new Date().getDate());
+          if (inputStatement) inputStatement.value = isValidDay(card.statementDay) ? dayToLocalDateStr(card.statementDay) : todayStr;
+          if (inputDue) inputDue.value = isValidDay(card.dueDay) ? dayToLocalDateStr(card.dueDay) : todayStr;
           const billingErr = document.getElementById('billing-modal-error');
           if (billingErr) billingErr.classList.add('hidden');
           
@@ -5788,20 +5813,20 @@
           const inputStatement = document.getElementById('input-billing-statement');
           const inputDue = document.getElementById('input-billing-due');
           const errEl = document.getElementById('billing-modal-error');
-          const statementVal = inputStatement ? inputStatement.value.trim() : '';
-          const dueVal = inputDue ? inputDue.value.trim() : '';
-          
-          if (!/^\d{1,2}$/.test(statementVal) || !isValidDay(statementVal) || !/^\d{1,2}$/.test(dueVal) || !isValidDay(dueVal)) {
+          const statementDay = localDateStrToDay(inputStatement ? inputStatement.value : '');
+          const dueDay = localDateStrToDay(inputDue ? inputDue.value : '');
+
+          if (!isValidDay(statementDay) || !isValidDay(dueDay)) {
               if (errEl) {
-                  errEl.textContent = 'Enter a day between 1 and 31 for both fields.';
+                  errEl.textContent = 'Please pick both a statement date and a due date.';
                   errEl.classList.remove('hidden');
               }
               return;
           }
           if (errEl) errEl.classList.add('hidden');
-          
-          card.statementDay = parseInt(statementVal, 10);
-          card.dueDay = parseInt(dueVal, 10);
+
+          card.statementDay = statementDay;
+          card.dueDay = dueDay;
           saveCards();
           
           window.renderDashboard();
@@ -6898,7 +6923,7 @@
   </div>
 
   <!-- Delete Confirmation Modal Overlay -->
-  <div id="modal-delete-card" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+  <div id="modal-delete-card" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" onclick="if(event.target === this) closeDeleteCardModal()">
       <div class="w-full max-w-xs sm:max-w-sm bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
           <!-- Red Icon Badge -->
           <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4">
@@ -6947,7 +6972,7 @@
       </div>
   </div>
   <!-- Update Billing Cycle Modal Overlay -->
-  <div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-[2px] flex flex-col justify-end transition-opacity duration-300 hidden opacity-0 pointer-events-none" id="modal-billing-cycle">
+  <div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-[2px] flex flex-col justify-end transition-opacity duration-300 hidden opacity-0 pointer-events-none" id="modal-billing-cycle" onclick="if(event.target === this) closeBillingModal()">
     <div class="bg-white rounded-t-[32px] p-6 pb-8 w-full max-w-md mx-auto mt-auto shadow-2xl relative transition-transform duration-300 translate-y-full flex flex-col pointer-events-auto">
       <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
       <div class="flex justify-between items-center mb-6">
@@ -6959,11 +6984,11 @@
       <div class="flex flex-col gap-5">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">STATEMENT GENERATION (DAY OF MONTH)</label>
-          <input id="input-billing-statement" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="e.g. 25">
+          <input id="input-billing-statement" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="date">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">PAYMENT DUE (DAY OF MONTH)</label>
-          <input id="input-billing-due" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="e.g. 10">
+          <input id="input-billing-due" class="w-full bg-slate-50/50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" type="date">
         </div>
         <p id="billing-modal-error" class="text-[12px] text-rose-600 font-medium hidden"></p>
       </div>
