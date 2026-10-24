@@ -474,20 +474,35 @@
       margin: 6px auto 0
     }
 
-    /* ── Interactive Visual Tour Styles ── */
-    #app-tour-card {
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      opacity: 1 !important;
+    /* ── Onboarding: welcome slides, Get started checklist, first-visit tips ── */
+    .ob-slides { transition: transform .28s cubic-bezier(.4,0,.2,1); }
+    .ob-fade { transition: opacity .22s ease, transform .22s ease; }
+    .ob-spot {
+      position: fixed;
+      border-radius: 16px;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, .55);
+      transition: top .25s cubic-bezier(.4,0,.2,1), left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1), height .25s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
     }
-
-    body.tour-active #screen-home,
-    body.tour-active #screen-list,
-    body.tour-active #screen-profile,
-    body.tour-active #screen-simulators,
-    body.tour-active #screen-spaces,
-    body.tour-active #screen-profile > div.flex-1 {
-      padding-bottom: 240px !important;
+    .ob-spot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 20px;
+      border: 2px solid rgba(16, 185, 129, .9);
+    }
+    .ob-tip-arrow {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      transform: rotate(45deg);
+    }
+    @keyframes obPop { 0% { transform: scale(.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    .ob-pop { animation: obPop .32s ease-out; }
+    @media (prefers-reduced-motion: reduce) {
+      .ob-slides, .ob-fade, .ob-spot { transition: none !important; }
+      .ob-pop { animation: none !important; }
     }
   </style>
 
@@ -938,8 +953,25 @@
       </section>
       
       <div class="px-5 flex flex-col space-y-5 mt-2">
+        <!-- Get started checklist (rendered by Onboarding.renderChecklist) -->
+        <section id="ob-checklist" class="hidden bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]" aria-labelledby="ob-checklist-title">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 id="ob-checklist-title" class="text-[16px] font-bold text-on-surface">Get started</h2>
+              <p id="ob-checklist-progress" class="text-[12px] text-secondary mt-0.5" aria-live="polite">0 of 6 done</p>
+            </div>
+            <button id="ob-checklist-dismiss" type="button" aria-label="Dismiss setup checklist" class="w-11 h-11 -mr-3 -mt-3 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+          <div class="mt-3 h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+            <div id="ob-checklist-bar" class="h-full w-0 bg-emerald-500 rounded-full transition-all duration-500"></div>
+          </div>
+          <ul id="ob-checklist-items" class="mt-2 flex flex-col"></ul>
+        </section>
+
         <!-- 3. High-Level Financial Snapshot Card (Primary Top Hero Card) -->
-        <section
+        <section id="home-snapshot-card"
           class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
           <div class="flex justify-between items-center mb-1.5">
             <span class="text-[11px] text-secondary font-bold tracking-wider uppercase">Total Aggregate Debt</span>
@@ -983,7 +1015,7 @@
         </section>
 
         <!-- 4. Urgent Alerts & Exposure Stack -->
-        <section class="flex flex-col space-y-3">
+        <section id="home-alerts-section" class="flex flex-col space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <h2 class="text-[18px] font-bold text-on-surface">Urgent Alerts &amp; Exposure</h2>
@@ -1149,7 +1181,7 @@
         </section>
 
         <!-- 6. Repayment Strategy & Goal Tracking -->
-        <section
+        <section id="home-strategy-section"
           class="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] mb-4">
           <div class="flex items-center justify-between mb-3">
             <div>
@@ -1781,7 +1813,7 @@
           <h1 class="text-[18px] font-semibold text-on-surface tracking-tight leading-none">Profile &amp; Settings</h1>
           <p class="text-[11px] font-semibold text-secondary mt-0.5">Financial Health &amp; Regulatory Rules</p>
         </div>
-        <button type="button" onclick="startVisualGuideTour(true)" aria-label="Replay Visual Guide" title="Replay Visual Guide"
+        <button type="button" onclick="Onboarding.replay()" aria-label="Replay app guide" title="Replay app guide"
           class="w-10 h-10 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary active:scale-95 transition-all cursor-pointer">
           <span class="material-symbols-outlined text-[20px]" data-icon="help_outline">help_outline</span>
         </button>
@@ -2011,15 +2043,15 @@
 
         <!-- Section: Guided Tour & Support -->
         <section class="space-y-2 mt-4">
-          <button type="button" onclick="startVisualGuideTour(true)"
+          <button type="button" id="btn-replay-guide" onclick="Onboarding.replay()"
             class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container active:scale-[0.98] transition-all app-card-shadow text-left cursor-pointer group">
             <div class="flex items-center space-x-3">
               <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-700 group-hover:scale-105 transition-transform">
                 <span class="material-symbols-outlined text-[20px]">explore</span>
               </div>
               <div>
-                <span class="text-[13px] font-semibold text-on-surface block">Replay Visual App Guide</span>
-                <span class="text-[11px] text-secondary block mt-0.5">Explore key features, menus & calculation metrics</span>
+                <span class="text-[13px] font-semibold text-on-surface block">Replay app guide</span>
+                <span class="text-[11px] text-secondary block mt-0.5">Walk through setup and screen tips again</span>
               </div>
             </div>
             <span class="material-symbols-outlined text-secondary text-[18px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
@@ -2702,54 +2734,102 @@
   </nav>
 
   <!-- ═══════════════════════════════════════════════════════════════
-       INTERACTIVE VISUAL GUIDE TOUR (CRYSTAL-CLEAR, ZERO BLUR)
+       ONBOARDING: WELCOME FLOW (first launch + replay from Profile)
   ═══════════════════════════════════════════════════════════════ -->
-  <!-- Animated Floating Pointer Badge (anchored above target element) -->
-  <div id="tour-target-pointer" class="hidden fixed z-[145] pointer-events-none" style="transition: top 0.35s cubic-bezier(.4,0,.2,1), left 0.35s cubic-bezier(.4,0,.2,1);">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-      <div id="tour-pointer-badge" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:11px;font-weight:700;box-shadow:0 4px 16px rgba(16,185,129,0.45);white-space:nowrap;letter-spacing:0.01em;">
-        <span id="tour-pointer-icon" class="material-symbols-outlined" style="font-size:14px;">touch_app</span>
-        <span id="tour-pointer-text">Tap Here</span>
+  <div id="ob-welcome" class="hidden fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-[2px] flex items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="ob-title-1">
+    <div id="ob-welcome-sheet" class="ob-fade w-full max-w-md bg-surface-container-lowest rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[100dvh] translate-y-4 opacity-0">
+      <div class="flex items-center justify-between px-5 pt-4">
+        <div id="ob-dots" class="flex items-center gap-1.5" aria-hidden="true"></div>
+        <button id="ob-skip" type="button" class="min-h-[44px] px-3 -mr-2 rounded-full text-[13px] font-semibold text-secondary hover:text-on-surface hover:bg-surface-container transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Skip for now</button>
       </div>
-      <div style="width:2px;height:10px;background:linear-gradient(to bottom,#10b981,transparent);border-radius:2px;"></div>
-      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #10b981;"></div>
+      <div class="overflow-hidden flex-1 min-h-0">
+        <div id="ob-slides" class="ob-slides flex h-full">
+          <!-- Slide 1: Value -->
+          <section class="ob-slide w-full shrink-0 px-6 pt-3 pb-2 overflow-y-auto" aria-roledescription="slide" aria-label="1 of 3">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-700 flex items-center justify-center mb-5">
+              <span class="material-symbols-outlined text-[32px]">account_balance_wallet</span>
+            </div>
+            <h2 id="ob-title-1" class="text-[22px] font-bold text-on-surface tracking-tight leading-tight">See all your card debt in one place</h2>
+            <p class="text-[14px] text-secondary mt-2 leading-relaxed">Link your credit cards and Serendib keeps a live picture of what you owe.</p>
+            <ul class="mt-5 flex flex-col gap-3">
+              <li class="flex items-start gap-3"><span class="material-symbols-outlined text-[20px] text-emerald-600 mt-0.5">monitoring</span><span class="text-[13px] text-on-surface leading-snug"><strong class="font-semibold">Total debt &amp; utilisation</strong> across every card</span></li>
+              <li class="flex items-start gap-3"><span class="material-symbols-outlined text-[20px] text-emerald-600 mt-0.5">local_fire_department</span><span class="text-[13px] text-on-surface leading-snug"><strong class="font-semibold">Interest this month</strong>, so you can see what your debt costs</span></li>
+              <li class="flex items-start gap-3"><span class="material-symbols-outlined text-[20px] text-emerald-600 mt-0.5">notifications_active</span><span class="text-[13px] text-on-surface leading-snug"><strong class="font-semibold">Due-date alerts</strong> once you set each card's billing cycle</span></li>
+            </ul>
+          </section>
+          <!-- Slide 2: How the plan works -->
+          <section class="ob-slide w-full shrink-0 px-6 pt-3 pb-2 overflow-y-auto" aria-roledescription="slide" aria-label="2 of 3">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-700 flex items-center justify-center mb-5">
+              <span class="material-symbols-outlined text-[32px]">route</span>
+            </div>
+            <h2 id="ob-title-2" class="text-[22px] font-bold text-on-surface tracking-tight leading-tight">Pay the right card first</h2>
+            <p class="text-[14px] text-secondary mt-2 leading-relaxed">Each month Serendib splits a safe repayment budget across your cards.</p>
+            <ol class="mt-5 flex flex-col gap-3">
+              <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-surface-container text-[12px] font-bold text-on-surface flex items-center justify-center shrink-0">1</span><span class="text-[13px] text-on-surface leading-snug">Every card gets at least its <strong class="font-semibold">minimum payment</strong>.</span></li>
+              <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-surface-container text-[12px] font-bold text-on-surface flex items-center justify-center shrink-0">2</span><span class="text-[13px] text-on-surface leading-snug">The rest goes to one <strong class="font-semibold">priority card</strong>, chosen by your strategy.</span></li>
+              <li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-surface-container text-[12px] font-bold text-on-surface flex items-center justify-center shrink-0">3</span><span class="text-[13px] text-on-surface leading-snug">When it's cleared, the money <strong class="font-semibold">rolls on to the next card</strong>.</span></li>
+            </ol>
+          </section>
+          <!-- Slide 3: Personalise -->
+          <section class="ob-slide w-full shrink-0 px-6 pt-3 pb-2 overflow-y-auto" aria-roledescription="slide" aria-label="3 of 3">
+            <h2 id="ob-title-3" class="text-[22px] font-bold text-on-surface tracking-tight leading-tight">Personalise your plan</h2>
+            <p class="text-[14px] text-secondary mt-2 leading-relaxed">Two answers and your repayment plan is ready. You can change both later in Profile.</p>
+            <div class="mt-5 space-y-1.5">
+              <label for="ob-income" class="text-[12px] font-semibold text-secondary">Monthly take-home income</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-secondary">LKR</span>
+                <input id="ob-income" type="number" inputmode="numeric" min="1" step="1000" placeholder="e.g. 175000" class="stitch-input pl-12 num" aria-describedby="ob-income-help">
+              </div>
+              <p id="ob-income-help" class="text-[11px] text-secondary leading-snug">Sets a safe repayment budget (25% of income) and your debt-to-income score.</p>
+            </div>
+            <fieldset class="mt-5">
+              <legend class="text-[12px] font-semibold text-secondary mb-1.5">Payoff strategy</legend>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="cursor-pointer">
+                  <input type="radio" name="ob-strategy" value="avalanche" class="sr-only peer" checked>
+                  <div class="h-full rounded-2xl border border-outline-variant/50 p-3 transition-colors peer-checked:border-2 peer-checked:border-primary peer-checked:bg-emerald-50/60 peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                    <span class="material-symbols-outlined text-[20px] text-emerald-700">trending_down</span>
+                    <p class="text-[14px] font-bold text-on-surface mt-1">Avalanche</p>
+                    <p class="text-[11px] text-secondary leading-snug mt-0.5">Highest interest first. Saves the most money.</p>
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="ob-strategy" value="snowball" class="sr-only peer">
+                  <div class="h-full rounded-2xl border border-outline-variant/50 p-3 transition-colors peer-checked:border-2 peer-checked:border-primary peer-checked:bg-emerald-50/60 peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                    <span class="material-symbols-outlined text-[20px] text-emerald-700">ac_unit</span>
+                    <p class="text-[14px] font-bold text-on-surface mt-1">Snowball</p>
+                    <p class="text-[11px] text-secondary leading-snug mt-0.5">Smallest balance first. Quickest wins.</p>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+            <p id="ob-error" class="hidden text-[12px] text-error mt-3" role="alert"></p>
+          </section>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-6 pt-3 pb-6">
+        <button id="ob-back" type="button" class="invisible h-12 px-4 rounded-full text-[14px] font-semibold text-secondary hover:bg-surface-container transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Back</button>
+        <button id="ob-next" type="button" class="flex-1 h-12 rounded-full bg-primary-container text-white text-[14px] font-bold hover:bg-primary-container/90 active:scale-[0.98] transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Next</button>
+      </div>
     </div>
   </div>
 
-  <!-- Main Coachmark Card (no dark overlay, crystal-clear app behind) -->
-  <div id="app-tour-overlay" class="hidden fixed z-[140] pointer-events-none" style="inset:0;">
-    <!-- Floating bottom coachmark card wrapper (pointer-events-none so touches around card pass through to scroll the page) -->
-    <div class="fixed bottom-[72px] inset-x-0 flex justify-center px-4 pointer-events-none" style="z-index:141;">
-      <div id="app-tour-card" class="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-[0_8px_32px_rgba(15,23,42,0.18)] flex flex-col gap-2 pointer-events-auto" style="background:#ffffff !important;background-color:#ffffff !important;opacity:1 !important;padding:14px 16px 12px;touch-action:pan-y;">
-
-        <!-- Top Row: Step badge + Feature name + Skip -->
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span id="tour-badge-step" style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;letter-spacing:.04em;text-transform:uppercase;">1 of 6</span>
-            <span id="tour-title" style="font-size:13px;font-weight:700;color:#0f172a;">Link Your Credit Cards</span>
-          </div>
-          <button type="button" onclick="skipVisualGuideTour()" style="display:flex;align-items:center;gap:2px;font-size:11px;color:#94a3b8;font-weight:600;background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='#f1f5f9';this.style.color='#475569';" onmouseout="this.style.background='none';this.style.color='#94a3b8';">
-            <span>Skip</span>
-            <span class="material-symbols-outlined" style="font-size:13px;">close</span>
-          </button>
+  <!-- ONBOARDING: FIRST-VISIT SPOTLIGHT TIPS -->
+  <div id="ob-tips" class="hidden fixed inset-0 z-[150]" role="dialog" aria-modal="true" aria-labelledby="ob-tip-title" aria-describedby="ob-tip-body">
+    <div id="ob-tip-catcher" class="absolute inset-0"></div>
+    <div id="ob-tip-spot" class="ob-spot"></div>
+    <div id="ob-tip-card" class="ob-fade absolute w-[calc(100%-32px)] max-w-[340px] bg-white rounded-2xl shadow-2xl p-4 opacity-0">
+      <div id="ob-tip-arrow" class="ob-tip-arrow"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between">
+          <span id="ob-tip-count" class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">1 of 3</span>
+          <button id="ob-tip-skip" type="button" class="min-h-[44px] -my-3 -mr-2 px-2 rounded-full text-[12px] font-semibold text-secondary hover:text-on-surface transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Skip tips</button>
         </div>
-
-        <!-- One-sentence crisp description -->
-        <p id="tour-description" style="font-size:12px;color:#475569;line-height:1.55;margin:0;">This is where you add your credit cards. Enter your balance, APR &amp; limit so Serendib can track your debt.</p>
-
-        <!-- Bottom Row: Back + Dots + Next -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
-          <button id="btn-tour-back" type="button" onclick="prevVisualGuideStep()" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#64748b;background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='none';">
-            <span class="material-symbols-outlined" style="font-size:14px;">arrow_back</span>
-            <span>Back</span>
-          </button>
-          <div id="tour-dots-container" style="display:flex;align-items:center;gap:5px;"></div>
-          <button id="btn-tour-next" type="button" onclick="nextVisualGuideStep()" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#fff;background:#1a1f2e;border:none;cursor:pointer;padding:6px 14px;border-radius:9px;box-shadow:0 2px 8px rgba(26,31,46,.18);transition:background .15s,transform .1s;" onmouseover="this.style.background='#2d3548';" onmouseout="this.style.background='#1a1f2e';" onmousedown="this.style.transform='scale(0.96)';" onmouseup="this.style.transform='scale(1)';">
-            <span id="btn-tour-next-text">Next</span>
-            <span id="btn-tour-next-icon" class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
-          </button>
+        <h3 id="ob-tip-title" class="text-[15px] font-bold text-on-surface mt-1"></h3>
+        <p id="ob-tip-body" class="text-[13px] text-secondary mt-1 leading-relaxed"></p>
+        <div class="flex justify-end mt-3">
+          <button id="ob-tip-next" type="button" class="h-11 px-5 rounded-full bg-primary-container text-white text-[13px] font-bold hover:bg-primary-container/90 active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Next</button>
         </div>
-
       </div>
     </div>
   </div>
@@ -2775,7 +2855,8 @@
       <form id="add-card-form" class="space-y-4" onsubmit="return false;">
         <div class="space-y-1.5">
           <label class="text-[12px] font-semibold text-secondary" for="f-bank">Bank name</label>
-          <input id="f-bank" type="text" placeholder="e.g. Commercial Bank of Ceylon" class="stitch-input" required>
+          <input id="f-bank" type="text" list="bank-options" autocomplete="off" placeholder="Start typing, e.g. Commercial Bank" class="stitch-input" required>
+          <datalist id="bank-options"></datalist>
         </div>
         <div class="space-y-1.5">
           <label class="text-[12px] font-semibold text-secondary" for="f-nick">Card tier / nickname</label>
@@ -2861,7 +2942,7 @@
         <div class="flex gap-3 pt-2">
           <button type="button" id="btn-modal-cancel"
             class="flex-1 h-12 rounded-full border border-outline-variant text-[14px] font-semibold text-secondary hover:bg-surface-container transition-all active:scale-[0.98]">Cancel</button>
-          <button type="submit" id="btn-modal-save"
+          <button type="button" id="btn-modal-save"
             class="flex-1 h-12 rounded-full bg-primary-container text-white text-[14px] font-bold hover:bg-primary-container/90 transition-all active:scale-[0.98] shadow-sm">Link
             Card</button>
         </div>
@@ -2907,11 +2988,13 @@
 
     /* FINANCIAL CALCULATIONS */
 
-    window.calculateCBSLAmortization = function(balance, apr) {
+    window.calculateCBSLAmortization = function(balance, apr, minPct, minFloor) {
         if (balance <= 0) return null;
-        
+
         const monthlyRate = (apr / 100) / 12;
-        
+        const pctRule = isFinite(minPct) && minPct > 0 ? minPct : MIN_PMT_PCT;
+        const floorRule = isFinite(minFloor) && minFloor >= 0 ? minFloor : MIN_PMT_FLOOR;
+
         // --- SCENARIO A: MINIMUM PAYMENT (4%) ---
         let minBal = balance;
         let minMonths = 0;
@@ -2919,8 +3002,8 @@
         
         while (minBal > 0 && minMonths < 600) {
             let interest = minBal * monthlyRate;
-            // CBSL 4% rule with the app-wide hard floor
-            let payment = Math.max(minBal * MIN_PMT_PCT, MIN_PMT_FLOOR);
+            // The card's minimum-payment rule (app default: 4% with an LKR 1,000 floor)
+            let payment = Math.max(minBal * pctRule, floorRule); 
             
             if (minBal + interest < payment) payment = minBal + interest;
             
@@ -2985,9 +3068,21 @@
       return window.currentStrategy || localStorage.getItem("payoff_strategy") || "avalanche";
     }
 
+    // A card's minimum-payment rule, taken from its bank when the card was added.
+    // Cards saved before per-bank rules existed keep the app default (4%, LKR 1,000 floor).
+    function cardMinRule(c) {
+      var pct = c ? parseFloat(c.minPct) : NaN;
+      var floor = c ? parseFloat(c.minFloor) : NaN;
+      return {
+        pct: isFinite(pct) && pct > 0 ? pct : MIN_PMT_PCT,
+        floor: isFinite(floor) && floor >= 0 ? floor : MIN_PMT_FLOOR
+      };
+    }
+
     // Minimum payment, never more than what is owed
     function minPaymentFor(c) {
-      return Math.min(c.balance, Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR));
+      var r = cardMinRule(c);
+      return Math.min(c.balance, Math.max(c.balance * r.pct, r.floor));
     }
 
     // The amount this card is guaranteed each month: a saved per-card target (clamped to its
@@ -3005,6 +3100,104 @@
       var a = parseFloat(c.apr);
       return isFinite(a) && a >= 0 ? a : 28.0;
     }
+
+    /* ── Sri Lankan credit card issuers ──
+       fee:      cash-advance fee at an ATM on standard cards.
+                 'greater' = higher of percent and fixed, 'plus' = percent + fixed, 'flat' = fixed only.
+       apr:      the bank's standard card rate. CBSL has capped card interest at 28% p.a. since Aug 2023.
+       minPct / minFloor: minimum monthly payment rule (fraction of balance, LKR floor).
+       verified: the fee was checked against the bank's own published tariff (asOf). Unverified banks
+                 use the app defaults (28%, 4% / LKR 1,000) until their tariff is confirmed.
+       HSBC Sri Lanka's retail cards moved to Nations Trust Bank on 1 May 2026, so HSBC maps to ntb. */
+    var SL_CARD_ISSUERS = {
+      combank:  { name: 'Commercial Bank',          aliases: ['commercialbankofceylon', 'commercialbank', 'commercial', 'combank'],
+                  fee: { type: 'greater', percent: 4.5, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2026' },
+      boc:      { name: 'Bank of Ceylon',           aliases: ['bankofceylon', 'boc'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 300 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      peoples:  { name: "People's Bank",            aliases: ['peoplesbank', 'peoples'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jun 2026' },
+      sampath:  { name: 'Sampath Bank',             aliases: ['sampathbank', 'sampath'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 300 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'May 2025' },
+      hnb:      { name: 'Hatton National Bank (HNB)', aliases: ['hattonnationalbank', 'hattonnational', 'hnb'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      seylan:   { name: 'Seylan Bank',              aliases: ['seylanbank', 'seylan'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 700 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2026' },
+      ntb:      { name: 'Nations Trust Bank',       aliases: ['nationstrustbank', 'nationstrust', 'americanexpress', 'amex', 'hsbc', 'ntb'],
+                  fee: { type: 'plus',    percent: 5.0, fixed: 1250 }, apr: 26, minPct: 0.04, minFloor: 250,  verified: true,  asOf: 'Oct 2026' },
+      ndb:      { name: 'NDB Bank',                 aliases: ['nationaldevelopmentbank', 'ndbbank', 'ndb'],
+                  fee: { type: 'plus',    percent: 5.0, fixed: 1200 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      dfcc:     { name: 'DFCC Bank',                aliases: ['dfccbank', 'dfcc'],
+                  fee: { type: 'greater', percent: 5.0, fixed: 1250 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      pabc:     { name: 'Pan Asia Bank',            aliases: ['panasiabanking', 'panasiabank', 'panasia', 'pabc'],
+                  fee: { type: 'greater', percent: 5.0, fixed: 1000 }, apr: 26, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2025' },
+      union:    { name: 'Union Bank',               aliases: ['unionbankofcolombo', 'unionbank', 'union'],
+                  fee: { type: 'plus',    percent: 10.0, fixed: 750 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jun 2026' },
+      cdb:      { name: 'CDB (Citizens Development Business Finance)', aliases: ['citizensdevelopment', 'cdb'],
+                  fee: { type: 'greater', percent: 5.0, fixed: 1000 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Oct 2026' },
+      cargills: { name: 'Cargills Bank',            aliases: ['cargillsbank', 'cargills'],
+                  fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      scb:      { name: 'Standard Chartered',       aliases: ['standardchartered', 'stanchart', 'scb'],
+                  fee: { type: 'flat',    percent: 0,   fixed: 990 },  apr: 26, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+      'default': { name: 'Other bank',              aliases: [],
+                  fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' }
+    };
+
+    // Match a typed bank name to an issuer key. The longest matching alias wins, so
+    // "Commercial Bank of Ceylon" resolves to combank rather than boc. Short aliases
+    // (4 letters or fewer, like "boc" or "hnb") must be a whole word.
+    function resolveIssuer(name) {
+      var lower = String(name || '').toLowerCase().replace(/&/g, 'and');
+      var compact = lower.replace(/[^a-z0-9]/g, '');
+      if (!compact) return null;
+      var words = lower.split(/[^a-z0-9]+/).filter(Boolean);
+      var best = null, bestLen = 0;
+      Object.keys(SL_CARD_ISSUERS).forEach(function (key) {
+        if (key === 'default') return;
+        var iss = SL_CARD_ISSUERS[key];
+        if (iss.name.toLowerCase().replace(/[^a-z0-9]/g, '') === compact) { best = key; bestLen = Infinity; return; }
+        iss.aliases.forEach(function (a) {
+          var hit = a.length <= 4 ? words.indexOf(a) !== -1 : compact.indexOf(a) !== -1;
+          if (hit && a.length > bestLen) { best = key; bestLen = a.length; }
+        });
+      });
+      return best;
+    }
+
+    function cardIssuer(c) {
+      var key = c && c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c && c.bank);
+      return SL_CARD_ISSUERS[key] || SL_CARD_ISSUERS['default'];
+    }
+
+    function computeAdvanceFee(fee, amount) {
+      var p = (fee.percent || 0) / 100;
+      if (fee.type === 'plus') return amount * p + fee.fixed;
+      if (fee.type === 'flat') return fee.fixed;
+      return Math.max(amount * p, fee.fixed);
+    }
+
+    // Read live from the issuer table, so tariff corrections reach cards saved earlier
+    function cardFee(c, amount) {
+      return computeAdvanceFee(cardIssuer(c).fee, amount);
+    }
+
+    // Cash advances are charged at the card's normal rate even on a 0% instalment plan,
+    // so this ignores isZeroPercent and uses the stored APR, then the bank's default
+    function cashAdvanceApr(c) {
+      var a = c ? parseFloat(c.apr) : NaN;
+      return isFinite(a) && a > 0 ? a : cardIssuer(c).apr;
+    }
+
+    // Fill the bank suggestion list shared by the Add Card and Edit Card fields
+    document.addEventListener('DOMContentLoaded', function () {
+      var list = document.getElementById('bank-options');
+      if (!list) return;
+      list.innerHTML = Object.keys(SL_CARD_ISSUERS)
+        .filter(function (k) { return k !== 'default'; })
+        .map(function (k) { return SL_CARD_ISSUERS[k].name; })
+        .sort()
+        .map(function (n) { return '<option value="' + n.replace(/"/g, '&quot;') + '"></option>'; })
+        .join('');
+    });
 
     // Clamp a day-of-month to the last day of the given month (e.g. 31 -> 30 in April)
     function clampDay(year, month, day) {
@@ -3070,9 +3263,9 @@
       return { alloc: alloc, total: total };
     }
 
-    // Minimum-only path (4% of balance, floor Rs.500)
-    function calcMinPayoff(balance, apr) {
-      var res = window.calculateCBSLAmortization(balance, apr !== undefined ? apr : 28);
+    // Minimum-only path, using the card's minimum-payment rule when given
+    function calcMinPayoff(balance, apr, rule) {
+      var res = window.calculateCBSLAmortization(balance, apr !== undefined ? apr : 28, rule && rule.pct, rule && rule.floor);
       if (!res || res.minMonths >= 600) return { months: Infinity, totalInterest: Infinity };
       return { months: res.minMonths, totalInterest: res.minTotalInterest };
     }
@@ -3100,22 +3293,13 @@
         return { daysLeft: diffDays, dateString: dateString };
     }
 
-    // Cash advance: advanceFee + compound daily interest
-    function calcCashAdvance(principal, days, c = null) {
-      const type = c?.feeType || 'greater';
-      const pct = c?.feePercent !== undefined ? c.feePercent : 4.0;
-      const fixed = c?.feeFixed !== undefined ? c.feeFixed : 500;
-      const apr = cardApr(c);
-      const p = pct / 100;
-      
-      let advanceFee = 0;
-      if (type === 'greater') advanceFee = Math.max(principal * p, fixed);
-      else if (type === 'plus') advanceFee = (principal * p) + fixed;
-      else if (type === 'flat') advanceFee = fixed;
-      
-      var base = principal + advanceFee;
-      const dailyRate = (apr / 100) / 365;
-      var interest = base * (Math.pow(1 + dailyRate, days) - 1);
+    // Cash advance: a one-off fee plus simple daily interest on the cash from the day it is
+    // withdrawn (Sri Lankan banks give no grace period on cash). `overrides` lets a custom
+    // simulator scenario supply its own fee and APR instead of a saved card's.
+    function calcCashAdvance(principal, days, c, overrides) {
+      var advanceFee = overrides && overrides.fee !== undefined ? overrides.fee : cardFee(c, principal);
+      var apr = overrides && overrides.apr !== undefined ? overrides.apr : cashAdvanceApr(c);
+      var interest = principal * (apr / 100 / 365) * days;
       return { advanceFee: advanceFee, interest: interest, total: principal + advanceFee + interest };
     }
 
@@ -3228,6 +3412,9 @@
             spaces: spaces || [],
             income: incomeVal,
             strategy: window.currentStrategy || "avalanche",
+            onboarding: (window.currentUserData && window.currentUserData.onboarding) || {},
+            hasCompletedTour: !!(window.currentUserData && (window.currentUserData.hasCompletedTour ||
+                (window.currentUserData.onboarding && window.currentUserData.onboarding.welcomeDone))),
             lastUpdated: Date.now()
         };
 
@@ -3370,6 +3557,11 @@
             var icon = targetTab.querySelector(".nav-icon");
             if (icon) icon.classList.add("icon-filled");
           }
+        }
+
+        if (window.Onboarding) {
+          if (targetScreenId === 'screen-simulators') window.Onboarding.markSimulatorTried();
+          window.Onboarding.maybeShowTips(targetScreenId);
         }
       }
       window.navigateTo = navigateTo;
@@ -3670,7 +3862,7 @@
                     elDate.innerText = nextPaymentDateObj.toLocaleDateString('en-GB', options);
                 }
                 if (elAmount) {
-                    var reqMin = Math.max(nextPaymentCard.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
+                    var reqMin = Math.round(minPaymentFor(nextPaymentCard));
                     elAmount.innerText = "LKR " + reqMin.toLocaleString();
                 }
             } else if (elAlertPayment) {
@@ -3770,7 +3962,8 @@
         var baselineTotalInterest = 0;
         var baselineMaxMonths = 0;
         portfolioBaseline.forEach(function(c) {
-            var res = window.calculateCBSLAmortization ? window.calculateCBSLAmortization(c.balance, cardApr(c)) : {minMonths: Infinity, minTotalInterest: Infinity};
+            var rule = cardMinRule(c);
+            var res = window.calculateCBSLAmortization ? window.calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor) : {minMonths: Infinity, minTotalInterest: Infinity};
             if (res.minMonths === Infinity || res.minMonths >= 1200) {
                 baselineMaxMonths = Infinity;
             } else {
@@ -3793,7 +3986,7 @@
                     var interest = c.balance * (cardApr(c) / 100 / 12);
                     c.balance += interest;
                     targetTotalInterest += interest;
-                    monthMinReq += Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
+                    monthMinReq += minPaymentFor(c);
                 }
             });
             
@@ -3808,7 +4001,7 @@
             // Deduct minimums first
             portfolioTarget.forEach(function(c) {
                 if (c.balance > 0.01) {
-                    var minPmt = Math.min(c.balance, Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR));
+                    var minPmt = minPaymentFor(c);
                     c.balance -= minPmt;
                     surplus -= minPmt;
                 }
@@ -3854,6 +4047,8 @@
                 elSavings.innerText = fmtLKR(Math.max(savings, 0));
             }
         }
+
+        if (window.Onboarding) window.Onboarding.renderChecklist();
       }
       function goHome() {
         activeId = null;
@@ -4167,7 +4362,7 @@
         fill.style.width = util.toFixed(1) + "%";
         fill.className = "h-full rounded-full transition-all duration-500 " + theme.barFill;
 
-        var minPmt = Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
+        var minPmt = minPaymentFor(c);
         var sl = document.getElementById("ps-slider");
         sl.min = Math.floor(minPmt);
         sl.max = Math.ceil(c.balance * 1.05 + 1);
@@ -4232,11 +4427,12 @@
                 const descEl = document.getElementById('card-adv-cost-desc');
                 const feeDescEl = document.getElementById('ca-fee-desc');
                 
-                const type = c.feeType || 'greater';
-                const pct = c.feePercent !== undefined ? c.feePercent : 4.0;
-                const fixed = c.feeFixed !== undefined ? c.feeFixed : 500;
-                const apr = cardApr(c);
-                
+                const issuer = cardIssuer(c);
+                const type = issuer.fee.type;
+                const pct = issuer.fee.percent;
+                const fixed = issuer.fee.fixed;
+                const apr = cashAdvanceApr(c);
+
                 let feeString = '';
                 let breakdownString = '';
                 if (type === 'greater') {
@@ -4250,7 +4446,10 @@
                     breakdownString = `Instant advance fee (Flat Rs.${new Intl.NumberFormat('en-LK').format(fixed)})`;
                 }
                 
-                if (descEl) descEl.textContent = `${feeString} + ${apr}% APR compounding from Day 1. No grace period.`;
+                const sourceNote = issuer.verified
+                    ? `Based on ${issuer.name}'s published tariff (${issuer.asOf}), ATM fee on standard cards.`
+                    : `Estimated: ${issuer.name === 'Other bank' ? "this bank's" : issuer.name + "'s"} tariff is not yet verified.`;
+                if (descEl) descEl.textContent = `${feeString} + ${apr}% APR charged daily from Day 1. No grace period. ${sourceNote}`;
                 if (feeDescEl) feeDescEl.textContent = breakdownString;
             }
         }
@@ -4258,8 +4457,8 @@
 
       function runPayoffSim(card, payment) {
         var balance = card.balance;
-        var minPmt = Math.max(balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
-        var minRes = calcMinPayoff(balance, cardApr(card));
+        var minPmt = minPaymentFor(card);
+        var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
         document.getElementById("ps-min-duration").textContent =
           !isFinite(minRes.months) ? "Never clears!" : fmtMonths(minRes.months);
         document.getElementById("ps-min-interest").textContent =
@@ -4299,7 +4498,7 @@
       function psSetSlider(preset) {
         var c = cards.filter(function (x) { return x.id === activeId; })[0];
         if (!c) return;
-        var minPmt = Math.max(c.balance * MIN_PMT_PCT, MIN_PMT_FLOOR);
+        var minPmt = minPaymentFor(c);
         var sl = document.getElementById("ps-slider");
         var val;
         if (preset === "min") val = minPmt;
@@ -4342,16 +4541,8 @@
         document.getElementById("ca-empty").classList.add("hidden");
         
         var c = cards.filter(function (x) { return x.id === activeId; })[0];
-        const type = c?.feeType || 'greater';
-        const pct = c?.feePercent !== undefined ? c.feePercent : 4.0;
-        const fixed = c?.feeFixed !== undefined ? c.feeFixed : 500;
-        const p = pct / 100;
-        
-        let fee = 0;
-        if (type === 'greater') fee = Math.max(raw * p, fixed);
-        else if (type === 'plus') fee = (raw * p) + fixed;
-        else if (type === 'flat') fee = fixed;
-        
+        var fee = cardFee(c, raw);
+
         document.getElementById("ca-principal").textContent = fmtLKR(raw, 2);
         document.getElementById("ca-fee").textContent = fmtLKR(fee, 2);
         [15, 30, 60].forEach(function (d) {
@@ -4400,32 +4591,10 @@
         document.getElementById("add-card-form").reset();
         document.getElementById("modal-error").classList.add("hidden");
       }
-      const BANK_FEE_DICTIONARY = {
-          'seylan': { type: 'greater', percent: 4.0, fixed: 700 },
-          'boc': { type: 'greater', percent: 4.0, fixed: 300 },
-          'bankofceylon': { type: 'greater', percent: 4.0, fixed: 300 },
-          'sampath': { type: 'greater', percent: 4.0, fixed: 300 },
-          'commercial': { type: 'greater', percent: 4.5, fixed: 500 },
-          'peoples': { type: 'greater', percent: 3.5, fixed: 500 },
-          'standardchartered': { type: 'flat', percent: 0.0, fixed: 990 },
-          'hsbc': { type: 'greater', percent: 5.0, fixed: 990 },
-          'dfcc': { type: 'greater', percent: 5.0, fixed: 1250 },
-          'ndb': { type: 'plus', percent: 5.0, fixed: 1200 },
-          'nationstrust': { type: 'plus', percent: 5.0, fixed: 1250 },
-          'ntb': { type: 'plus', percent: 5.0, fixed: 1250 },
-          'amex': { type: 'plus', percent: 5.0, fixed: 1250 },
-          'union': { type: 'plus', percent: 10.0, fixed: 750 },
-          'default': { type: 'greater', percent: 4.0, fixed: 500 }
-      };
-
+      // Kept for older call sites: the cash-advance fee for a typed bank name
       window.resolveCardTariff = function(bankName = '') {
-          const clean = bankName.toLowerCase().replace(/[^a-z0-9]/g, '');
-          for (const [key, tariff] of Object.entries(BANK_FEE_DICTIONARY)) {
-              if (key !== 'default' && clean.includes(key)) {
-                  return tariff;
-              }
-          }
-          return BANK_FEE_DICTIONARY['default'];
+          const iss = SL_CARD_ISSUERS[resolveIssuer(bankName)] || SL_CARD_ISSUERS['default'];
+          return { type: iss.fee.type, percent: iss.fee.percent, fixed: iss.fee.fixed };
       };
 
       function saveCard() {
@@ -4442,8 +4611,9 @@
         if (balance > limit) return showErr("Balance cannot exceed the credit limit.");
         errEl.classList.add("hidden");
         
-        const match = window.resolveCardTariff(bank);
-        
+        const issuerKey = resolveIssuer(bank);
+        const issuer = SL_CARD_ISSUERS[issuerKey] || SL_CARD_ISSUERS['default'];
+
         cards.push({ 
             id: uid(), 
             bank: bank, 
@@ -4451,11 +4621,11 @@
             limit: limit, 
             balance: balance, 
             color: color,
-            apr: 28.0,
+            issuer: issuerKey,
+            apr: issuer.apr,
             isZeroPercent: false,
-            feeType: match.type,
-            feePercent: match.percent,
-            feeFixed: match.fixed
+            minPct: issuer.minPct,
+            minFloor: issuer.minFloor
         });
         saveCards();
         renderList();
@@ -4525,6 +4695,7 @@
                   option.textContent = card.bank + ' ' + card.nick + (card.balance === 0 ? ' - Settled' : '');
                   option.dataset.balance = card.balance;
                   option.dataset.apr = cardApr(card);
+                  option.dataset.cashApr = cashAdvanceApr(card);
                   option.dataset.bankName = card.bankName || card.bank || '';
                   if (card.balance === 0) option.disabled = true;
                   advDropdown.appendChild(option);
@@ -4604,11 +4775,8 @@
                   } else {
                       // Lock and Load from Dictionary for Saved Cards
                       const selectedOption = e.target.options[e.target.selectedIndex];
-                      const bankName = selectedOption.dataset.bankName || '';
-                      
-                      // Rely on the global fuzzy matcher created previously
-                      const tariff = window.resolveCardTariff(bankName);
-                      
+                      const tariff = cardIssuer(findCard(selectedOption.value)).fee;
+
                       if (feeInput) {
                           feeInput.value = tariff.type === 'flat' ? '0.0' : tariff.percent.toFixed(1);
                           feeInput.disabled = true;
@@ -4623,7 +4791,7 @@
                           else if (tariff.type === 'flat') minLabel.textContent = `Flat fee (No %)`;
                       }
                       
-                      let targetApr = selectedOption.dataset.apr !== undefined ? parseFloat(selectedOption.dataset.apr) : 28.0;
+                      let targetApr = selectedOption.dataset.cashApr !== undefined ? parseFloat(selectedOption.dataset.cashApr) : 28.0;
                       if (aprDisplay) aprDisplay.textContent = `${targetApr}%`;
                       if (aprInput) aprInput.value = targetApr;
                       if (balanceInput) balanceInput.value = selectedOption.dataset.balance || 0;
@@ -4893,6 +5061,8 @@
           const simOpt = simSource && simSource.value !== 'custom' ? simSource.options[simSource.selectedIndex] : null;
           const simApr = simOpt && simOpt.dataset.apr !== undefined ? parseFloat(simOpt.dataset.apr) : NaN;
           const apr = isFinite(simApr) ? simApr : 28.0;
+          const simCard = simOpt ? findCard(simOpt.value) : null;
+          const simRule = cardMinRule(simCard);
           
           if (cleanBalance <= 0) {
               safeSetText('sim-min-time', '--');
@@ -4919,7 +5089,7 @@
 
           const monthlyRate = (apr / 100) / 12;
           
-          const calcResults = window.calculateCBSLAmortization(cleanBalance, apr);
+          const calcResults = window.calculateCBSLAmortization(cleanBalance, apr, simRule.pct, simRule.floor);
           if (!calcResults) return;
 
           const minMonths = calcResults.minMonths;
@@ -4960,7 +5130,7 @@
           
           // --- VELOCITY BAR ---
           const firstMonthInterest = cleanBalance * monthlyRate;
-          const firstMonthPayment = Math.max(cleanBalance * 0.04, 1000);
+          const firstMonthPayment = Math.max(cleanBalance * simRule.pct, simRule.floor);
           
           let principalPortion = firstMonthPayment - firstMonthInterest;
           if (principalPortion < 0) principalPortion = 0;
@@ -5011,31 +5181,23 @@
               return;
           }
 
-          let feeCost = 0;
+          const days = parseFloat(document.getElementById('sim-adv-input-days')?.value || 30);
+          let result;
           if (!isCustom) {
               const opt = dataSource.options[dataSource.selectedIndex];
-              const bankName = opt.dataset.bankName || '';
-              const tariff = window.resolveCardTariff(bankName);
-              
-              const t = tariff.type;
-              const p = tariff.percent / 100;
-              const f = tariff.fixed;
-              
-              if (t === 'greater') feeCost = Math.max(cleanBalance * p, f);
-              else if (t === 'plus') feeCost = (cleanBalance * p) + f;
-              else if (t === 'flat') feeCost = f;
+              result = calcCashAdvance(cleanBalance, days, findCard(opt.value));
           } else {
-              // Custom scenario fallback (Standard 'Greater of')
-              const customPct = parseFloat(document.getElementById('sim-adv-input-fee')?.value || 0) / 100;
-              feeCost = Math.max(cleanBalance * customPct, 500); 
+              // Custom scenario: the user's own fee % (min LKR 500) and APR
+              const customPct = parseFloat(document.getElementById('sim-adv-input-fee')?.value || 0);
+              const customApr = parseFloat(document.getElementById('sim-adv-input-apr')?.value || 28);
+              result = calcCashAdvance(cleanBalance, days, null, {
+                  fee: computeAdvanceFee({ type: 'greater', percent: customPct, fixed: 500 }, cleanBalance),
+                  apr: customApr
+              });
           }
-          
-          const days = parseFloat(document.getElementById('sim-adv-input-days')?.value || 30);
-          const apr = parseFloat(document.getElementById('sim-adv-input-apr')?.value || 28);
-          
-          const dailyRate = (apr / 100) / 365;
-          const interestCost = cleanBalance * dailyRate * days;
-          
+          const feeCost = result.advanceFee;
+          const interestCost = result.interest;
+
           const hiddenCosts = feeCost + interestCost;
           const totalOwed = cleanBalance + hiddenCosts;
           
@@ -5169,11 +5331,8 @@
         
         let migrated = false;
         cards.forEach(c => {
-            if (c.feeType === undefined) {
-                const tariff = window.resolveCardTariff(c.bank);
-                c.feeType = tariff.type;
-                c.feePercent = tariff.percent;
-                c.feeFixed = tariff.fixed;
+            if (c.issuer === undefined) {
+                c.issuer = resolveIssuer(c.bank);
                 c.apr = c.apr !== undefined ? c.apr : 28.0;
                 migrated = true;
             }
@@ -5209,7 +5368,7 @@
           var totalMin = 0;
           cards.forEach(function (c) {
             if (c.balance > 0) {
-                totalMin += Math.max(1000, c.balance * 0.04);
+                totalMin += minPaymentFor(c);
             }
           });
 
@@ -5383,6 +5542,7 @@
 
         if (tabBtnOverview) tabBtnOverview.addEventListener('click', function () { renderCardsOverview(); switchSubTab('overview'); });
         if (tabBtnList) tabBtnList.addEventListener('click', function () { switchSubTab('list'); });
+        window.switchCardsSubTab = switchSubTab;
 
         // Default: show All Cards tab on load
         switchSubTab('list');
@@ -5444,6 +5604,7 @@
         var elProfileIncome = document.getElementById("profile-income-input");
         if (elProfileIncome) {
           elProfileIncome.addEventListener("input", function (e) {
+            if (window.Onboarding && this.value.trim() !== "" && parseFloat(this.value) > 0) window.Onboarding.markIncomeSet();
             saveUserData();
             if (typeof updateDTI === 'function') updateDTI();
             if (typeof window.renderDashboard === 'function') window.renderDashboard();
@@ -5556,11 +5717,19 @@
         }
 
         if (avalancheCard) {
-          avalancheCard.addEventListener('click', function () { updateStrategyUI('avalanche'); });
+          avalancheCard.addEventListener('click', function () {
+            if (window.Onboarding) window.Onboarding.markStrategyChosen();
+            updateStrategyUI('avalanche');
+          });
         }
         if (snowballCard) {
-          snowballCard.addEventListener('click', function () { updateStrategyUI('snowball'); });
+          snowballCard.addEventListener('click', function () {
+            if (window.Onboarding) window.Onboarding.markStrategyChosen();
+            updateStrategyUI('snowball');
+          });
         }
+        // Used by the onboarding welcome to apply the strategy picked there
+        window.setPayoffStrategy = function (strategy) { updateStrategyUI(strategy); };
 
         updateStrategyUI(currentStrategy);
 
@@ -5950,10 +6119,10 @@
           
           if (bank !== card.bank) {
               card.bank = bank;
-              const tariff = window.resolveCardTariff(card.bank);
-              card.feeType = tariff.type;
-              card.feePercent = tariff.percent;
-              card.feeFixed = tariff.fixed;
+              card.issuer = resolveIssuer(bank);
+              const iss = SL_CARD_ISSUERS[card.issuer] || SL_CARD_ISSUERS['default'];
+              card.minPct = iss.minPct;
+              card.minFloor = iss.minFloor;
           }
           card.nick = nick;
           card.limit = limit;
@@ -6375,7 +6544,8 @@
           closeAddFundsModal();
       };
 
-      return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData, saveUserData: saveUserData };
+      return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData, saveUserData: saveUserData,
+        getState: function () { return { cards: cards, spaces: spaces }; }, openAddCard: openModal, goDetail: goDetail };
     })();
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -7018,7 +7188,7 @@
           <div class="space-y-4 mb-6">
               <div>
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Bank Name</label>
-                  <input id="edit-input-bank" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" />
+                  <input id="edit-input-bank" list="bank-options" autocomplete="off" class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-medium" type="text" />
               </div>
               <div>
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Card Network &amp; Tier</label>
@@ -7783,308 +7953,580 @@
     };
 
     /* ══════════════════════════════════════════════════════════════
-       REDESIGNED VISUAL-FIRST COACHMARK TOUR ENGINE
-       - Zero blur / zero dark overlay
-       - Glowing box-shadow spotlight on target elements
-       - Animated floating pointer badge anchored above target
-       - 6 action-oriented steps, auto-launched on first signup
+       ONBOARDING
+       1. Welcome flow: three slides, the last one collects income and strategy
+       2. Get started checklist on Home, derived from the user's real data
+       3. One-time spotlight tips the first time each screen is opened
+       State lives in currentUserData.onboarding and is saved with the rest
+       of the user document by App.saveUserData().
     ══════════════════════════════════════════════════════════════ */
-    window.visualGuideSteps = [
-      {
-        step: 1,
-        screenId: 'screen-list',
-        tabId: 'btn-nav-cards',
-        title: 'Link Your Credit Cards',
-        description: 'This is where you add your credit cards. Enter your balance, APR & limit so Serendib can track your debt.',
-        highlightId: 'btn-add-card',
-        pointerText: '💳 Add Cards Here',
-        pointerIcon: 'credit_card'
-      },
-      {
-        step: 2,
-        screenId: 'screen-profile',
-        tabId: null,
-        title: 'Enter Your Monthly Income',
-        description: 'Type your monthly take-home salary here — it powers your safe debt limits and DTI health score.',
-        highlightId: 'profile-income-input',
-        pointerText: '💰 Enter Salary Here',
-        pointerIcon: 'payments'
-      },
-      {
-        step: 3,
-        screenId: 'screen-profile',
-        tabId: null,
-        title: 'Pick Your Payoff Strategy',
-        description: 'Choose Avalanche (saves the most interest) or Snowball (fastest psychological wins) to match your style.',
-        highlightId: 'section-payoff-method',
-        pointerText: '⚡ Choose Strategy',
-        pointerIcon: 'bolt'
-      },
-      {
-        step: 4,
-        screenId: 'screen-simulators',
-        tabId: 'btn-nav-simulators',
-        title: 'Simulate Debt Payoff',
-        description: 'Enter any balance or pick quick presets (100k, 250k, 500k) to see the trap of minimum payments vs. fixed payoff savings.',
-        highlightId: 'sim-balance-section',
-        pointerText: '🧮 Test Balance & Presets',
-        pointerIcon: 'calculate'
-      },
-      {
-        step: 5,
-        screenId: 'screen-spaces',
-        tabId: 'btn-nav-spaces',
-        title: 'Create an Emergency Buffer',
-        description: 'Set aside a reserve fund here so unexpected costs never push you back into credit card debt.',
-        highlightId: 'btn-create-space-top',
-        pointerText: '🛡️ Create Space',
-        pointerIcon: 'savings'
-      },
-      {
-        step: 6,
-        screenId: 'screen-home',
-        tabId: 'btn-nav-home',
-        title: 'Your Live Debt Dashboard',
-        description: 'This is your command center — total debt, daily interest, and payoff countdown all update in real time. You are ready!',
-        highlightId: 'home-total-debt',
-        pointerText: '🎯 Live Dashboard',
-        pointerIcon: 'dashboard'
+    window.Onboarding = (function () {
+      var TIPS = {
+        'screen-home': [
+          { id: 'ob-checklist', title: 'Your setup checklist', body: 'Finish these steps to build your repayment plan. Each one ticks itself off as you go.' },
+          { id: 'home-snapshot-card', title: 'Your debt at a glance', body: 'Total debt and limit across every card, and how much of your limit you are using. Under 30% is healthy.' },
+          { id: 'home-strategy-section', title: 'Your payoff plan', body: 'Your monthly budget, debt-free date and the interest your strategy saves compared with paying minimums.' }
+        ],
+        'screen-list': [
+          { id: 'tab-btn-overview', title: "This month's plan", body: 'See which card to pay first this month and exactly how much each card gets.' },
+          { id: 'btn-add-card', title: 'Link a card', body: 'Add each credit card with its limit and current balance. Everything else updates from here.' }
+        ],
+        'screen-detail': [
+          { id: 'card-menu-container', title: 'Card actions', body: 'Edit the card, mark its balance as settled, set its billing cycle or delete it.' },
+          { id: 'tab-payoff', parent: true, title: 'Card calculators', body: 'Payoff timeline, cash-advance cost and the real cost of 0% plans, all worked out for this card.' },
+          { id: 'btn-save-target', title: 'Commit a monthly payment', body: 'Save an amount for this card and your plan will always give it at least that much.' }
+        ],
+        'screen-simulators': [
+          { id: 'tab-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves.' },
+          { id: 'tab-cash-advance', title: 'Cash advance trap', body: 'The true cost of withdrawing cash on a card, with fees and daily interest included.' },
+          { id: 'tab-surcharge', title: '0% surcharge exposer', body: 'Reveal the effective interest rate hidden inside "0%" instalment plans.' }
+        ],
+        'screen-spaces': [
+          { id: 'btn-create-space-top', title: 'Build a buffer', body: 'Create a savings space for emergencies, so a surprise bill does not land on a credit card.' }
+        ],
+        'view-offers': [
+          { id: 'offers-feed', title: 'Card offers', body: 'Promotions matched to your cards. Tap any offer to read its terms.' }
+        ],
+        'screen-profile': [
+          { id: 'profile-income-input', title: 'Your income', body: 'Your monthly take-home pay. A quarter of it becomes your default repayment budget.' },
+          { id: 'section-payoff-method', title: 'Payoff strategy', body: 'Switch between Avalanche and Snowball any time. Your plan updates straight away.' },
+          { id: 'profile-dti-container', title: 'Debt-to-income health', body: 'Your minimum payments as a share of your income. Lenders use this to judge new credit.' },
+          { id: 'btn-replay-guide', title: 'Need a refresher?', body: 'Replay the welcome and these tips from here whenever you like.' }
+        ]
+      };
+
+      var ITEMS = [
+        { key: 'income', label: 'Set your monthly income', hint: 'Sizes your monthly repayment budget', icon: 'payments',
+          done: function (o) { return !!o.incomeSet; }, go: function () { goProfile('profile-income-input', true); } },
+        { key: 'strategy', label: 'Choose a payoff strategy', hint: 'Avalanche or Snowball', icon: 'route',
+          done: function (o) { return !!o.strategyChosen; }, go: function () { goProfile('section-payoff-method', false); } },
+        { key: 'card', label: 'Link your first card', hint: 'Limit and current balance', icon: 'credit_card',
+          done: function (o, st) { return st.cards.length > 0; }, go: function () { goAddCard(); } },
+        { key: 'billing', label: 'Set a billing cycle', hint: 'Turns on due-date alerts', icon: 'event',
+          done: function (o, st) { return st.cards.some(function (c) { return isValidDay(c.statementDay) && isValidDay(c.dueDay); }); },
+          go: function () { goBilling(); } },
+        { key: 'sim', label: 'Try a simulator', hint: 'See what minimum payments really cost', icon: 'calculate',
+          done: function (o) { return !!o.simulatorTried; },
+          go: function () { _suppressTipsOnce = true; window.navigateTo('screen-simulators', 'btn-nav-simulators'); } },
+        { key: 'buffer', label: 'Create an emergency buffer', hint: 'A savings space for surprises', icon: 'savings',
+          done: function (o, st) { return st.spaces.length > 0; }, go: function () { goBuffer(); } }
+      ];
+
+      var SLIDES = 3;
+      var _slide = 0;
+      var _welcomeOpen = false;
+      var _tipsOpen = false;
+      var _suppressTipsOnce = false;
+      var _tipQueue = [], _tipIdx = 0, _tipScreen = null, _tipTarget = null;
+      var _tipTimer = 0, _raf = 0, _ro = null;
+      var _lastFocus = null;
+      var _prevDone = null;
+      var _showCompleteUntil = 0;
+
+      function el(id) { return document.getElementById(id); }
+      function reducedMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       }
-    ];
-
-    window._currentTourStepIndex = 0;
-    window._tourHighlightedEl = null;
-    window._tourPointerInterval = null;
-    window._tourScrollHandler = null;
-
-    /* ── Start or replay the tour ── */
-    window.startVisualGuideTour = function(isManualReplay) {
-      window._currentTourStepIndex = 0;
-      document.body.classList.add('tour-active');
-      const overlay = document.getElementById('app-tour-overlay');
-      if (overlay) overlay.classList.remove('hidden');
-      window.renderVisualGuideStep();
-    };
-
-    /* ── Clear previous spotlight + pointer ── */
-    function _tourClearHighlight() {
-      if (window._tourHighlightedEl) {
-        window._tourHighlightedEl.style.removeProperty('box-shadow');
-        window._tourHighlightedEl.style.removeProperty('transform');
-        window._tourHighlightedEl.style.removeProperty('transition');
-        window._tourHighlightedEl.style.removeProperty('position');
-        window._tourHighlightedEl.style.removeProperty('z-index');
-        window._tourHighlightedEl = null;
+      function appState() {
+        var st = (typeof App !== 'undefined' && App.getState) ? App.getState() : null;
+        return { cards: (st && st.cards) || [], spaces: (st && st.spaces) || [] };
       }
-      const ptr = document.getElementById('tour-target-pointer');
-      if (ptr) ptr.classList.add('hidden');
-      if (window._tourPointerInterval) {
-        clearInterval(window._tourPointerInterval);
-        window._tourPointerInterval = null;
+      function state() {
+        var d = window.currentUserData;
+        if (!d) return null;
+        if (!d.onboarding || typeof d.onboarding !== 'object') d.onboarding = {};
+        var o = d.onboarding;
+        if (!o.tipsSeen || typeof o.tipsSeen !== 'object') o.tipsSeen = {};
+        return o;
       }
-      if (window._tourScrollHandler) {
-        window.removeEventListener('scroll', window._tourScrollHandler, true);
-        window.removeEventListener('resize', window._tourScrollHandler);
-        window._tourScrollHandler = null;
+      function persist() {
+        if (typeof App !== 'undefined' && typeof App.saveUserData === 'function') App.saveUserData();
       }
-    }
-
-    /* ── Position pointer badge above target element ── */
-    function _tourPositionPointer(el) {
-      const ptr = document.getElementById('tour-target-pointer');
-      if (!ptr || !el) return;
-      function _update() {
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) return;
-        ptr.style.left = (rect.left + rect.width / 2) + 'px';
-        ptr.style.top = (rect.top - 58) + 'px';
-        ptr.style.transform = 'translateX(-50%)';
-      }
-      ptr.classList.remove('hidden');
-      _update();
-      // Re-position on scroll/resize in real-time
-      if (window._tourPointerInterval) clearInterval(window._tourPointerInterval);
-      window._tourPointerInterval = setInterval(_update, 100);
-
-      if (window._tourScrollHandler) {
-        window.removeEventListener('scroll', window._tourScrollHandler, true);
-        window.removeEventListener('resize', window._tourScrollHandler);
-      }
-      window._tourScrollHandler = _update;
-      window.addEventListener('scroll', _update, { capture: true, passive: true });
-      window.addEventListener('resize', _update, { passive: true });
-    }
-
-    /* ── Main render function ── */
-    window.renderVisualGuideStep = function() {
-      if (!window.visualGuideSteps || window.visualGuideSteps.length === 0) return;
-      const step = window.visualGuideSteps[window._currentTourStepIndex];
-      if (!step) return;
-
-      // 0. Clear previous highlights
-      _tourClearHighlight();
-
-      // 1. Navigate to target screen & tab
-      if (typeof navigateTo === 'function') {
-        navigateTo(step.screenId, step.tabId);
-      }
-
-      // 2. Spotlight target element with glowing box-shadow (no Tailwind ring, no blur)
-      if (step.highlightId) {
-        setTimeout(function() {
-          const el = document.getElementById(step.highlightId);
-          if (el) {
-            // Glow spotlight
-            el.style.boxShadow = '0 0 0 3px #10b981, 0 0 28px rgba(16,185,129,0.50)';
-            el.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
-            el.style.position = 'relative';
-            el.style.zIndex = '135';
-            window._tourHighlightedEl = el;
-            // Scroll into view
-            try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
-            // Anchor animated pointer badge
-            setTimeout(function() { _tourPositionPointer(el); }, 180);
-          }
-        }, 150);
-      }
-
-      // 3. Update pointer badge text & icon
-      const ptrText = document.getElementById('tour-pointer-text');
-      const ptrIcon = document.getElementById('tour-pointer-icon');
-      if (ptrText) ptrText.textContent = step.pointerText || '';
-      if (ptrIcon) ptrIcon.textContent = step.pointerIcon || 'touch_app';
-
-      // 4. Update coachmark card content
-      const stepBadgeEl = document.getElementById('tour-badge-step');
-      if (stepBadgeEl) stepBadgeEl.textContent = (window._currentTourStepIndex + 1) + ' of ' + window.visualGuideSteps.length;
-
-      const titleEl = document.getElementById('tour-title');
-      if (titleEl) titleEl.textContent = step.title;
-
-      const descEl = document.getElementById('tour-description');
-      if (descEl) descEl.textContent = step.description;
-
-      // 5. Update navigation controls
-      const backBtn = document.getElementById('btn-tour-back');
-      if (backBtn) {
-        backBtn.style.visibility = window._currentTourStepIndex === 0 ? 'hidden' : 'visible';
-      }
-
-      const nextBtnText = document.getElementById('btn-tour-next-text');
-      const nextBtnIcon = document.getElementById('btn-tour-next-icon');
-      if (nextBtnText && nextBtnIcon) {
-        if (window._currentTourStepIndex === window.visualGuideSteps.length - 1) {
-          nextBtnText.textContent = "Let's Go!";
-          nextBtnIcon.textContent = 'celebration';
-        } else {
-          nextBtnText.textContent = 'Next';
-          nextBtnIcon.textContent = 'arrow_forward';
+      function restoreFocus() {
+        if (_lastFocus && typeof _lastFocus.focus === 'function' && document.contains(_lastFocus)) {
+          try { _lastFocus.focus({ preventScroll: true }); } catch (e) {}
         }
+        _lastFocus = null;
       }
-
-      // 6. Update progress dots
-      const dotsContainer = document.getElementById('tour-dots-container');
-      if (dotsContainer) {
-        dotsContainer.innerHTML = window.visualGuideSteps.map(function(_, i) {
-          return i === window._currentTourStepIndex
-            ? '<div style="width:20px;height:5px;border-radius:3px;background:#10b981;transition:all .3s;"></div>'
-            : '<div style="width:5px;height:5px;border-radius:50%;background:#cbd5e1;transition:all .3s;"></div>';
-        }).join('');
-      }
-    };
-
-    window.nextVisualGuideStep = function() {
-      if (window._currentTourStepIndex < window.visualGuideSteps.length - 1) {
-        window._currentTourStepIndex++;
-        window.renderVisualGuideStep();
-      } else {
-        window.completeVisualGuideTour(false);
-      }
-    };
-
-    window.prevVisualGuideStep = function() {
-      if (window._currentTourStepIndex > 0) {
-        window._currentTourStepIndex--;
-        window.renderVisualGuideStep();
-      }
-    };
-
-    window.skipVisualGuideTour = function() {
-      window.completeVisualGuideTour(true);
-    };
-
-    window.completeVisualGuideTour = function(isSkipped) {
-      document.body.classList.remove('tour-active');
-      // Clear spotlight & pointer
-      _tourClearHighlight();
-
-      // Hide overlay
-      const overlay = document.getElementById('app-tour-overlay');
-      if (overlay) overlay.classList.add('hidden');
-
-      // Return home
-      if (typeof navigateTo === 'function') {
-        navigateTo('screen-home', 'btn-nav-home');
-      }
-
-      // Persist tour completion
-      if (window.currentUserData) window.currentUserData.hasCompletedTour = true;
-      if (window.currentUser && window.currentUser.email) {
-        localStorage.setItem('stitch_tour_completed_' + window.currentUser.email.toLowerCase().trim(), 'true');
-      }
-      if (window.currentUser && window.currentUser.uid && typeof db !== 'undefined') {
-        db.collection('users').doc(window.currentUser.uid).set({ hasCompletedTour: true }, { merge: true }).catch(console.warn);
-      }
-      if (typeof App !== 'undefined' && typeof App.saveUserData === 'function') {
-        App.saveUserData();
-      }
-
-      if (typeof window.showToast === 'function') {
-        window.showToast(
-          isSkipped ? "Guide skipped. Replay anytime from Profile." : "You're all set! Welcome to Serendib. 🎉",
-          'info'
+      function focusables(root) {
+        return Array.prototype.filter.call(
+          root.querySelectorAll('button, input, select, textarea, [href], [tabindex]:not([tabindex="-1"])'),
+          function (n) { return !n.disabled && !n.closest('[inert]') && !n.closest('.hidden') && !n.classList.contains('invisible') && n.getClientRects().length > 0; }
         );
       }
-    };
+      function trapTab(e, root) {
+        var f = focusables(root);
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        else if (!root.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      }
 
-    // Forward touch scroll & wheel from tour card so page scrolling is seamless even if gestures start over the card
-    (function initTourCardScroll() {
-      const tourCard = document.getElementById('app-tour-card');
-      if (!tourCard || tourCard._hasScrollInit) return;
-      tourCard._hasScrollInit = true;
-
-      let tourTouchStartY = 0;
-      tourCard.addEventListener('touchstart', function(e) {
-        if (e.target.closest('button')) return;
-        tourTouchStartY = e.touches[0].clientY;
-      }, { passive: true });
-
-      tourCard.addEventListener('touchmove', function(e) {
-        if (e.target.closest('button')) return;
-        const currentY = e.touches[0].clientY;
-        const diff = tourTouchStartY - currentY;
-        tourTouchStartY = currentY;
-
-        const currentStep = window.visualGuideSteps && window.visualGuideSteps[window._currentTourStepIndex];
-        const currentScreen = currentStep ? document.getElementById(currentStep.screenId) : null;
-        const scrollableChild = currentScreen ? currentScreen.querySelector('.overflow-y-auto') : null;
-        if (scrollableChild) {
-          scrollableChild.scrollTop += diff;
-        } else {
-          window.scrollBy(0, diff);
+      // Users who used the app before this onboarding existed skip the welcome and tips
+      function migrate(o) {
+        if (o.version) return false;
+        var d = window.currentUserData || {};
+        var email = window.currentUser && window.currentUser.email ? window.currentUser.email.toLowerCase().trim() : '';
+        var legacyDone = false;
+        try { legacyDone = !!email && localStorage.getItem('stitch_tour_completed_' + email) === 'true'; } catch (e) {}
+        if (d.hasCompletedTour === true || legacyDone || appState().cards.length > 0) {
+          o.welcomeDone = true;
+          o.incomeSet = true;
+          o.strategyChosen = true;
+          Object.keys(TIPS).forEach(function (s) { o.tipsSeen[s] = true; });
         }
-      }, { passive: true });
+        o.version = 2;
+        return true;
+      }
 
-      tourCard.addEventListener('wheel', function(e) {
-        const currentStep = window.visualGuideSteps && window.visualGuideSteps[window._currentTourStepIndex];
-        const currentScreen = currentStep ? document.getElementById(currentStep.screenId) : null;
-        const scrollableChild = currentScreen ? currentScreen.querySelector('.overflow-y-auto') : null;
-        if (scrollableChild) {
-          scrollableChild.scrollTop += e.deltaY;
-        } else {
-          window.scrollBy(0, e.deltaY);
+      /* ── Entry point after sign-in; safe to call more than once ── */
+      function maybeStart() {
+        var o = state();
+        if (!o) return;
+        if (migrate(o)) persist();
+        renderChecklist();
+        if (!o.welcomeDone && !_welcomeOpen) openWelcome();
+      }
+
+      /* ── 1. Welcome flow ── */
+      function openWelcome() {
+        var wrap = el('ob-welcome'), sheet = el('ob-welcome-sheet');
+        if (!wrap || !sheet) return;
+        closeTips(false);
+        clearTimeout(_tipTimer);
+        _welcomeOpen = true;
+        _lastFocus = document.activeElement;
+
+        var o = state() || {};
+        var inc = el('ob-income');
+        if (inc) inc.value = (o.incomeSet && window.currentUserData && window.currentUserData.income) ? window.currentUserData.income : '';
+        var strat = typeof getStrategy === 'function' ? getStrategy() : 'avalanche';
+        document.querySelectorAll('input[name="ob-strategy"]').forEach(function (r) { r.checked = (r.value === strat); });
+        var err = el('ob-error');
+        if (err) err.classList.add('hidden');
+
+        goToSlide(0, true);
+        wrap.classList.remove('hidden');
+        requestAnimationFrame(function () { sheet.classList.remove('translate-y-4', 'opacity-0'); });
+        document.addEventListener('keydown', onWelcomeKey, true);
+        setTimeout(function () { var n = el('ob-next'); if (n) n.focus({ preventScroll: true }); }, 60);
+      }
+
+      function closeWelcome() {
+        var wrap = el('ob-welcome'), sheet = el('ob-welcome-sheet');
+        _welcomeOpen = false;
+        document.removeEventListener('keydown', onWelcomeKey, true);
+        if (sheet) sheet.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(function () { if (wrap && !_welcomeOpen) wrap.classList.add('hidden'); }, reducedMotion() ? 0 : 220);
+        restoreFocus();
+      }
+
+      function goToSlide(i, instant) {
+        _slide = Math.max(0, Math.min(SLIDES - 1, i));
+        var track = el('ob-slides');
+        if (track) {
+          if (instant) track.style.transition = 'none';
+          track.style.transform = 'translateX(' + (-100 * _slide) + '%)';
+          if (instant) { void track.offsetHeight; track.style.transition = ''; }
         }
-      }, { passive: true });
+        document.querySelectorAll('#ob-slides .ob-slide').forEach(function (s, idx) {
+          var active = idx === _slide;
+          s.inert = !active;
+          if (active) s.removeAttribute('aria-hidden'); else s.setAttribute('aria-hidden', 'true');
+        });
+        var wrap = el('ob-welcome');
+        if (wrap) wrap.setAttribute('aria-labelledby', 'ob-title-' + (_slide + 1));
+        var back = el('ob-back');
+        if (back) back.classList.toggle('invisible', _slide === 0);
+        var next = el('ob-next');
+        if (next) next.textContent = _slide === SLIDES - 1 ? 'Finish setup' : 'Next';
+        var dots = el('ob-dots');
+        if (dots) {
+          var html = '';
+          for (var k = 0; k < SLIDES; k++) {
+            html += '<span class="block h-1.5 rounded-full transition-all duration-300 ' +
+              (k === _slide ? 'w-5 bg-emerald-500' : 'w-1.5 bg-slate-300') + '"></span>';
+          }
+          dots.innerHTML = html;
+        }
+      }
+
+      function finishWelcome() {
+        var o = state();
+        if (!o) { closeWelcome(); return; }
+        var incEl = el('ob-income');
+        var raw = incEl ? incEl.value.trim() : '';
+        if (raw !== '') {
+          var inc = parseFloat(raw);
+          if (isNaN(inc) || inc <= 0) {
+            var err = el('ob-error');
+            if (err) { err.textContent = 'Enter your monthly income in LKR, or leave it blank to add it later.'; err.classList.remove('hidden'); }
+            if (incEl) incEl.focus();
+            return;
+          }
+          var val = String(Math.round(inc));
+          // saveUserData reads income from the Profile field, so write it there first
+          var pin = el('profile-income-input');
+          if (pin) pin.value = val;
+          if (window.currentUserData) window.currentUserData.income = val;
+          o.incomeSet = true;
+        }
+        o.strategyChosen = true;
+        o.welcomeDone = true;
+        closeWelcome();
+
+        var picked = document.querySelector('input[name="ob-strategy"]:checked');
+        if (picked && typeof window.setPayoffStrategy === 'function') {
+          window.setPayoffStrategy(picked.value); // saves and re-renders Home + Overview
+        } else {
+          persist();
+        }
+        window.navigateTo('screen-home', 'btn-nav-home');
+      }
+
+      function skipWelcome() {
+        var o = state();
+        if (o) { o.welcomeDone = true; persist(); }
+        closeWelcome();
+        window.navigateTo('screen-home', 'btn-nav-home');
+      }
+
+      function onWelcomeKey(e) {
+        if (!_welcomeOpen) return;
+        var sheet = el('ob-welcome-sheet');
+        if (e.key === 'Escape') { e.preventDefault(); skipWelcome(); }
+        else if (e.key === 'Tab' && sheet) trapTab(e, sheet);
+      }
+
+      /* ── 2. Get started checklist ── */
+      function renderChecklist() {
+        var box = el('ob-checklist'), list = el('ob-checklist-items');
+        if (!box || !list) return;
+        var o = state();
+        if (!o || !o.version || o.checklistDismissed) { box.classList.add('hidden'); return; }
+
+        var st = appState();
+        var doneMap = {};
+        var done = 0;
+        ITEMS.forEach(function (it) { doneMap[it.key] = !!it.done(o, st); if (doneMap[it.key]) done++; });
+        var allDone = done === ITEMS.length;
+
+        if (allDone && !o.checklistCompleted) {
+          o.checklistCompleted = true;
+          _showCompleteUntil = Date.now() + 6000;
+          persist();
+          if (typeof confetti === 'function' && !reducedMotion()) {
+            confetti({ particleCount: 90, spread: 75, gravity: 1.1, origin: { y: 0.25, x: 0.5 }, colors: ['#10b981', '#34d399', '#FFD700', '#4ECDC4'] });
+          }
+          setTimeout(renderChecklist, 6100);
+        }
+        if (o.checklistCompleted && Date.now() >= _showCompleteUntil) { box.classList.add('hidden'); return; }
+
+        list.innerHTML = ITEMS.map(function (it, idx) {
+          var ok = doneMap[it.key];
+          var pop = ok && _prevDone && _prevDone[it.key] === false;
+          return '<li><button type="button" data-ob-item="' + idx + '"' + (ok ? ' aria-disabled="true"' : '') +
+            ' class="w-full min-h-[52px] flex items-center gap-3 px-2 -mx-2 py-2 text-left rounded-xl transition-all ' +
+            (ok ? 'cursor-default' : 'hover:bg-surface-container active:scale-[0.99]') + '">' +
+            '<span class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 ' +
+            (ok ? 'bg-emerald-500 text-white' + (pop ? ' ob-pop' : '') : 'border-2 border-outline-variant/70 text-transparent') + '">' +
+            '<span class="material-symbols-outlined text-[16px]" aria-hidden="true">check</span></span>' +
+            '<span class="flex-1 min-w-0">' +
+            '<span class="sr-only">' + (ok ? 'Done: ' : 'To do: ') + '</span>' +
+            '<span class="block text-[14px] font-semibold ' + (ok ? 'text-secondary line-through decoration-slate-300' : 'text-on-surface') + '">' + it.label + '</span>' +
+            (ok ? '' : '<span class="block text-[11px] text-secondary mt-0.5">' + it.hint + '</span>') +
+            '</span>' +
+            (ok ? '' : '<span class="material-symbols-outlined text-[18px] text-secondary" aria-hidden="true">chevron_right</span>') +
+            '</button></li>';
+        }).join('');
+        _prevDone = doneMap;
+
+        var title = el('ob-checklist-title');
+        var progress = el('ob-checklist-progress');
+        var bar = el('ob-checklist-bar');
+        if (title) title.textContent = allDone ? "You're all set" : 'Get started';
+        if (progress) progress.textContent = allDone ? 'All ' + ITEMS.length + ' steps done' : done + ' of ' + ITEMS.length + ' done';
+        if (bar) bar.style.width = Math.round((done / ITEMS.length) * 100) + '%';
+        box.classList.remove('hidden');
+      }
+
+      function goProfile(targetId, focus) {
+        _suppressTipsOnce = true;
+        var btn = el('btn-profile-home'); // its handler refreshes the DTI score before opening Profile
+        if (btn) btn.click(); else window.navigateTo('screen-profile', null);
+        setTimeout(function () {
+          var t = el(targetId);
+          if (!t) return;
+          try { t.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }); } catch (e) {}
+          if (focus && typeof t.focus === 'function') t.focus({ preventScroll: true });
+        }, 250);
+      }
+      function goAddCard() {
+        _suppressTipsOnce = true;
+        window.navigateTo('screen-list', 'btn-nav-cards');
+        if (typeof window.switchCardsSubTab === 'function') window.switchCardsSubTab('list');
+        setTimeout(function () { if (typeof App !== 'undefined' && App.openAddCard) App.openAddCard(); }, 250);
+      }
+      function goBilling() {
+        var st = appState();
+        var card = st.cards.filter(function (c) { return !(isValidDay(c.statementDay) && isValidDay(c.dueDay)); })[0];
+        if (!card) { goAddCard(); return; }
+        _suppressTipsOnce = true;
+        if (typeof App !== 'undefined' && App.goDetail) App.goDetail(card.id);
+        setTimeout(function () { if (typeof window.openBillingModal === 'function') window.openBillingModal(); }, 250);
+      }
+      function goBuffer() {
+        _suppressTipsOnce = true;
+        window.navigateTo('screen-spaces', 'btn-nav-spaces');
+        setTimeout(function () { if (typeof window.openCreateSpaceModal === 'function') window.openCreateSpaceModal(); }, 250);
+      }
+
+      function dismissChecklist() {
+        var o = state();
+        if (!o) return;
+        o.checklistDismissed = true;
+        persist();
+        renderChecklist();
+        if (typeof window.showToast === 'function') window.showToast('Checklist hidden. You can replay the guide from Profile.', 'info');
+      }
+
+      /* ── 3. First-visit spotlight tips ── */
+      var MODAL_IDS = ['modal-edit-card', 'modal-billing-cycle', 'modal-delete-card', 'modal-settle-card', 'modal-create-space',
+        'modal-add-funds', 'modal-edit-space', 'modal-offer-terms', 'modal-delete-space', 'modal-dti-info',
+        'modal-surcharge-info', 'modal-velocity-info', 'modal-effective-apr'];
+      function anyModalOpen() {
+        var addCard = el('add-card-modal');
+        if (addCard && addCard.classList.contains('modal-open')) return true;
+        var sheet = el('info-sheet-overlay');
+        if (sheet && sheet.classList.contains('open')) return true;
+        var drawer = el('menu-backdrop');
+        if (drawer && !drawer.classList.contains('hidden')) return true;
+        return MODAL_IDS.some(function (id) { var m = el(id); return m && !m.classList.contains('hidden'); });
+      }
+      function resolveTarget(t) {
+        var n = el(t.id);
+        return n && t.parent ? n.parentElement : n;
+      }
+      function isVisible(n) {
+        if (!n || !n.getClientRects().length) return false;
+        var r = n.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      }
+
+      function maybeShowTips(screenId) {
+        clearTimeout(_tipTimer);
+        if (_tipsOpen) closeTips(false);
+        var o = state();
+        if (!o || !o.version || !o.welcomeDone || _welcomeOpen) return;
+        if (_suppressTipsOnce) { _suppressTipsOnce = false; return; }
+        if (!TIPS[screenId] || o.tipsSeen[screenId]) return;
+        _tipTimer = setTimeout(function () {
+          if (_welcomeOpen || _tipsOpen || anyModalOpen()) return;
+          var screen = el(screenId);
+          if (!screen || screen.classList.contains('hidden')) return;
+          var queue = TIPS[screenId].filter(function (t) { return isVisible(resolveTarget(t)); });
+          if (!queue.length) return; // nothing to point at yet; try again on the next visit
+          _tipQueue = queue;
+          _tipScreen = screenId;
+          openTips();
+        }, 350);
+      }
+
+      function openTips() {
+        var wrap = el('ob-tips');
+        if (!wrap) return;
+        _tipsOpen = true;
+        _lastFocus = document.activeElement;
+        wrap.classList.remove('hidden');
+        document.addEventListener('keydown', onTipKey, true);
+        window.addEventListener('scroll', schedulePosition, { capture: true, passive: true });
+        window.addEventListener('resize', schedulePosition, { passive: true });
+        showTip(0);
+      }
+
+      function showTip(i) {
+        if (i >= _tipQueue.length) { closeTips(true); return; }
+        _tipIdx = i;
+        var t = _tipQueue[i];
+        _tipTarget = resolveTarget(t);
+        if (!isVisible(_tipTarget)) { showTip(i + 1); return; }
+
+        var multi = _tipQueue.length > 1;
+        el('ob-tip-count').textContent = multi ? (i + 1) + ' of ' + _tipQueue.length : 'Tip';
+        el('ob-tip-title').textContent = t.title;
+        el('ob-tip-body').textContent = t.body;
+        el('ob-tip-next').textContent = i === _tipQueue.length - 1 ? 'Got it' : 'Next';
+        el('ob-tip-skip').classList.toggle('hidden', !multi);
+
+        if (_ro) _ro.disconnect();
+        if (window.ResizeObserver) { _ro = new ResizeObserver(schedulePosition); _ro.observe(_tipTarget); }
+
+        var card = el('ob-tip-card');
+        card.classList.add('opacity-0');
+        try { _tipTarget.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }); } catch (e) {}
+        position();
+        setTimeout(function () {
+          if (!_tipsOpen) return;
+          position();
+          card.classList.remove('opacity-0');
+          el('ob-tip-next').focus({ preventScroll: true });
+        }, reducedMotion() ? 0 : 320);
+      }
+
+      function position() {
+        _raf = 0;
+        if (!_tipsOpen || !_tipTarget) return;
+        var r = _tipTarget.getBoundingClientRect();
+        var pad = 6;
+        var spot = el('ob-tip-spot');
+        spot.style.top = (r.top - pad) + 'px';
+        spot.style.left = (r.left - pad) + 'px';
+        spot.style.width = (r.width + pad * 2) + 'px';
+        spot.style.height = (r.height + pad * 2) + 'px';
+
+        var card = el('ob-tip-card'), arrow = el('ob-tip-arrow');
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var cw = card.offsetWidth, ch = card.offsetHeight;
+        var gap = 14;
+        var spaceBelow = vh - (r.bottom + pad), spaceAbove = r.top - pad;
+        var below = spaceBelow >= ch + gap + 8 || spaceBelow >= spaceAbove;
+        var top = below ? r.bottom + pad + gap : r.top - pad - gap - ch;
+        top = Math.max(8, Math.min(vh - ch - 8, top));
+        var left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
+        card.style.top = top + 'px';
+        card.style.left = left + 'px';
+
+        arrow.style.left = Math.max(16, Math.min(cw - 28, r.left + r.width / 2 - left - 6)) + 'px';
+        arrow.style.top = below ? '-6px' : '';
+        arrow.style.bottom = below ? '' : '-6px';
+      }
+      function schedulePosition() {
+        if (!_raf) _raf = requestAnimationFrame(position);
+      }
+
+      function closeTips(markSeen) {
+        if (!_tipsOpen) return;
+        _tipsOpen = false;
+        if (markSeen && _tipScreen) {
+          var o = state();
+          if (o) { o.tipsSeen[_tipScreen] = true; persist(); }
+        }
+        document.removeEventListener('keydown', onTipKey, true);
+        window.removeEventListener('scroll', schedulePosition, true);
+        window.removeEventListener('resize', schedulePosition);
+        if (_ro) { _ro.disconnect(); _ro = null; }
+        if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
+        var wrap = el('ob-tips');
+        if (wrap) wrap.classList.add('hidden');
+        var card = el('ob-tip-card');
+        if (card) card.classList.add('opacity-0');
+        _tipTarget = null;
+        _tipQueue = [];
+        _tipScreen = null;
+        restoreFocus();
+      }
+
+      function skipAllTips() {
+        var o = state();
+        if (o) Object.keys(TIPS).forEach(function (s) { o.tipsSeen[s] = true; });
+        closeTips(true);
+      }
+
+      function onTipKey(e) {
+        if (!_tipsOpen) return;
+        if (e.key === 'Escape') { e.preventDefault(); closeTips(true); }
+        else if (e.key === 'Tab') trapTab(e, el('ob-tip-card'));
+      }
+
+      /* ── Replay, markers, teardown ── */
+      function replay() {
+        var o = state();
+        if (!o) return;
+        migrate(o);
+        // Explicit false (not {}): Firestore merge writes would keep old true values otherwise
+        Object.keys(TIPS).forEach(function (s) { o.tipsSeen[s] = false; });
+        var st = appState();
+        var allDone = ITEMS.every(function (it) { return it.done(o, st); });
+        if (!allDone) { o.checklistDismissed = false; o.checklistCompleted = false; }
+        persist();
+        renderChecklist();
+        openWelcome();
+      }
+      function mark(flag) {
+        var o = state();
+        if (o && !o[flag]) { o[flag] = true; persist(); }
+      }
+      function teardown() {
+        clearTimeout(_tipTimer);
+        closeTips(false);
+        var wrap = el('ob-welcome'), sheet = el('ob-welcome-sheet');
+        _welcomeOpen = false;
+        document.removeEventListener('keydown', onWelcomeKey, true);
+        if (sheet) sheet.classList.add('translate-y-4', 'opacity-0');
+        if (wrap) wrap.classList.add('hidden');
+        var box = el('ob-checklist');
+        if (box) box.classList.add('hidden');
+        _suppressTipsOnce = false;
+        _prevDone = null;
+        _showCompleteUntil = 0;
+        _lastFocus = null;
+      }
+
+      function bind() {
+        var next = el('ob-next'), back = el('ob-back'), skip = el('ob-skip');
+        if (next) next.addEventListener('click', function () { if (_slide < SLIDES - 1) goToSlide(_slide + 1); else finishWelcome(); });
+        if (back) back.addEventListener('click', function () { goToSlide(_slide - 1); });
+        if (skip) skip.addEventListener('click', skipWelcome);
+        var inc = el('ob-income');
+        if (inc) {
+          inc.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); finishWelcome(); } });
+          inc.addEventListener('input', function () { var err = el('ob-error'); if (err) err.classList.add('hidden'); });
+        }
+
+        var track = el('ob-slides');
+        if (track) {
+          var x0 = null, y0 = null;
+          track.addEventListener('touchstart', function (e) {
+            if (e.target.closest('input, label, button')) { x0 = null; return; }
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+          }, { passive: true });
+          track.addEventListener('touchend', function (e) {
+            if (x0 === null) return;
+            var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+            x0 = null;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) goToSlide(_slide + (dx < 0 ? 1 : -1));
+          }, { passive: true });
+        }
+
+        var list = el('ob-checklist-items');
+        if (list) list.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-ob-item]');
+          if (!b || b.getAttribute('aria-disabled') === 'true') return;
+          var it = ITEMS[parseInt(b.getAttribute('data-ob-item'), 10)];
+          if (it) it.go();
+        });
+        var dismiss = el('ob-checklist-dismiss');
+        if (dismiss) dismiss.addEventListener('click', dismissChecklist);
+
+        var tipNext = el('ob-tip-next'), tipSkip = el('ob-tip-skip'), catcher = el('ob-tip-catcher');
+        if (tipNext) tipNext.addEventListener('click', function () { showTip(_tipIdx + 1); });
+        if (tipSkip) tipSkip.addEventListener('click', skipAllTips);
+        if (catcher) catcher.addEventListener('click', function () { showTip(_tipIdx + 1); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+      else bind();
+
+      return {
+        maybeStart: maybeStart,
+        replay: replay,
+        teardown: teardown,
+        renderChecklist: renderChecklist,
+        maybeShowTips: maybeShowTips,
+        markIncomeSet: function () { mark('incomeSet'); },
+        markStrategyChosen: function () { mark('strategyChosen'); },
+        markSimulatorTried: function () { mark('simulatorTried'); }
+      };
     })();
 
     function completeUserEntry(user, fname, lname) {
@@ -8120,15 +8562,12 @@
             navigateTo('screen-home', 'btn-nav-home');
         }
 
-        // Trigger visual guide tour if first-time sign-up
-        if (window._isFirstTimeSignup) {
-            window._isFirstTimeSignup = false;
-            setTimeout(function() {
-                if (typeof window.startVisualGuideTour === 'function') {
-                    window.startVisualGuideTour();
-                }
-            }, 800);
-        }
+        // Google sign-up skips the auth listener's data load, so start onboarding from here.
+        // maybeStart is idempotent and decides from the user's data whether to show the welcome.
+        window._isFirstTimeSignup = false;
+        setTimeout(function() {
+            if (window.Onboarding) window.Onboarding.maybeStart();
+        }, 400);
     }
 
     window.signupWithGoogle = function() {
@@ -8491,6 +8930,7 @@
                       income: resolvedIncome,
                       strategy: resolvedStrategy
                   };
+                  if (!mergedData.onboarding && localData && localData.onboarding) mergedData.onboarding = localData.onboarding;
 
                   App.setCloudData(mergedData);
                   window._pendingSignupName = null;
@@ -8517,6 +8957,8 @@
                       income: (localData && localData.income) || "175000",
                       strategy: (localData && localData.strategy) || "avalanche"
                   };
+                  if (localData && localData.onboarding) initialData.onboarding = localData.onboarding;
+                  if (localData && localData.hasCompletedTour) initialData.hasCompletedTour = true;
                   window._pendingSignupName = null;
 
                   App.setCloudData(initialData);
@@ -8557,18 +8999,11 @@
               navigateTo('screen-home', 'btn-nav-home');
           }
 
-          // Trigger visual guide walkthrough for first-time signups
-          var emailKey = (user.email || '').toLowerCase().trim();
-          var localTourDone = localStorage.getItem('stitch_tour_completed_' + emailKey) === 'true';
-          var cloudTourDone = cloudData && (cloudData.hasCompletedTour === true);
-          if (window._isFirstTimeSignup || (!localTourDone && !cloudTourDone && window._isFirstTimeSignup)) {
-              window._isFirstTimeSignup = false;
-              setTimeout(function() {
-                  if (typeof window.startVisualGuideTour === 'function') {
-                      window.startVisualGuideTour();
-                  }
-              }, 800);
-          }
+          // Onboarding decides from the loaded user data (not a sign-up flag) whether to show the welcome
+          window._isFirstTimeSignup = false;
+          setTimeout(function() {
+              if (window.Onboarding) window.Onboarding.maybeStart();
+          }, 400);
         }
       } else {
         // ── SIGNED OUT ──
@@ -8584,14 +9019,8 @@
             window.renderDashboard();
         }
 
-        // Close guide tour if active
-        var tourOverlay = document.getElementById('app-tour-overlay');
-        if (tourOverlay) tourOverlay.classList.add('hidden');
-        document.body.classList.remove('tour-active');
-        if (window._tourHighlightedEl) {
-            window._tourHighlightedEl.classList.remove('ring-4', 'ring-emerald-500/80', 'animate-pulse', 'relative', 'z-50');
-            window._tourHighlightedEl = null;
-        }
+        // Close any onboarding overlays left open
+        if (window.Onboarding) window.Onboarding.teardown();
 
         if (loginScreen && appShell) {
           appShell.classList.add("hidden");
