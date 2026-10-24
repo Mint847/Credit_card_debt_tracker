@@ -1,0 +1,40 @@
+name: Weekly offers collector
+
+on:
+  schedule:
+    # Sunday 20:30 UTC = Monday 02:00 Sri Lanka time
+    - cron: '30 20 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: extract and print offers without writing to Firestore'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tools/offers-collector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install headless Chromium (for pages that need a browser)
+        run: npx playwright install --with-deps chromium
+      - name: Run unit tests
+        run: npm test
+      - name: Collect offers
+        run: node collect.mjs ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          OFFERS_MODEL: ${{ vars.OFFERS_MODEL }}

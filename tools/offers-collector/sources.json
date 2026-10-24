@@ -1,0 +1,20 @@
+{
+  "_comment": "Official offers pages, one or more per issuer. issuer must be a key from SL_CARD_ISSUERS in index.html. fetch: http (plain request) or browser (headless Chromium, for pages built with JavaScript or that block plain requests). Entries with enabled: false or no url are skipped.",
+  "sources": [
+    { "issuer": "combank",  "bank": "Commercial Bank",    "url": "https://www.combank.lk/rewards-promotions", "fetch": "browser" },
+    { "issuer": "boc",      "bank": "Bank of Ceylon",     "url": "https://www.boc.lk/personal-banking/card-offers", "fetch": "http" },
+    { "issuer": "sampath",  "bank": "Sampath Bank",       "url": "https://www.sampath.lk/sampath-cards/credit-card-offer", "fetch": "browser" },
+    { "issuer": "hnb",      "bank": "HNB",                "url": "https://www.hnb.lk/personal/promotions/card-promotion/card-offers", "fetch": "browser" },
+    { "issuer": "seylan",   "bank": "Seylan Bank",        "url": "https://www.seylan.lk/promotions/cards?type%5B%5D=credit_card", "fetch": "http" },
+    { "issuer": "ntb",      "bank": "Nations Trust Bank", "url": "https://www.nationstrust.com/promotions", "fetch": "http" },
+    { "issuer": "ndb",      "bank": "NDB Bank",           "url": "https://www.ndbbank.com/cards/card-offers", "fetch": "http" },
+    { "issuer": "dfcc",     "bank": "DFCC Bank",          "url": "https://www.dfcc.lk/personal/savings-accounts/cards/card-offers/hotels", "fetch": "http" },
+    { "issuer": "dfcc",     "bank": "DFCC Bank",          "url": "https://www.dfcc.lk/dining-promotion", "fetch": "http" },
+    { "issuer": "pabc",     "bank": "Pan Asia Bank",      "url": "https://www.pabcbank.com/card-offers/", "fetch": "browser" },
+    { "issuer": "union",    "bank": "Union Bank",         "url": "https://www.unionb.com/credit-cards-offers/", "fetch": "http" },
+    { "issuer": "cdb",      "bank": "CDB",                "url": "https://www.cdb.lk/cdb-offers", "fetch": "http" },
+    { "issuer": "peoples",  "bank": "People's Bank",      "url": "", "fetch": "http", "enabled": false, "_todo": "Official offers page not found yet" },
+    { "issuer": "lolc",     "bank": "LOLC Finance",       "url": "https://www.lolcfinance.com/credit-card-offers/", "fetch": "http" },
+    { "issuer": "cargills", "bank": "Cargills Bank",      "url": "", "fetch": "http", "enabled": false, "_todo": "Official offers page not found yet" }
+  ]
+}
