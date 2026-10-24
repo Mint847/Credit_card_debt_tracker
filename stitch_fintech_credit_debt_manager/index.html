@@ -17,6 +17,124 @@
     rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet">
+  <script>
+    /* ── Theme: Light / Dark / Auto (follows the device). Runs first so the page never flashes the wrong colours.
+       The choice is kept per device in localStorage (serendib_theme). ── */
+    (function () {
+      var MODES = ['light', 'dark', 'auto'], mode = 'auto';
+      try { var saved = localStorage.getItem('serendib_theme'); if (MODES.indexOf(saved) !== -1) mode = saved; } catch (e) {}
+      var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+      function paintSwitches() {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-theme-choice]'), function (b) {
+          var on = b.getAttribute('data-theme-choice') === mode;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+      }
+      function apply() {
+        var dark = mode === 'dark' || (mode === 'auto' && !!(mq && mq.matches));
+        document.documentElement.classList.toggle('dark', dark);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#0f1416' : '#f8f9fa');
+        paintSwitches();
+      }
+      window.Theme = {
+        get: function () { return mode; },
+        isDark: function () { return document.documentElement.classList.contains('dark'); },
+        set: function (m) {
+          if (MODES.indexOf(m) === -1) return;
+          mode = m;
+          try { localStorage.setItem('serendib_theme', m); } catch (e) {}
+          var root = document.documentElement;
+          root.classList.add('theme-switching');
+          apply();
+          clearTimeout(window.__themeT);
+          window.__themeT = setTimeout(function () { root.classList.remove('theme-switching'); }, 400);
+        }
+      };
+      apply();
+      if (mq) {
+        var follow = function () { if (mode === 'auto') apply(); };
+        if (mq.addEventListener) mq.addEventListener('change', follow); else if (mq.addListener) mq.addListener(follow);
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        paintSwitches();
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest && e.target.closest('[data-theme-choice]');
+          if (b) window.Theme.set(b.getAttribute('data-theme-choice'));
+        });
+      });
+    })();
+
+    /* ── Colours as CSS variables, so dark mode swaps values without touching any markup ──
+       Light values are exactly Tailwind's palette and the app's design tokens. Each kind of class has its own
+       dark value: backgrounds (--c-*), text (--t-*), borders (--b-*), so bg-white can turn dark while
+       text-white stays white. */
+    (function () {
+      var PALETTE = {"slate":{"50":"#f8fafc","100":"#f1f5f9","200":"#e2e8f0","300":"#cbd5e1","400":"#94a3b8","500":"#64748b","600":"#475569","700":"#334155","800":"#1e293b","900":"#0f172a","950":"#020617"},"gray":{"50":"#f9fafb","100":"#f3f4f6","200":"#e5e7eb","300":"#d1d5db","400":"#9ca3af","500":"#6b7280","600":"#4b5563","700":"#374151","800":"#1f2937","900":"#111827","950":"#030712"},"zinc":{"50":"#fafafa","100":"#f4f4f5","200":"#e4e4e7","300":"#d4d4d8","400":"#a1a1aa","500":"#71717a","600":"#52525b","700":"#3f3f46","800":"#27272a","900":"#18181b","950":"#09090b"},"neutral":{"50":"#fafafa","100":"#f5f5f5","200":"#e5e5e5","300":"#d4d4d4","400":"#a3a3a3","500":"#737373","600":"#525252","700":"#404040","800":"#262626","900":"#171717","950":"#0a0a0a"},"stone":{"50":"#fafaf9","100":"#f5f5f4","200":"#e7e5e4","300":"#d6d3d1","400":"#a8a29e","500":"#78716c","600":"#57534e","700":"#44403c","800":"#292524","900":"#1c1917","950":"#0c0a09"},"red":{"50":"#fef2f2","100":"#fee2e2","200":"#fecaca","300":"#fca5a5","400":"#f87171","500":"#ef4444","600":"#dc2626","700":"#b91c1c","800":"#991b1b","900":"#7f1d1d","950":"#450a0a"},"orange":{"50":"#fff7ed","100":"#ffedd5","200":"#fed7aa","300":"#fdba74","400":"#fb923c","500":"#f97316","600":"#ea580c","700":"#c2410c","800":"#9a3412","900":"#7c2d12","950":"#431407"},"amber":{"50":"#fffbeb","100":"#fef3c7","200":"#fde68a","300":"#fcd34d","400":"#fbbf24","500":"#f59e0b","600":"#d97706","700":"#b45309","800":"#92400e","900":"#78350f","950":"#451a03"},"yellow":{"50":"#fefce8","100":"#fef9c3","200":"#fef08a","300":"#fde047","400":"#facc15","500":"#eab308","600":"#ca8a04","700":"#a16207","800":"#854d0e","900":"#713f12","950":"#422006"},"lime":{"50":"#f7fee7","100":"#ecfccb","200":"#d9f99d","300":"#bef264","400":"#a3e635","500":"#84cc16","600":"#65a30d","700":"#4d7c0f","800":"#3f6212","900":"#365314","950":"#1a2e05"},"green":{"50":"#f0fdf4","100":"#dcfce7","200":"#bbf7d0","300":"#86efac","400":"#4ade80","500":"#22c55e","600":"#16a34a","700":"#15803d","800":"#166534","900":"#14532d","950":"#052e16"},"emerald":{"50":"#ecfdf5","100":"#d1fae5","200":"#a7f3d0","300":"#6ee7b7","400":"#34d399","500":"#10b981","600":"#059669","700":"#047857","800":"#065f46","900":"#064e3b","950":"#022c22"},"teal":{"50":"#f0fdfa","100":"#ccfbf1","200":"#99f6e4","300":"#5eead4","400":"#2dd4bf","500":"#14b8a6","600":"#0d9488","700":"#0f766e","800":"#115e59","900":"#134e4a","950":"#042f2e"},"cyan":{"50":"#ecfeff","100":"#cffafe","200":"#a5f3fc","300":"#67e8f9","400":"#22d3ee","500":"#06b6d4","600":"#0891b2","700":"#0e7490","800":"#155e75","900":"#164e63","950":"#083344"},"sky":{"50":"#f0f9ff","100":"#e0f2fe","200":"#bae6fd","300":"#7dd3fc","400":"#38bdf8","500":"#0ea5e9","600":"#0284c7","700":"#0369a1","800":"#075985","900":"#0c4a6e","950":"#082f49"},"blue":{"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"},"indigo":{"50":"#eef2ff","100":"#e0e7ff","200":"#c7d2fe","300":"#a5b4fc","400":"#818cf8","500":"#6366f1","600":"#4f46e5","700":"#4338ca","800":"#3730a3","900":"#312e81","950":"#1e1b4b"},"violet":{"50":"#f5f3ff","100":"#ede9fe","200":"#ddd6fe","300":"#c4b5fd","400":"#a78bfa","500":"#8b5cf6","600":"#7c3aed","700":"#6d28d9","800":"#5b21b6","900":"#4c1d95","950":"#2e1065"},"purple":{"50":"#faf5ff","100":"#f3e8ff","200":"#e9d5ff","300":"#d8b4fe","400":"#c084fc","500":"#a855f7","600":"#9333ea","700":"#7e22ce","800":"#6b21a8","900":"#581c87","950":"#3b0764"},"fuchsia":{"50":"#fdf4ff","100":"#fae8ff","200":"#f5d0fe","300":"#f0abfc","400":"#e879f9","500":"#d946ef","600":"#c026d3","700":"#a21caf","800":"#86198f","900":"#701a75","950":"#4a044e"},"pink":{"50":"#fdf2f8","100":"#fce7f3","200":"#fbcfe8","300":"#f9a8d4","400":"#f472b6","500":"#ec4899","600":"#db2777","700":"#be185d","800":"#9d174d","900":"#831843","950":"#500724"},"rose":{"50":"#fff1f2","100":"#ffe4e6","200":"#fecdd3","300":"#fda4af","400":"#fb7185","500":"#f43f5e","600":"#e11d48","700":"#be123c","800":"#9f1239","900":"#881337","950":"#4c0519"}};
+      var TOKENS = {"on-error":["#ffffff","#ffffff","#ffffff","#ffffff"],"on-tertiary-fixed":["#00201d","#00201d","#00201d","#00201d"],"surface-dim":["#d9dadb","#0b0f10","#0b0f10","#0b0f10"],"surface-tint":["#006b5c","#4fdbc2","#4fdbc2","#4fdbc2"],"on-background":["#191c1d","#e0e3e3","#e0e3e3","#e0e3e3"],"primary-fixed-dim":["#44ddc1","#44ddc1","#44ddc1","#44ddc1"],"surface-container-highest":["#e1e3e4","#313a3c","#313a3c","#313a3c"],"surface-bright":["#f8f9fa","#0f1416","#0f1416","#0f1416"],"inverse-primary":["#44ddc1","#006b5c","#006b5c","#006b5c"],"error-container":["#ffdad6","#5c1513","#ffdad6","#7a2a26"],"tertiary":["#006a63","#006a63","#4fdbd0","#4fdbd0"],"on-secondary-fixed":["#131b2e","#131b2e","#131b2e","#131b2e"],"surface-container-lowest":["#ffffff","#151b1d","#151b1d","#151b1d"],"secondary-container":["#dae2fd","#2e3750","#dae2fd","#3e475d"],"tertiary-fixed":["#56faeb","#56faeb","#56faeb","#56faeb"],"secondary":["#565e74","#565e74","#b9c3dc","#8b94ad"],"primary-container":["#008374","#008374","#4fdbc2","#00bfa5"],"on-surface-variant":["#3c4a46","#bec9c4","#bec9c4","#bec9c4"],"on-primary-fixed":["#00201a","#00201a","#00201a","#00201a"],"error":["#ba1a1a","#ba1a1a","#ffb4ab","#ffb4ab"],"outline-variant":["#bbcac4","#3f4946","#6f7a76","#3f4946"],"inverse-surface":["#2e3132","#e0e3e3","#e0e3e3","#e0e3e3"],"background":["#f8f9fa","#0f1416","#0f1416","#0f1416"],"on-secondary-container":["#5c647a","#c9d1ea","#c9d1ea","#c9d1ea"],"outline":["#6c7a76","#8a9490","#8a9490","#8a9490"],"surface":["#f8f9fa","#0f1416","#0f1416","#0f1416"],"tertiary-fixed-dim":["#28ddcf","#28ddcf","#28ddcf","#28ddcf"],"on-secondary-fixed-variant":["#3f465c","#3f465c","#3f465c","#3f465c"],"inverse-on-surface":["#f0f1f2","#2d3133","#2d3133","#2d3133"],"on-primary-container":["#00473c","#00473c","#8af5df","#8af5df"],"secondary-fixed":["#dae2fd","#dae2fd","#dae2fd","#dae2fd"],"on-primary":["#ffffff","#ffffff","#ffffff","#ffffff"],"on-error-container":["#93000a","#93000a","#ffdad6","#ffdad6"],"surface-variant":["#e1e3e4","#313a3c","#313a3c","#313a3c"],"surface-container":["#edeeef","#1d2426","#1d2426","#1d2426"],"on-tertiary":["#ffffff","#ffffff","#ffffff","#ffffff"],"primary-fixed":["#68fadd","#68fadd","#68fadd","#68fadd"],"secondary-fixed-dim":["#bec6e0","#bec6e0","#bec6e0","#bec6e0"],"tertiary-container":["#00beb1","#00beb1","#00beb1","#00beb1"],"on-tertiary-fixed-variant":["#00504a","#00504a","#00504a","#00504a"],"surface-container-low":["#f3f4f5","#191f21","#191f21","#191f21"],"on-tertiary-container":["#004741","#004741","#9ef2e8","#9ef2e8"],"primary":["#006b5c","#006b5c","#4fdbc2","#4fdbc2"],"on-secondary":["#ffffff","#ffffff","#ffffff","#ffffff"],"surface-container-high":["#e7e8e9","#273032","#273032","#273032"],"on-surface":["#191c1d","#e0e3e3","#e0e3e3","#e0e3e3"],"on-primary-fixed-variant":["#005145","#005145","#005145","#005145"]}; // name: [light, dark background, dark text, dark border]
+      var NEUTRAL = { slate: 1, gray: 1, zinc: 1, neutral: 1, stone: 1 };
+      var CARD = '#151b1d';
+      function rgb(hex) { var n = parseInt(hex.slice(1), 16); return (n >> 16 & 255) + ' ' + (n >> 8 & 255) + ' ' + (n & 255); }
+      function mix(a, b, t) {
+        var x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);
+        var c = [16, 8, 0].map(function (s) { return Math.round((x >> s & 255) * t + (y >> s & 255) * (1 - t)); });
+        return '#' + c.map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('');
+      }
+      var NB = { 50: '#1b2224', 100: '#222a2d', 200: '#2b3437', 300: '#3a4447', 400: '#56616a' };
+      var NT = { 50: '#1b2224', 100: '#2b3437', 200: '#3a4447', 300: '#56616a', 400: '#8b98a5', 500: '#9aa7b4', 600: '#b4c0cb', 700: '#cdd6df', 800: '#e2e8ee', 900: '#eef2f6', 950: '#f8fafc' };
+      var NBo = { 50: '#20282b', 100: '#273033', 200: '#2f393c', 300: '#3c474b', 400: '#56616a' };
+      var TXT = { 400: 300, 500: 400, 600: 400, 700: 300, 800: 200, 900: 100, 950: 100 };
+      function darkBg(h, s, v) {
+        if (NEUTRAL[h]) return NB[s] || v;
+        var p = PALETTE[h];
+        return s == 50 ? mix(p[500], CARD, .14) : s == 100 ? mix(p[500], CARD, .2) : s == 200 ? mix(p[500], CARD, .28) : s == 300 ? mix(p[400], CARD, .45) : v;
+      }
+      function darkText(h, s, v) { return NEUTRAL[h] ? NT[s] : (TXT[s] ? PALETTE[h][TXT[s]] : v); }
+      function darkBorder(h, s, v) {
+        if (NEUTRAL[h]) return NBo[s] || v;
+        var p = PALETTE[h];
+        return s == 50 ? mix(p[500], CARD, .18) : s == 100 ? mix(p[500], CARD, .24) : s == 200 ? mix(p[500], CARD, .32) : s == 300 ? mix(p[500], CARD, .45) : v;
+      }
+      var light = [], dark = [], colors = {}, textColor = { white: '#ffffff' }, borderColor = {};
+      function define(key, lightHex, dBg, dText, dBorder) {
+        light.push('--c-' + key + ':' + rgb(lightHex));
+        if (dBg !== lightHex) dark.push('--c-' + key + ':' + rgb(dBg));
+        dark.push('--t-' + key + ':' + rgb(dText), '--b-' + key + ':' + rgb(dBorder));
+      }
+      function refs(key) {
+        return {
+          c: 'rgb(var(--c-' + key + ') / <alpha-value>)',
+          t: 'rgb(var(--t-' + key + ', var(--c-' + key + ')) / <alpha-value>)',
+          b: 'rgb(var(--b-' + key + ', var(--c-' + key + ')) / <alpha-value>)'
+        };
+      }
+      Object.keys(PALETTE).forEach(function (h) {
+        colors[h] = {}; textColor[h] = {}; borderColor[h] = {};
+        Object.keys(PALETTE[h]).forEach(function (s) {
+          var v = PALETTE[h][s], key = h + '-' + s;
+          define(key, v, darkBg(h, s, v), darkText(h, s, v), darkBorder(h, s, v));
+          var r = refs(key);
+          colors[h][s] = r.c; textColor[h][s] = r.t; borderColor[h][s] = r.b;
+        });
+      });
+      define('white', '#ffffff', CARD, '#ffffff', CARD);
+      colors.white = refs('white').c; borderColor.white = refs('white').b;
+      Object.keys(TOKENS).forEach(function (name) {
+        var t = TOKENS[name], key = 'tk-' + name;
+        define(key, t[0], t[1], t[2], t[3]);
+        var r = refs(key);
+        colors[name] = r.c; textColor[name] = r.t; borderColor[name] = r.b;
+      });
+      // Brand teal: buttons use the deeper #008374 (white text 4.7:1); teal text and borders keep the bright #00bfa5
+      light.push('--t-tk-primary-container:' + rgb('#00bfa5'), '--b-tk-primary-container:' + rgb('#00bfa5'));
+      var st = document.createElement('style');
+      st.id = 'theme-vars';
+      st.textContent = ':root{' + light.join(';') + '}html.dark{color-scheme:dark;' + dark.join(';') + '}';
+      document.head.appendChild(st);
+      window.__themeColors = { colors: colors, textColor: textColor, borderColor: borderColor };
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script id="tailwind-config">
@@ -42,22 +160,10 @@
               '100%': { opacity: '1', transform: 'translateY(0)' },
             }
           },
-          colors: {
-            "on-error": "#ffffff", "on-tertiary-fixed": "#00201d", "surface-dim": "#d9dadb", "surface-tint": "#006b5c",
-            "on-background": "#191c1d", "primary-fixed-dim": "#44ddc1", "surface-container-highest": "#e1e3e4",
-            "surface-bright": "#f8f9fa", "inverse-primary": "#44ddc1", "error-container": "#ffdad6", "tertiary": "#006a63",
-            "on-secondary-fixed": "#131b2e", "surface-container-lowest": "#ffffff", "secondary-container": "#dae2fd",
-            "tertiary-fixed": "#56faeb", "secondary": "#565e74", "primary-container": "#00bfa5", "on-surface-variant": "#3c4a46",
-            "on-primary-fixed": "#00201a", "error": "#ba1a1a", "outline-variant": "#bbcac4", "inverse-surface": "#2e3132",
-            "background": "#f8f9fa", "on-secondary-container": "#5c647a", "outline": "#6c7a76", "surface": "#f8f9fa",
-            "tertiary-fixed-dim": "#28ddcf", "on-secondary-fixed-variant": "#3f465c", "inverse-on-surface": "#f0f1f2",
-            "on-primary-container": "#00473c", "secondary-fixed": "#dae2fd", "on-primary": "#ffffff",
-            "on-error-container": "#93000a", "surface-variant": "#e1e3e4", "surface-container": "#edeeef",
-            "on-tertiary": "#ffffff", "primary-fixed": "#68fadd", "secondary-fixed-dim": "#bec6e0",
-            "tertiary-container": "#00beb1", "on-tertiary-fixed-variant": "#00504a", "surface-container-low": "#f3f4f5",
-            "on-tertiary-container": "#004741", "primary": "#006b5c", "on-secondary": "#ffffff",
-            "surface-container-high": "#e7e8e9", "on-surface": "#191c1d", "on-primary-fixed-variant": "#005145"
-          }
+          // Design tokens and the Tailwind palette as CSS variables (light values unchanged; see the theme script)
+          colors: window.__themeColors.colors,
+          textColor: window.__themeColors.textColor,
+          borderColor: window.__themeColors.borderColor
         }
       }
     }
@@ -441,6 +547,218 @@
       color: #191c1d
     }
 
+    /* ── Dark mode: hand-written styles (Tailwind classes switch through the colour variables) ── */
+    html.theme-switching *,
+    html.theme-switching *::before,
+    html.theme-switching *::after {
+      transition: background-color .3s ease, border-color .3s ease, color .3s ease, fill .3s ease !important
+    }
+
+    html.dark body,
+    html.dark #app-shell {
+      background: #0f1416
+    }
+
+    html.dark #app-shell {
+      border-color: rgba(63, 73, 70, .6);
+      box-shadow: 0 0 40px rgba(0, 0, 0, .5)
+    }
+
+    html.dark #modal-sheet,
+    html.dark #info-sheet-panel,
+    html.dark #spend-sheet-panel,
+    html.dark .ob-tip-arrow {
+      background: #151b1d
+    }
+
+    html.dark #info-sheet-panel,
+    html.dark #spend-sheet-panel {
+      box-shadow: 0 -8px 40px rgba(0, 0, 0, .55)
+    }
+
+    html.dark #add-card-modal,
+    html.dark #info-sheet-overlay,
+    html.dark #spend-sheet {
+      background: rgba(0, 0, 0, .6)
+    }
+
+    html.dark .stitch-input,
+    html.dark .stitch-select {
+      background: #191f21;
+      border-color: #3f4946;
+      color: #e0e3e3
+    }
+
+    html.dark .stitch-input::placeholder {
+      color: #8a9490
+    }
+
+    html.dark input[type=range]::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, #00bfa5 var(--track-fill, 0%), #313a3c var(--track-fill, 0%))
+    }
+
+    html.dark #ps-slider::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, var(--card-accent) var(--track-fill, 0%), #313a3c var(--track-fill, 0%))
+    }
+
+    html.dark input[type=range]::-moz-range-track {
+      background: #313a3c
+    }
+
+    html.dark input[type=range]::-webkit-slider-thumb {
+      border-color: #151b1d
+    }
+
+    html.dark input[type=range]::-moz-range-thumb {
+      border-color: #151b1d
+    }
+
+    html.dark .calc-tab.active {
+      background: #273032;
+      color: #4fdbc2;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .4)
+    }
+
+    html.dark #screen-detail .calc-tab.active {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .4), inset 0 -2px 0 var(--card-accent)
+    }
+
+    html.dark .spend-chip {
+      background: #191f21;
+      border-color: #3f4946;
+      color: #bec9c4
+    }
+
+    html.dark .spend-chip.is-on {
+      background: rgba(0, 191, 165, .16);
+      border-color: #4fdbc2;
+      color: #8af5df
+    }
+
+    /* A card chip keeps its own card colour when selected */
+    html.dark .spend-chip[data-card].is-on {
+      border-color: var(--chip-accent, #4fdbc2);
+      background: var(--chip-soft, rgba(0, 191, 165, .16));
+      color: #e0e3e3
+    }
+
+    html.dark .spend-seg {
+      color: #a3aeaa
+    }
+
+    html.dark .spend-seg.is-on {
+      background: #273032;
+      color: #e0e3e3;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .4)
+    }
+
+    html.dark #spend-sheet .spend-seg.is-on {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .4), inset 0 -2px 0 var(--card-accent)
+    }
+
+    html.dark .tenure-btn.active {
+      background: #00796b;
+      border-color: #00796b
+    }
+
+    html.dark .ca-tile {
+      background: #191f21;
+      border-color: #313a3c
+    }
+
+    html.dark .util-bar-fill.danger {
+      background: #ff6b5f
+    }
+
+    html.dark #global-nav .home-bar {
+      background: rgba(224, 227, 227, .3)
+    }
+
+    /* Card colour chips: lighter text so each card's colour still reads on dark */
+    html.dark .card-chip {
+      color: var(--ink-dark) !important
+    }
+
+    /* Solid dark buttons stay visible on a dark page */
+    html.dark .bg-slate-900,
+    html.dark .bg-\[\#1a1f2e\] {
+      background-color: #2b3437
+    }
+
+    html.dark .hover\:bg-slate-800:hover {
+      background-color: #374245
+    }
+
+    html.dark .bg-\[\#f8fafc\] {
+      background-color: #0f1416
+    }
+
+    html.dark .text-\[\#008f7a\] {
+      color: #4fdbc2
+    }
+
+    html.dark .text-\[\#004d40\] {
+      color: #8af5df
+    }
+
+    /* CRIB alert */
+    html.dark .bg-\[\#FEF2F2\] {
+      background-color: #2a1719
+    }
+
+    html.dark .bg-\[\#FEE2E2\] {
+      background-color: #3d1d20
+    }
+
+    html.dark .border-\[\#FCA5A5\] {
+      border-color: #6b2a2f
+    }
+
+    html.dark .text-\[\#991B1B\] {
+      color: #fda4af
+    }
+
+    html.dark .text-\[\#7F1D1D\] {
+      color: #fecdd3
+    }
+
+    /* Sign-in illustration: a night version of the same watercolour */
+    html.dark .auth-art {
+      filter: invert(1) hue-rotate(180deg) brightness(1.05) saturate(.9)
+    }
+
+    /* Switch knobs and form controls */
+    html.dark .after\:bg-white::after {
+      background-color: #e0e3e3
+    }
+
+    html.dark [type=checkbox]:not(:checked),
+    html.dark [type=radio]:not(:checked) {
+      background-color: #191f21;
+      border-color: #6f7a76
+    }
+
+    /* Appearance switch (side menu and Profile) */
+    .theme-opt {
+      color: #565e74
+    }
+
+    .theme-opt.is-on {
+      background: #fff;
+      color: #006b5c;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .08)
+    }
+
+    html.dark .theme-opt {
+      color: #b9c3dc
+    }
+
+    html.dark .theme-opt.is-on {
+      background: #273032;
+      color: #4fdbc2;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .4)
+    }
+
     /* ── Calculator tabs ── */
     .calc-tab {
       transition: background .15s, color .15s, box-shadow .15s
@@ -775,7 +1093,7 @@
     <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/80 to-transparent z-10"></div>
     <!-- Ambient Floating Illustration Container -->
     <div class="w-full h-full animate-ambient-breathe origin-bottom">
-    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
+    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="auth-art w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
     </div>
     <!-- Subtle Vignette / Edge Softening -->
     <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-emerald-950/5 to-transparent"></div>
@@ -845,7 +1163,7 @@
     <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/80 to-transparent z-10"></div>
     <!-- Ambient Floating Illustration Container -->
     <div class="w-full h-full animate-ambient-breathe origin-bottom">
-    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
+    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="auth-art w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
     </div>
     <!-- Subtle Vignette / Edge Softening -->
     <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-emerald-950/5 to-transparent"></div>
@@ -1041,7 +1359,7 @@
     <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/80 to-transparent z-10"></div>
     <!-- Ambient Floating Illustration Container -->
     <div class="w-full h-full animate-ambient-breathe origin-bottom">
-    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
+    <img alt="Serene Sri Lankan tea hills and financial growth illustration" class="auth-art w-full h-full object-cover object-bottom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgLHJqPGhsPY-vh5kSrCXVcO_qKSGFoN2ymZG3wrR3yGvWIRxewJaF9i9n4EnT3HQoDQi8_jxEBtJQnQpaaBadaeE4wv8JWsPaElQciIkyOFP_mWE0Dx6vxv_cNhEI1oKi4uNYFd3QVbfBHmbZnH0IH5veMEKOtGhGeBbSdu1iL3YMYjHzQADV4Mup1AnucWJjdmJ4hqFOthdXzVBRcI_826MIRZdR-K9oI2JDCj7X"/>
     </div>
     <!-- Subtle Vignette / Edge Softening -->
     <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-emerald-950/5 to-transparent"></div>
@@ -1201,20 +1519,50 @@
                     <span id="home-alert-payment-date"
                       class="px-2 py-0.5 rounded-full bg-surface-container text-[11px] font-semibold text-secondary">--</span>
                   </div>
-                  <p class="text-[12px] text-secondary mt-1">
-                    Minimum Required: <strong id="home-alert-payment-amount" class="text-on-surface">--</strong> to avoid statutory late
-                    penalties.
-                  </p>
+                  <p id="home-alert-payment-text" class="text-[12px] text-secondary mt-1">--</p>
                   <div id="home-alert-payment-card" class="mt-2"></div>
                 </div>
               </div>
             </div>
             <div class="mt-3 pt-3 border-t border-surface-container flex justify-end">
-              <button
+              <button type="button" id="home-alert-payment-btn"
                 class="bg-primary-container hover:bg-primary text-on-primary px-4 py-2 rounded-full text-[12px] font-semibold flex items-center space-x-1.5 active:scale-95 transition-all shadow-sm">
-                <span>Pay Now</span>
+                <span>Log payment</span>
                 <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
               </button>
+            </div>
+          </article>
+          <!-- Did you pay? (the day after a due date with the minimum unpaid) -->
+          <article id="home-alert-ask"
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-amber-500 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+            <div class="flex space-x-3 items-start">
+              <span class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 mt-0.5 text-amber-600">
+                <span class="material-symbols-outlined text-[22px]" aria-hidden="true">help</span>
+              </span>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-[14px] text-on-surface font-bold">Payment check</h3>
+                <p id="home-alert-ask-text" class="text-[12px] text-secondary mt-1">--</p>
+                <div id="home-alert-ask-card" class="mt-2"></div>
+                <div class="flex gap-2 mt-3">
+                  <button type="button" id="home-alert-ask-yes" class="h-9 px-4 rounded-full bg-primary-container text-white text-[12px] font-bold active:scale-95 transition-all">Yes, log it</button>
+                  <button type="button" id="home-alert-ask-no" class="h-9 px-4 rounded-full border border-outline-variant text-[12px] font-semibold text-on-surface active:scale-95 transition-all">Not yet</button>
+                </div>
+              </div>
+            </div>
+          </article>
+          <!-- Overdue under 60 days -->
+          <article id="home-alert-overdue"
+            class="hidden bg-amber-50/60 rounded-2xl p-4 border-y border-r border-amber-200 border-l-[6px] border-l-amber-500 overflow-hidden">
+            <div class="flex space-x-3 items-start">
+              <span class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 text-amber-700">
+                <span class="material-symbols-outlined text-[22px]" aria-hidden="true">schedule</span>
+              </span>
+              <div class="flex-1 min-w-0">
+                <h3 id="home-alert-overdue-title" class="text-[14px] text-amber-900 font-bold">--</h3>
+                <p id="home-alert-overdue-text" class="text-[12px] text-amber-900/80 mt-1 leading-snug">--</p>
+                <div id="home-alert-overdue-card" class="mt-2"></div>
+                <button type="button" id="home-alert-overdue-btn" class="mt-3 h-9 px-4 rounded-full bg-amber-700 text-white text-[12px] font-bold active:scale-95 transition-all">View catch-up plan</button>
+              </div>
             </div>
           </article>
           <!-- Card B (CRIB Danger Zone) -->
@@ -1242,8 +1590,7 @@
                     class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/80 text-error border border-error/20">
                     Critical Impact
                   </span>
-                  <span class="text-[11px] text-[#991B1B] font-semibold underline cursor-pointer">View Remedial
-                    Plan</span>
+                  <button type="button" id="home-alert-crib-btn" class="text-[11px] text-[#991B1B] font-semibold underline">View Remedial Plan</button>
                 </div>
               </div>
             </div>
@@ -1313,7 +1660,7 @@
         <section class="flex flex-col space-y-3">
           <div class="flex justify-between items-center">
             <h2 class="text-[18px] text-on-surface font-bold">Calculators &amp; Simulators</h2>
-            <span class="text-[12px] text-primary font-semibold cursor-pointer">Explore all</span>
+            <button type="button" id="btn-home-explore-sims" onclick="window.navigateTo('screen-simulators', 'btn-nav-simulators'); window.switchSimulator('min-payment');" class="text-[12px] text-primary font-semibold">Explore all</button>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <!-- 1: Min Payment Trap -->
@@ -1631,7 +1978,7 @@
           </div>
         </div>
         <div class="flex items-center gap-1">
-          <button aria-label="Share"
+          <button type="button" id="btn-share-card" aria-label="Share progress" onclick="App.openShare()"
             class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all"><span
               class="material-symbols-outlined text-[20px]">ios_share</span></button>
           <div id="card-menu-container" class="relative">
@@ -1711,6 +2058,7 @@
               <span>0%</span><span class="text-secondary/70">30% Healthy</span><span>100%</span>
             </div>
           </div>
+          <div id="detail-cycle-row" class="hidden mt-3 pt-3 border-t border-outline-variant/30 text-[12px]"></div>
         </section>
         <!-- Tab Switcher -->
         <section class="flex bg-surface-container-low p-1 rounded-xl gap-1">
@@ -2119,6 +2467,21 @@
         </section>
 
         <!-- Section 3: Repayment Strategy Preference -->
+        <section id="section-appearance" class="space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">contrast</span>
+              <h3 class="text-[14px] font-semibold text-on-surface">Appearance</h3>
+            </div>
+            <span class="text-[11px] font-semibold text-secondary">Saved on this device</span>
+          </div>
+          <div class="flex bg-surface-container-low p-1 rounded-xl gap-1" role="radiogroup" aria-label="Appearance">
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="light" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">light_mode</span>Light</button>
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">dark_mode</span>Dark</button>
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">brightness_auto</span>Auto</button>
+          </div>
+        </section>
+
         <section id="section-payoff-method" class="space-y-2 transition-all duration-700 rounded-2xl p-1 -m-1">
           <div class="flex items-center justify-between px-1">
             <div class="flex items-center space-x-2">
@@ -2184,9 +2547,8 @@
               class="flex items-center space-x-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl px-3 py-2.5">
               <span class="material-symbols-outlined text-[#008f7a] text-[18px] icon-filled">lock</span>
               <div class="flex-1">
-                <span class="text-[12px] font-semibold text-emerald-950 block">Private &amp; Local Storage</span>
-                <span class="text-[11px] text-emerald-700 block mt-0.5">No credit card numbers or credentials ever leave
-                  this device.</span>
+                <span class="text-[12px] font-semibold text-emerald-950 block">Private by design</span>
+                <span class="text-[11px] text-emerald-700 block mt-0.5">Serendib never asks for card numbers or passwords. Your data is saved to your own account only.</span>
               </div>
             </div>
             <div class="pt-1 space-y-1">
@@ -2197,12 +2559,26 @@
                     <span class="material-symbols-outlined text-[18px]">download</span>
                   </div>
                   <div class="text-left">
-                    <span class="text-[12px] font-semibold text-on-surface block">Export Financial Data (JSON)</span>
-                    <span class="text-[11px] text-secondary mt-0.5 block">Download encrypted simulation ledger</span>
+                    <span class="text-[12px] font-semibold text-on-surface block">Download a backup</span>
+                    <span class="text-[11px] text-secondary mt-0.5 block">Cards, spending history and spaces, as a JSON file</span>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-secondary text-[18px]">chevron_right</span>
               </button>
+              <button id="btn-restore-data" type="button" onclick="document.getElementById('input-restore-file').click()"
+                class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-surface-container active:scale-[0.99] transition-all">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">upload</span>
+                  </div>
+                  <div class="text-left">
+                    <span class="text-[12px] font-semibold text-on-surface block">Restore from a backup</span>
+                    <span class="text-[11px] text-secondary mt-0.5 block">See what's in it before anything changes</span>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-secondary text-[18px]">chevron_right</span>
+              </button>
+              <input type="file" id="input-restore-file" accept="application/json,.json" class="hidden" aria-hidden="true" tabindex="-1">
               <button id="btn-reset-data"
                 class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-error-container/20 active:scale-[0.99] transition-all text-error">
                 <div class="flex items-center space-x-3">
@@ -2820,10 +3196,10 @@
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span id="spaces-active-count" class="text-xs font-medium text-slate-500">0 Active Repayment Buffers</span>
             </div>
-            <span class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center cursor-pointer">
+            <button type="button" id="btn-spaces-details" onclick="App.openSpacesSummary()" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center">
               Details
-              <span class="material-symbols-outlined text-[14px] ml-0.5">chevron_right</span>
-            </span>
+              <span class="material-symbols-outlined text-[14px] ml-0.5" aria-hidden="true">chevron_right</span>
+            </button>
           </div>
         </div>
         <!-- Spaces Architecture Vertical Stack -->
@@ -3791,17 +4167,17 @@
        bg/icon/bar are the Tailwind classes the card list and card screen already used;
        hex/ink/soft are for inline styles and CSS variables (accent, text on tint, tint). */
     var CARD_THEMES = {
-      teal:    { name: 'Teal (default)',    bg: 'bg-teal-50',    icon: 'text-teal-600',    text: 'text-teal-700',    bar: 'bg-teal-500',    hex: '#14b8a6', ink: '#0f766e', soft: 'rgba(20,184,166,.12)' },
-      rose:    { name: 'Rose',              bg: 'bg-rose-50',    icon: 'text-rose-600',    text: 'text-rose-700',    bar: 'bg-rose-500',    hex: '#f43f5e', ink: '#be123c', soft: 'rgba(244,63,94,.12)' },
-      amber:   { name: 'Amber / Gold',      bg: 'bg-amber-50',   icon: 'text-amber-600',   text: 'text-amber-700',   bar: 'bg-amber-500',   hex: '#f59e0b', ink: '#b45309', soft: 'rgba(245,158,11,.14)' },
-      emerald: { name: 'Emerald',           bg: 'bg-emerald-50', icon: 'text-emerald-600', text: 'text-emerald-700', bar: 'bg-emerald-500', hex: '#10b981', ink: '#047857', soft: 'rgba(16,185,129,.12)' },
-      violet:  { name: 'Violet',            bg: 'bg-violet-50',  icon: 'text-violet-600',  text: 'text-violet-700',  bar: 'bg-violet-500',  hex: '#8b5cf6', ink: '#6d28d9', soft: 'rgba(139,92,246,.12)' },
-      sky:     { name: 'Sky Blue',          bg: 'bg-sky-50',     icon: 'text-sky-600',     text: 'text-sky-700',     bar: 'bg-sky-500',     hex: '#0ea5e9', ink: '#0369a1', soft: 'rgba(14,165,233,.12)' },
-      slate:   { name: 'Slate / Titanium',  bg: 'bg-slate-100',  icon: 'text-slate-600',   text: 'text-slate-700',   bar: 'bg-slate-600',   hex: '#475569', ink: '#334155', soft: 'rgba(71,85,105,.12)' },
-      indigo:  { name: 'Indigo / Navy',     bg: 'bg-indigo-50',  icon: 'text-indigo-600',  text: 'text-indigo-700',  bar: 'bg-indigo-600',  hex: '#4f46e5', ink: '#4338ca', soft: 'rgba(79,70,229,.12)' },
-      red:     { name: 'Crimson / Ruby',    bg: 'bg-red-50',     icon: 'text-red-600',     text: 'text-red-700',     bar: 'bg-red-600',     hex: '#dc2626', ink: '#b91c1c', soft: 'rgba(220,38,38,.12)' },
-      fuchsia: { name: 'Fuchsia / Magenta', bg: 'bg-fuchsia-50', icon: 'text-fuchsia-600', text: 'text-fuchsia-700', bar: 'bg-fuchsia-500', hex: '#d946ef', ink: '#a21caf', soft: 'rgba(217,70,239,.12)' },
-      cyan:    { name: 'Cyan / Ocean',      bg: 'bg-cyan-50',    icon: 'text-cyan-600',    text: 'text-cyan-700',    bar: 'bg-cyan-500',    hex: '#06b6d4', ink: '#0e7490', soft: 'rgba(6,182,212,.12)' }
+      teal:    { name: 'Teal (default)',    bg: 'bg-teal-50',    icon: 'text-teal-600',    text: 'text-teal-700',    bar: 'bg-teal-500',    hex: '#14b8a6', ink: '#0f766e', soft: 'rgba(20,184,166,.12)', inkDark: '#5eead4' },
+      rose:    { name: 'Rose',              bg: 'bg-rose-50',    icon: 'text-rose-600',    text: 'text-rose-700',    bar: 'bg-rose-500',    hex: '#f43f5e', ink: '#be123c', soft: 'rgba(244,63,94,.12)', inkDark: '#fda4af' },
+      amber:   { name: 'Amber / Gold',      bg: 'bg-amber-50',   icon: 'text-amber-600',   text: 'text-amber-700',   bar: 'bg-amber-500',   hex: '#f59e0b', ink: '#b45309', soft: 'rgba(245,158,11,.14)', inkDark: '#fcd34d' },
+      emerald: { name: 'Emerald',           bg: 'bg-emerald-50', icon: 'text-emerald-600', text: 'text-emerald-700', bar: 'bg-emerald-500', hex: '#10b981', ink: '#047857', soft: 'rgba(16,185,129,.12)', inkDark: '#6ee7b7' },
+      violet:  { name: 'Violet',            bg: 'bg-violet-50',  icon: 'text-violet-600',  text: 'text-violet-700',  bar: 'bg-violet-500',  hex: '#8b5cf6', ink: '#6d28d9', soft: 'rgba(139,92,246,.12)', inkDark: '#c4b5fd' },
+      sky:     { name: 'Sky Blue',          bg: 'bg-sky-50',     icon: 'text-sky-600',     text: 'text-sky-700',     bar: 'bg-sky-500',     hex: '#0ea5e9', ink: '#0369a1', soft: 'rgba(14,165,233,.12)', inkDark: '#7dd3fc' },
+      slate:   { name: 'Slate / Titanium',  bg: 'bg-slate-100',  icon: 'text-slate-600',   text: 'text-slate-700',   bar: 'bg-slate-600',   hex: '#475569', ink: '#334155', soft: 'rgba(71,85,105,.12)', inkDark: '#cbd5e1' },
+      indigo:  { name: 'Indigo / Navy',     bg: 'bg-indigo-50',  icon: 'text-indigo-600',  text: 'text-indigo-700',  bar: 'bg-indigo-600',  hex: '#4f46e5', ink: '#4338ca', soft: 'rgba(79,70,229,.12)', inkDark: '#a5b4fc' },
+      red:     { name: 'Crimson / Ruby',    bg: 'bg-red-50',     icon: 'text-red-600',     text: 'text-red-700',     bar: 'bg-red-600',     hex: '#dc2626', ink: '#b91c1c', soft: 'rgba(220,38,38,.12)', inkDark: '#fca5a5' },
+      fuchsia: { name: 'Fuchsia / Magenta', bg: 'bg-fuchsia-50', icon: 'text-fuchsia-600', text: 'text-fuchsia-700', bar: 'bg-fuchsia-500', hex: '#d946ef', ink: '#a21caf', soft: 'rgba(217,70,239,.12)', inkDark: '#f0abfc' },
+      cyan:    { name: 'Cyan / Ocean',      bg: 'bg-cyan-50',    icon: 'text-cyan-600',    text: 'text-cyan-700',    bar: 'bg-cyan-500',    hex: '#06b6d4', ink: '#0e7490', soft: 'rgba(6,182,212,.12)', inkDark: '#67e8f9' }
     };
     function cardTheme(card) { return CARD_THEMES[card && card.color] || CARD_THEMES.teal; }
     function cardName(c) { return String(c.bank || '').split(' ')[0] + ' ' + (c.nick || ''); }
@@ -3812,7 +4188,7 @@
     // "● Sampath Visa Platinum" pill in the card's colour; the name is always beside the colour
     function cardChip(card) {
       var t = cardTheme(card);
-      return '<span class="card-chip inline-flex items-center gap-1.5 max-w-full px-2.5 py-1 rounded-full text-[12px] font-semibold" style="background:' + t.soft + ';color:' + t.ink + '">' +
+      return '<span class="card-chip inline-flex items-center gap-1.5 max-w-full px-2.5 py-1 rounded-full text-[12px] font-semibold" style="background:' + t.soft + ';color:' + t.ink + ';--ink-dark:' + t.inkDark + '">' +
         cardDot(card, 8) + '<span class="truncate">' + suggestEscape(cardName(card)) + '</span></span>';
     }
     // Sets --card-accent / --card-accent-soft on an element (card screen, spending sheet)
@@ -4081,6 +4457,262 @@
       return out;
     }
 
+    /* ── Statement cycles: due dates, statement minimums, paid / overdue ── */
+    // Latest statement date on or before refStr
+    function lastStatementOnOrBefore(statementDay, refStr) {
+      var r = parseYmd(refStr), sd = parseInt(statementDay, 10), y = r.getFullYear(), m = r.getMonth();
+      var d = new Date(y, m, clampDay(y, m, sd));
+      if (d > r) d = new Date(y, m - 1, clampDay(y, m - 1, sd));
+      return ymd(d);
+    }
+    // A statement's payment due date: the first due day after the statement date
+    function dueDateFor(stmtStr, dueDay) {
+      var s = parseYmd(stmtStr), dd = parseInt(dueDay, 10), y = s.getFullYear(), m = s.getMonth();
+      var d = new Date(y, m, clampDay(y, m, dd));
+      if (d <= s) d = new Date(y, m + 1, clampDay(y, m + 1, dd));
+      return ymd(d);
+    }
+    // Statement dates from fromStr to toStr (inclusive), oldest first
+    function statementDatesBetween(statementDay, fromStr, toStr) {
+      var out = [], f = parseYmd(fromStr), sd = parseInt(statementDay, 10);
+      var y = f.getFullYear(), m = f.getMonth() - 1;
+      for (var guard = 0; guard < 40; guard++) {
+        var d = ymd(new Date(y, m, clampDay(y, m, sd)));
+        if (d > toStr) break;
+        if (d >= fromStr) out.push(d);
+        m++;
+        if (m > 11) { m = 0; y++; }
+      }
+      return out;
+    }
+    // First statement date after stmtStr
+    function nextStatementAfter(statementDay, stmtStr) {
+      return statementDatesBetween(statementDay, addDays(stmtStr, 1), addDays(stmtStr, 62))[0];
+    }
+    // The due day this month, or next month if it has passed (today counts)
+    function nextDueDayFrom(dueDay, todayStr) {
+      var t = parseYmd(todayStr), dd = parseInt(dueDay, 10), y = t.getFullYear(), m = t.getMonth();
+      var d = ymd(new Date(y, m, clampDay(y, m, dd)));
+      return d >= todayStr ? d : ymd(new Date(y, m + 1, clampDay(y, m + 1, dd)));
+    }
+    // Balance at the end of dateStr: today's balance minus everything logged after it
+    function balanceAt(card, dateStr) {
+      var b = Number(card.balance) || 0;
+      (card.ledger || []).forEach(function (e) { if (e.date > dateStr) b -= Number(e.applied) || 0; });
+      return Math.max(0, Math.round(b * 100) / 100);
+    }
+    // Snapshot each statement (balance and minimum due) from cycleTrackedFrom up to today. Keeps 12.
+    function recordStatements(card, todayStr) {
+      if (!isValidDay(card.statementDay) || !isValidDay(card.dueDay) || !card.cycleTrackedFrom) return false;
+      if (!Array.isArray(card.statements)) card.statements = [];
+      var have = {}, changed = false;
+      card.statements.forEach(function (s) { have[s.date] = true; });
+      statementDatesBetween(card.statementDay, card.cycleTrackedFrom, todayStr).forEach(function (d) {
+        if (have[d]) return;
+        var bal = balanceAt(card, d);
+        var minDue = Math.round(minPaymentFor({ balance: bal, minPct: card.minPct, minFloor: card.minFloor }) * 100) / 100;
+        card.statements.push({ date: d, due: dueDateFor(d, card.dueDay), balance: bal, minDue: minDue });
+        changed = true;
+      });
+      if (changed) {
+        card.statements.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+        if (card.statements.length > 12) card.statements.splice(0, card.statements.length - 12);
+      }
+      return changed;
+    }
+    // Which statement minimums are paid. Payments logged after a statement count towards it,
+    // oldest unpaid first; a cleared balance pays everything.
+    function cycleStatus(card, todayStr) {
+      var st = (card.statements || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+      if (!st.length) return null;
+      var rows = st.map(function (s) { return { s: s, paid: 0, remaining: Math.max(0, Number(s.minDue) || 0) }; });
+      if (!(Number(card.balance) > 0)) {
+        rows.forEach(function (r) { r.paid = r.remaining; r.remaining = 0; });
+      } else {
+        (card.ledger || []).filter(function (e) { return e.type === 'payment'; })
+          .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; })
+          .forEach(function (p) {
+            var left = Number(p.amount) || 0;
+            rows.forEach(function (r) {
+              if (left <= 0 || r.remaining <= 0 || p.date <= r.s.date) return;
+              var take = Math.min(left, r.remaining);
+              r.paid = Math.round((r.paid + take) * 100) / 100;
+              r.remaining = Math.round((r.remaining - take) * 100) / 100;
+              left -= take;
+            });
+          });
+      }
+      var unpaid = rows.filter(function (r) { return r.remaining > 0.5; });
+      var missed = unpaid.filter(function (r) { return r.s.due < todayStr; });
+      var next = unpaid.filter(function (r) { return r.s.due >= todayStr; })[0] || null;
+      return {
+        rows: rows,
+        latest: rows[rows.length - 1],
+        next: next,
+        overdue: missed.length ? {
+          since: missed[0].s.due,
+          days: daysBetween(missed[0].s.due, todayStr),
+          amount: Math.round(missed.reduce(function (s, r) { return s + r.remaining; }, 0) * 100) / 100,
+          statements: missed.map(function (r) { return r.s; }),
+          // Asked once, about the oldest missed payment; later months don't hide the warnings
+          answered: missed[0].s.answered === 'no'
+        } : null
+      };
+    }
+
+    /* ── Spaces: history, months left, monthly amount needed, recent pace ── */
+    // Ids go into onclick attributes, so keep them to letters, digits, - and _
+    function safeId(id) { return String(id == null ? '' : id).replace(/[^\w-]/g, ''); }
+    // Older spaces have no history: start it with one "Opening balance" deposit on the day the space was made
+    function ensureSpaceHistory(space) {
+      if (Array.isArray(space.history)) return false;
+      space.history = [];
+      var cur = Number(space.currentLKR) || 0;
+      if (cur > 0) {
+        var made = Number(space.id);
+        var date = isFinite(made) && made > 1e12 ? ymd(new Date(made)) : ymd(new Date());
+        space.history.push({ id: 'open_' + safeId(space.id), date: date, type: 'deposit', amount: cur, note: 'Opening balance', createdAt: isFinite(made) ? made : Date.now() });
+      }
+      return true;
+    }
+    // Whole months from today to the target date (0 once it has passed)
+    function spaceMonthsLeft(targetDate, todayStr) {
+      if (!isRealYmd(targetDate) || targetDate <= todayStr) return 0;
+      var t = parseYmd(todayStr), d = parseYmd(targetDate);
+      var months = (d.getFullYear() - t.getFullYear()) * 12 + (d.getMonth() - t.getMonth());
+      if (d.getDate() > t.getDate()) months++;
+      return Math.max(1, months);
+    }
+    function spaceMonthlyNeeded(space, todayStr) {
+      var left = Math.max(0, (Number(space.targetLKR) || 0) - (Number(space.currentLKR) || 0));
+      if (!left) return 0;
+      var months = spaceMonthsLeft(space.targetDate, todayStr);
+      return months ? left / months : left;
+    }
+    // Average net amount added per month over the last 90 days
+    function spaceRecentPace(space, todayStr) {
+      var from = addDays(todayStr, -90), net = 0;
+      (space.history || []).forEach(function (h) {
+        if (h.date <= from || h.note === 'Opening balance') return;
+        net += h.type === 'deposit' ? (Number(h.amount) || 0) : -(Number(h.amount) || 0);
+      });
+      return net / 3;
+    }
+
+    /* ── Backup files: build and check. Only known fields are kept, so a bad file can't inject anything ── */
+    var BACKUP_VERSION = 1;
+    function _num(v, min, max) { var n = Number(v); return isFinite(n) && n >= (min == null ? -Infinity : min) && n <= (max == null ? Infinity : max) ? n : null; }
+    function _str(v, max) { return typeof v === 'string' ? v.slice(0, max) : null; }
+    function _pick(src, out, key, val) { if (val !== null && val !== undefined) out[key] = val; }
+    function _ymdOrNull(v) { return typeof v === 'string' && isRealYmd(v) ? v : null; }
+    var LEDGER_TYPES = ['purchase', 'payment', 'refund', 'adjustment'], LEDGER_SOURCES = ['manual', 'sms', 'recurring', 'system', 'space'];
+    function cleanEntry(e) {
+      if (!e || typeof e !== 'object') return null;
+      var out = {}, id = safeId(e.id), date = _ymdOrNull(e.date), amt = _num(e.amount, -1e9, 1e9);
+      if (!id || !date || amt === null || LEDGER_TYPES.indexOf(e.type) === -1) return null;
+      out.id = id; out.date = date; out.type = e.type; out.amount = amt;
+      if (SPEND_CATEGORIES.some(function (c) { return c.key === e.category; })) out.category = e.category;
+      _pick(e, out, 'merchant', _str(e.merchant, 60));
+      _pick(e, out, 'note', _str(e.note, 80));
+      out.source = LEDGER_SOURCES.indexOf(e.source) !== -1 ? e.source : 'manual';
+      _pick(e, out, 'applied', _num(e.applied, -1e9, 1e9));
+      _pick(e, out, 'createdAt', _num(e.createdAt, 0));
+      _pick(e, out, 'editedAt', _num(e.editedAt, 0));
+      if (e.recurringId) out.recurringId = safeId(e.recurringId);
+      if (e.spaceId) out.spaceId = safeId(e.spaceId);
+      return out;
+    }
+    function cleanRecurring(r) {
+      if (!r || typeof r !== 'object') return null;
+      var id = safeId(r.id), name = _str(r.name, 40), amt = _num(r.amount, 0.01, 1e8);
+      if (!id || !name || amt === null || !isValidDay(r.day) || !_ymdOrNull(r.startDate)) return null;
+      var out = { id: id, name: name, amount: amt, day: parseInt(r.day, 10), startDate: r.startDate, endDate: _ymdOrNull(r.endDate),
+        paused: !!r.paused, cancelled: !!r.cancelled, lastPosted: /^\d{4}-\d{2}$/.test(r.lastPosted || '') ? r.lastPosted : null,
+        skipped: Array.isArray(r.skipped) ? r.skipped.filter(function (m) { return /^\d{4}-\d{2}$/.test(m); }).slice(0, 240) : [] };
+      out.category = SPEND_CATEGORIES.some(function (c) { return c.key === r.category; }) ? r.category : 'subscriptions';
+      _pick(r, out, 'createdAt', _num(r.createdAt, 0));
+      return out;
+    }
+    function cleanCard(c) {
+      if (!c || typeof c !== 'object') return null;
+      var bank = _str(c.bank, 80), nick = _str(c.nick, 80), limit = _num(c.limit, 0, 1e10), balance = _num(c.balance, 0, 1e10);
+      if (!bank || !bank.trim() || nick === null || limit === null || balance === null) return null;
+      var out = { id: safeId(c.id) || uid(), bank: bank, nick: nick, limit: limit, balance: balance, color: CARD_THEMES[c.color] ? c.color : 'teal' };
+      out.issuer = SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(bank);
+      _pick(c, out, 'apr', _num(c.apr, 0, 100));
+      if (c.isZeroPercent) out.isZeroPercent = true;
+      _pick(c, out, 'minPct', _num(c.minPct, 0.001, 1));
+      _pick(c, out, 'minFloor', _num(c.minFloor, 0, 1e7));
+      if (isValidDay(c.statementDay)) out.statementDay = parseInt(c.statementDay, 10);
+      if (isValidDay(c.dueDay)) out.dueDay = parseInt(c.dueDay, 10);
+      _pick(c, out, 'targetPayment', _num(c.targetPayment, 0.01, 1e10));
+      if (/^\d{4}$/.test(c.last4 || '')) out.last4 = c.last4;
+      _pick(c, out, 'cycleTrackedFrom', _ymdOrNull(c.cycleTrackedFrom));
+      out.ledger = (Array.isArray(c.ledger) ? c.ledger.slice(0, 6000) : []).map(cleanEntry).filter(Boolean);
+      out.recurring = (Array.isArray(c.recurring) ? c.recurring.slice(0, 100) : []).map(cleanRecurring).filter(Boolean);
+      if (c.budgets && typeof c.budgets === 'object') {
+        out.budgets = {};
+        SPEND_CATEGORIES.forEach(function (k) { var v = _num(c.budgets[k.key], 0.01, 1e9); if (v !== null) out.budgets[k.key] = v; });
+      }
+      if (Array.isArray(c.statements)) out.statements = c.statements.slice(-12).map(function (s) {
+        if (!s || !_ymdOrNull(s.date) || !_ymdOrNull(s.due)) return null;
+        var o = { date: s.date, due: s.due, balance: _num(s.balance, 0, 1e10) || 0, minDue: _num(s.minDue, 0, 1e10) || 0 };
+        if (s.answered === 'no') o.answered = 'no';
+        return o;
+      }).filter(Boolean);
+      if (c.ledgerArchive && typeof c.ledgerArchive === 'object') {
+        out.ledgerArchive = {};
+        Object.keys(c.ledgerArchive).slice(0, 600).forEach(function (m) {
+          var a = c.ledgerArchive[m];
+          if (!/^\d{4}-\d{2}$/.test(m) || !a || typeof a !== 'object') return;
+          var by = {};
+          if (a.byCategory && typeof a.byCategory === 'object') SPEND_CATEGORIES.forEach(function (k) { var v = _num(a.byCategory[k.key]); if (v !== null) by[k.key] = v; });
+          out.ledgerArchive[m] = { spent: _num(a.spent) || 0, payments: _num(a.payments) || 0, byCategory: by };
+        });
+      }
+      return out;
+    }
+    function cleanSpace(s) {
+      if (!s || typeof s !== 'object') return null;
+      var name = _str(s.name, 60), target = _num(s.targetLKR, 0, 1e10), cur = _num(s.currentLKR, 0, 1e10);
+      if (!name || !name.trim() || target === null || cur === null) return null;
+      var out = { id: safeId(s.id) || String(Date.now()), name: name, targetLKR: target, currentLKR: cur, targetDate: _ymdOrNull(s.targetDate) || '', color: _str(s.color, 20) || 'emerald' };
+      out.history = (Array.isArray(s.history) ? s.history.slice(0, 3000) : []).map(function (h) {
+        if (!h || ['deposit', 'withdraw', 'card-payment'].indexOf(h.type) === -1 || !_ymdOrNull(h.date) || _num(h.amount, 0, 1e10) === null) return null;
+        var o = { id: safeId(h.id) || uid(), date: h.date, type: h.type, amount: Number(h.amount) };
+        _pick(h, o, 'note', _str(h.note, 60));
+        _pick(h, o, 'createdAt', _num(h.createdAt, 0));
+        if (h.cardId) o.cardId = safeId(h.cardId);
+        if (h.ledgerId) o.ledgerId = safeId(h.ledgerId);
+        return o;
+      }).filter(Boolean);
+      return out;
+    }
+    // Returns { ok, error?, data: { exportedAt, profile, cards, spaces }, entries }
+    function readBackup(obj) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { ok: false, error: 'This file isn\u2019t a Serendib backup.' };
+      var legacy = obj.app === undefined && Array.isArray(obj.cards);
+      if (!legacy && obj.app !== 'serendib') return { ok: false, error: 'This file isn\u2019t a Serendib backup.' };
+      if (!legacy && !(Number(obj.version) >= 1)) return { ok: false, error: 'This backup\u2019s format isn\u2019t recognised.' };
+      if (!legacy && Number(obj.version) > BACKUP_VERSION) return { ok: false, error: 'This backup was made by a newer version of Serendib. Update the app and try again.' };
+      var rawCards = Array.isArray(obj.cards) ? obj.cards : [], rawSpaces = Array.isArray(obj.spaces) ? obj.spaces : [];
+      if (rawCards.length > 50 || rawSpaces.length > 50) return { ok: false, error: 'This backup has more cards or spaces than Serendib supports.' };
+      var cards = rawCards.map(cleanCard).filter(Boolean), spaces = rawSpaces.map(cleanSpace).filter(Boolean);
+      if (cards.length < rawCards.length || spaces.length < rawSpaces.length) return { ok: false, error: 'Some cards or spaces in this backup are damaged, so nothing was restored.' };
+      var seen = {};
+      cards.forEach(function (c) { if (seen[c.id]) c.id = uid(); seen[c.id] = true; });
+      var p = legacy ? obj : (obj.profile || {}), profile = {};
+      _pick(p, profile, 'firstName', _str(p.firstName, 60));
+      _pick(p, profile, 'lastName', _str(p.lastName, 60));
+      var inc = _num(p.income, 0, 1e10);
+      if (inc !== null) profile.income = String(inc);
+      if (p.strategy === 'avalanche' || p.strategy === 'snowball') profile.strategy = p.strategy;
+      var data = { exportedAt: _str(obj.exportedAt, 40) || '', profile: profile, cards: cards, spaces: spaces };
+      if (JSON.stringify(data).length > 900000) return { ok: false, error: 'This backup is too large to restore (over 900 KB).' };
+      var entries = cards.reduce(function (n, c) { return n + c.ledger.length; }, 0);
+      return { ok: true, data: data, entries: entries };
+    }
+
     /* DEFAULT SEED DATA */
     var DEFAULT_CARDS = [
       { bank: "Commercial Bank of Ceylon", nick: "Visa Gold", limit: 300000, balance: 125000, color: "teal" },
@@ -4228,6 +4860,7 @@
 
         cards = (data && Array.isArray(data.cards)) ? data.cards : [];
         spaces = (data && Array.isArray(data.spaces)) ? data.spaces : [];
+        spaces.forEach(ensureSpaceHistory);
         cards.forEach(function (c) {
             if (c.issuer === undefined) c.issuer = resolveIssuer(c.bank);
             if (c.apr === undefined) c.apr = 28.0;
@@ -4841,12 +5474,12 @@ var checkSnowball = document.getElementById('check-snowball');
         var source = o.sourceUrl && /^https:\/\//i.test(o.sourceUrl)
           ? '<a href="' + escapeHtml(o.sourceUrl) + '" target="_blank" rel="noopener noreferrer" class="text-[12px] font-semibold text-primary flex items-center gap-1">Source page<span class="material-symbols-outlined text-[14px]" aria-hidden="true">open_in_new</span></a>' : '';
         var actions = kind === 'draft'
-          ? '<button type="button" data-admin-action="approve" class="flex-1 h-10 rounded-xl bg-emerald-600 text-white text-[13px] font-bold">Approve</button>' +
+          ? '<button type="button" data-admin-action="approve" class="flex-1 h-10 rounded-xl bg-emerald-700 text-white text-[13px] font-bold">Approve</button>' +
             '<button type="button" data-admin-action="reject" class="flex-1 h-10 rounded-xl bg-slate-100 text-slate-700 text-[13px] font-semibold">Reject</button>'
           : kind === 'new'
-          ? '<button type="button" data-admin-action="create" class="flex-1 h-10 rounded-xl bg-emerald-600 text-white text-[13px] font-bold">Publish</button>' +
+          ? '<button type="button" data-admin-action="create" class="flex-1 h-10 rounded-xl bg-emerald-700 text-white text-[13px] font-bold">Publish</button>' +
             '<button type="button" data-admin-action="cancel-new" class="flex-1 h-10 rounded-xl bg-slate-100 text-slate-700 text-[13px] font-semibold">Cancel</button>'
-          : '<button type="button" data-admin-action="save" class="flex-1 h-10 rounded-xl bg-emerald-600 text-white text-[13px] font-bold">Save changes</button>' +
+          : '<button type="button" data-admin-action="save" class="flex-1 h-10 rounded-xl bg-emerald-700 text-white text-[13px] font-bold">Save changes</button>' +
             '<button type="button" data-admin-action="expire" class="flex-1 h-10 rounded-xl bg-rose-50 text-rose-700 text-[13px] font-semibold">Expire now</button>';
         return '<article data-admin-kind="' + kind + '" data-admin-id="' + escapeHtml(o.id || '') + '" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-4 flex flex-col gap-2.5">' +
           '<div class="flex items-center justify-between gap-2">' +
@@ -5014,90 +5647,8 @@ var checkSnowball = document.getElementById('check-snowball');
 
         var alertCount = 0;
         
-        // 1. Next Payment Alert Engine
-        var elAlertPayment = document.getElementById("home-alert-payment");
-        if (activeCardsArray.length === 0) {
-            if (elAlertPayment) elAlertPayment.classList.add("hidden");
-        } else {
-            var today = new Date();
-            var smallestDelta = Infinity;
-            var nextPaymentCard = null;
-            var nextPaymentDateObj = null;
-
-            activeCardsArray.forEach(function(c) {
-                // Only cards with a configured billing cycle produce a due-date alert
-                if (!isValidDay(c.dueDay)) return;
-                var d = parseInt(c.dueDay, 10);
-                var currentYear = today.getFullYear();
-                var currentMonth = today.getMonth();
-                var dueThisMonth = new Date(currentYear, currentMonth, clampDay(currentYear, currentMonth, d));
-                
-                // Set time to midnight for accurate day comparison
-                dueThisMonth.setHours(0,0,0,0);
-                var todayMidnight = new Date(today);
-                todayMidnight.setHours(0,0,0,0);
-                
-                if (dueThisMonth < todayMidnight) {
-                    dueThisMonth = new Date(currentYear, currentMonth + 1, clampDay(currentYear, currentMonth + 1, d));
-                }
-                var diffTime = dueThisMonth.getTime() - todayMidnight.getTime();
-                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays < smallestDelta) {
-                    smallestDelta = diffDays;
-                    nextPaymentCard = c;
-                    nextPaymentDateObj = dueThisMonth;
-                }
-            });
-
-            if (nextPaymentCard && elAlertPayment) {
-                elAlertPayment.classList.remove("hidden");
-                alertCount++;
-                var elCountdown = document.getElementById("home-alert-payment-countdown");
-                var elDate = document.getElementById("home-alert-payment-date");
-                var elAmount = document.getElementById("home-alert-payment-amount");
-
-                if (elCountdown) elCountdown.innerText = smallestDelta === 0 ? "Payment Due Today"
-                    : smallestDelta === 1 ? "Payment Due Tomorrow"
-                    : "Next Payment Due in " + smallestDelta + " Days";
-                if (elDate) {
-                    var options = { day: 'numeric', month: 'short' };
-                    elDate.innerText = nextPaymentDateObj.toLocaleDateString('en-GB', options);
-                }
-                if (elAmount) {
-                    var reqMin = Math.round(minPaymentFor(nextPaymentCard));
-                    elAmount.innerText = "LKR " + reqMin.toLocaleString();
-                }
-                var elPayCard = document.getElementById("home-alert-payment-card");
-                if (elPayCard) elPayCard.innerHTML = cardChip(nextPaymentCard);
-            } else if (elAlertPayment) {
-                elAlertPayment.classList.add("hidden");
-            }
-        }
-
-        // 2. CRIB Warning Engine
-        var elAlertCrib = document.getElementById("home-alert-crib");
-        var worstDelinquentCard = null;
-        var highestPastDue = 0;
-        
-        cards.forEach(function(c) {
-            if (c.daysPastDue && c.daysPastDue > highestPastDue) {
-                highestPastDue = c.daysPastDue;
-                worstDelinquentCard = c;
-            }
-        });
-
-        if (highestPastDue > 60 && elAlertCrib) {
-            elAlertCrib.classList.remove("hidden");
-            alertCount++;
-            var daysLeft = 90 - highestPastDue;
-            var cribText = document.getElementById("home-alert-crib-text");
-            if (cribText) {
-                cribText.innerHTML = (worstDelinquentCard.bank || "Credit") + " card is <strong>" + highestPastDue + " days past due</strong>. Only <strong>" + daysLeft + " days</strong> before irreversible 90-day CRIB default reporting.";
-            }
-        } else if (elAlertCrib) {
-            elAlertCrib.classList.add("hidden");
-        }
+        // 1-2. Payments due, missed payments and CRIB warnings (statement cycles)
+        alertCount += renderDueAlerts();
 
         // 3. Interest Bleed
         var totalBleed = 0;
@@ -5572,6 +6123,7 @@ var checkSnowball = document.getElementById('check-snowball');
         sl.value = c.targetPayment ? c.targetPayment : Math.round(minPmt * 2.5);
         if (App._updateSliderFill) App._updateSliderFill(sl);
         runPayoffSim(c, parseFloat(sl.value));
+        renderCycleRow(c);
         renderSpending(c);
         
         var btnSettle = document.getElementById("btn-menu-settle");
@@ -5656,6 +6208,25 @@ var checkSnowball = document.getElementById('check-snowball');
         card.ledger.push(entry);
         return entry;
       }
+      // A payment made from a space: removing it puts the money back in the space
+      function unlinkSpacePayment(entry) {
+        if (!entry || !entry.spaceId) return null;
+        var space = spaces.find(function (s) { return String(s.id) === String(entry.spaceId); });
+        if (!space || !Array.isArray(space.history)) return null;
+        var idx = space.history.findIndex(function (h) { return h.ledgerId === entry.id; });
+        if (idx === -1) return null;
+        var h = space.history.splice(idx, 1)[0];
+        space.currentLKR = Math.round(((Number(space.currentLKR) || 0) + (Number(h.amount) || 0)) * 100) / 100;
+        return { spaceId: space.id, item: h, index: idx };
+      }
+      function relinkSpacePayment(link) {
+        if (!link) return;
+        var space = spaces.find(function (s) { return String(s.id) === String(link.spaceId); });
+        if (!space) return;
+        ensureSpaceHistory(space);
+        space.history.splice(Math.min(link.index, space.history.length), 0, link.item);
+        space.currentLKR = Math.round(((Number(space.currentLKR) || 0) - (Number(link.item.amount) || 0)) * 100) / 100;
+      }
       function removeEntry(card, id) {
         var i = (card.ledger || []).findIndex(function (e) { return e.id === id; });
         if (i === -1) return null;
@@ -5663,7 +6234,7 @@ var checkSnowball = document.getElementById('check-snowball');
         applyLedgerEffect(card, e, -1);
         card.ledger.splice(i, 1);
         afterBalanceChange(card);
-        return { entry: e, index: i };
+        return { entry: e, index: i, link: unlinkSpacePayment(e) };
       }
       function undoAdd(cardId, entryId, message) {
         var card = findCard(cardId);
@@ -6003,9 +6574,11 @@ var checkSnowball = document.getElementById('check-snowball');
               return '<button type="button" role="radio" aria-checked="' + on + '" data-type="' + t[0] + '" class="spend-seg' + (on ? ' is-on' : '') + '">' + t[1] + '</button>';
             }).join('') + '</div>';
         }
+        var prefill = !editing && Number(opts.prefill) > 0 ? String(Math.round(Number(opts.prefill) * 100) / 100) : '';
         html += '<label for="log-amount" class="' + LABEL + '">Amount</label><div class="relative">' +
           '<span class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-secondary">LKR</span>' +
-          '<input id="log-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" class="stitch-input h-14 pl-14 text-[22px] font-bold num" value="' + (editing ? escapeHtml(String(editing.amount)) : '') + '"></div>' +
+          '<input id="log-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" class="stitch-input h-14 pl-14 text-[22px] font-bold num" value="' + (editing ? escapeHtml(String(editing.amount)) : prefill) + '"></div>' +
+          (editing ? '' : '<div id="log-pay-chips" class="hidden flex gap-2 mt-2 overflow-x-auto no-scrollbar"></div>') +
           '<p id="log-warn" class="hidden text-[12px] font-semibold text-amber-700 mt-1.5"></p>';
         html += '<div id="log-merchant-wrap" class="mt-4"><label for="log-merchant" class="' + LABEL + '">Merchant</label>' +
           '<input id="log-merchant" type="text" autocomplete="off" maxlength="60" class="stitch-input" placeholder="e.g. Keells, Uber, Daraz" value="' + (editing ? escapeHtml(editing.merchant || '') : '') + '"></div>';
@@ -6027,9 +6600,34 @@ var checkSnowball = document.getElementById('check-snowball');
           var amountEl = document.getElementById('log-amount');
           var merchantEl = document.getElementById('log-merchant');
           var catsEl = document.getElementById('log-cats');
+          // Payment amount shortcuts for the chosen card: what's due now, the plan amount, the full balance
+          function paintPayChips() {
+            var box = document.getElementById('log-pay-chips');
+            if (!box) return;
+            var c = findCard(logState.cardId);
+            if (!c || logState.type !== 'payment' || !(c.balance > 0)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            var seen = {}, chips = [['Due now', amountDueNow(c)], ['Plan', planAllocationFor(c)], ['Full balance', c.balance]].filter(function (x) {
+              var v = Math.round(x[1] * 100) / 100;
+              if (!(v > 0) || seen[v]) return false;
+              seen[v] = true;
+              return true;
+            });
+            box.innerHTML = chips.map(function (x) {
+              return '<button type="button" class="spend-chip shrink-0" data-amount="' + (Math.round(x[1] * 100) / 100) + '">' + x[0] + ' · ' + fmtAmt(x[1]) + '</button>';
+            }).join('');
+            box.classList.toggle('hidden', !chips.length);
+          }
+          var payChips = document.getElementById('log-pay-chips');
+          if (payChips) payChips.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-amount]');
+            if (!b) return;
+            amountEl.value = b.getAttribute('data-amount');
+            updateWarn();
+          });
           function setType(t) {
             logState.type = t;
             setChoice(document.getElementById('log-types'), 'data-type', t);
+            paintPayChips();
             var noCat = t === 'payment' || t === 'adjustment';
             document.getElementById('log-merchant-wrap').classList.toggle('hidden', noCat);
             document.getElementById('log-cat-wrap').classList.toggle('hidden', noCat);
@@ -6052,7 +6650,7 @@ var checkSnowball = document.getElementById('check-snowball');
           }
           bindChoice(document.getElementById('log-types'), 'data-type', setType);
           bindChoice(catsEl, 'data-cat', function (k) { logState.category = k; });
-          bindChoice(document.getElementById('log-cards'), 'data-card', function (id) { var c = findCard(id); logState.cardId = c.id; setSheetAccent(c); updateWarn(); });
+          bindChoice(document.getElementById('log-cards'), 'data-card', function (id) { var c = findCard(id); logState.cardId = c.id; setSheetAccent(c); paintPayChips(); updateWarn(); });
           amountEl.addEventListener('input', updateWarn);
           merchantEl.addEventListener('change', function () { categoryFor(merchantEl.value); });
           attachSuggest(merchantEl, {
@@ -6147,6 +6745,20 @@ var checkSnowball = document.getElementById('check-snowball');
         if (logState.editingId) {
           entry = findEntry(card, logState.editingId);
           if (!entry) { closeSpendSheet(); return; }
+          if (entry.spaceId) {
+            var linkSpace = spaces.find(function (s) { return String(s.id) === String(entry.spaceId); });
+            var linkItem = linkSpace && (linkSpace.history || []).find(function (h) { return h.ledgerId === entry.id; });
+            if (linkItem && type === 'payment') {
+              var diff = Math.round((amt - (Number(linkItem.amount) || 0)) * 100) / 100;
+              if (diff > (Number(linkSpace.currentLKR) || 0) + 0.001) return showSheetError('log-error', linkSpace.name + ' only has ' + fmtAmt(Number(linkSpace.currentLKR) || 0) + ' left to cover this.');
+              linkItem.amount = amt;
+              linkItem.date = date;
+              linkSpace.currentLKR = Math.round(((Number(linkSpace.currentLKR) || 0) - diff) * 100) / 100;
+            } else if (linkItem) {
+              unlinkSpacePayment(entry);
+              delete entry.spaceId;
+            }
+          }
           applyLedgerEffect(card, entry, -1);
           entry.type = type;
           entry.amount = amt;
@@ -6225,6 +6837,7 @@ var checkSnowball = document.getElementById('check-snowball');
           if (!Array.isArray(c.ledger)) c.ledger = [];
           applyLedgerEffect(c, removed.entry, 1);
           c.ledger.splice(Math.min(removed.index, c.ledger.length), 0, removed.entry);
+          relinkSpacePayment(removed.link);
           afterBalanceChange(c);
           commitSpending();
           if (back === 'history') openHistorySheet(cardId);
@@ -6267,12 +6880,13 @@ var checkSnowball = document.getElementById('check-snowball');
         if (!cloudReady) return [];
         var today = ymd(new Date());
         lastRecurringDay = today;
-        var posted = [], archived = false;
+        var posted = [], archived = false, cycles = false;
         cards.forEach(function (c) {
           if (archiveOldLedger(c, today)) archived = true;
           posted = posted.concat(postRecurringNow(c));
+          if (refreshCycles(c, today)) cycles = true;
         });
-        if (!posted.length && !archived) return posted;
+        if (!posted.length && !archived && !cycles) return posted;
         commitSpending();
         if (posted.length) setTimeout(function () { announceRecurring(posted); }, 900);
         return posted;
@@ -6594,6 +7208,503 @@ var checkSnowball = document.getElementById('check-snowball');
           });
           focusLater('match-amount');
         });
+      }
+
+      /* Statement cycles in the app */
+      // Start tracking from the cycle still awaiting payment, so older cycles are never flagged
+      function initCycleTracking(card, todayStr) {
+        if (!isValidDay(card.statementDay) || !isValidDay(card.dueDay)) { delete card.cycleTrackedFrom; return; }
+        var last = lastStatementOnOrBefore(card.statementDay, todayStr);
+        card.cycleTrackedFrom = dueDateFor(last, card.dueDay) >= todayStr ? last : addDays(todayStr, 1);
+      }
+      function refreshCycles(card, todayStr) {
+        var changed = false;
+        if (isValidDay(card.statementDay) && isValidDay(card.dueDay) && !card.cycleTrackedFrom) { initCycleTracking(card, todayStr); changed = true; }
+        return recordStatements(card, todayStr) || changed;
+      }
+      // This card's monthly amount in the current plan (same order and budget as Cards Overview)
+      function planAllocationFor(card) {
+        var active = cards.filter(function (c) { return c.balance > 0; });
+        if (getStrategy() === 'snowball') active.sort(function (a, b) { return a.balance - b.balance; });
+        else active.sort(function (a, b) { var d = cardApr(b) - cardApr(a); return d !== 0 ? d : a.balance - b.balance; });
+        return allocateMonthlyPayments(active, computeMonthlyBudget(cards)).alloc[card.id] || 0;
+      }
+      // What is owed now on a card: overdue catch-up first, else the next unpaid minimum
+      function amountDueNow(card) {
+        var st = cycleStatus(card, ymd(new Date()));
+        if (st && st.overdue) return st.overdue.amount + (st.next ? st.next.remaining : 0);
+        if (st && st.next) return st.next.remaining;
+        if (st) return 0;
+        return minPaymentFor(card);
+      }
+
+      // "Statement 25 Sep · Min LKR 4,000 due 10 Oct · Paid" row on the card summary
+      function renderCycleRow(card) {
+        var el = document.getElementById('detail-cycle-row');
+        if (!el) return;
+        if (!isValidDay(card.statementDay) || !isValidDay(card.dueDay)) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+        var today = ymd(new Date()), st = cycleStatus(card, today), html;
+        var BTN = 'shrink-0 h-8 px-3 rounded-full text-[12px] font-bold active:scale-95 transition-all';
+        if (st && st.overdue) {
+          html = '<div class="flex items-center justify-between gap-2"><p class="text-error font-semibold leading-snug"><span class="material-symbols-outlined text-[16px] align-[-3px]" aria-hidden="true">error</span> ' +
+            fmtAmt(st.overdue.amount) + ' overdue since ' + shortDate(st.overdue.since) + ' (' + st.overdue.days + (st.overdue.days === 1 ? ' day' : ' days') + ')</p>' +
+            '<button type="button" onclick="App.openRemedial()" class="' + BTN + ' bg-error text-white">Catch up</button></div>';
+        } else if (st && st.next) {
+          var r = st.next;
+          html = '<div class="flex items-center justify-between gap-2"><p class="text-secondary leading-snug">Statement ' + shortDate(r.s.date) + ' · Min <strong class="text-on-surface">' + fmtAmt(r.s.minDue) + '</strong> due ' + shortDate(r.s.due) +
+            (r.paid > 0 ? ' · <span class="text-amber-700 font-semibold">' + fmtAmt(r.remaining) + ' left</span>' : '') + '</p>' +
+            '<button type="button" onclick="App.logDuePayment()" class="' + BTN + ' bg-primary-container text-white">Log payment</button></div>';
+        } else if (st) {
+          html = '<p class="text-emerald-700 font-semibold leading-snug"><span class="material-symbols-outlined text-[16px] align-[-3px]" aria-hidden="true">check_circle</span> Minimum paid for the ' +
+            shortDate(st.latest.s.date) + ' statement · next statement ' + shortDate(nextStatementAfter(card.statementDay, st.latest.s.date)) + '</p>';
+        } else {
+          html = '<p class="text-secondary leading-snug">Next payment due ' + shortDate(nextDueDayFrom(card.dueDay, today)) + ' · Min <strong class="text-on-surface">' + fmtAmt(minPaymentFor(card)) + '</strong></p>';
+        }
+        el.innerHTML = html;
+        el.classList.remove('hidden');
+      }
+
+      // Home: next payment due, "did you pay?" prompt, overdue and CRIB warnings. Returns alert count.
+      function renderDueAlerts() {
+        var today = ymd(new Date()), count = 0, upcoming = [], overdue = [], tracked = 0;
+        cards.forEach(function (c) {
+          if (!isValidDay(c.dueDay) || !isValidDay(c.statementDay)) return;
+          var st = cycleStatus(c, today);
+          if (st) {
+            tracked++;
+            if (st.overdue) overdue.push({ card: c, st: st });
+            if (st.next) upcoming.push({ card: c, due: st.next.s.due, left: st.next.remaining, min: st.next.s.minDue });
+          } else if (c.balance > 0) {
+            // Not tracked yet (e.g. offline at sign-in): next due day and today's minimum
+            var min = minPaymentFor(c);
+            upcoming.push({ card: c, due: nextDueDayFrom(c.dueDay, today), left: min, min: min });
+          }
+        });
+
+        // Next payment due (skips cycles already paid)
+        var elPay = document.getElementById('home-alert-payment');
+        if (elPay) {
+          upcoming.sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+          var u = upcoming[0];
+          var countdown = document.getElementById('home-alert-payment-countdown');
+          var dateEl = document.getElementById('home-alert-payment-date');
+          var textEl = document.getElementById('home-alert-payment-text');
+          var cardEl = document.getElementById('home-alert-payment-card');
+          var btn = document.getElementById('home-alert-payment-btn');
+          if (u) {
+            var days = daysBetween(today, u.due);
+            countdown.textContent = days === 0 ? 'Payment Due Today' : days === 1 ? 'Payment Due Tomorrow' : 'Next Payment Due in ' + days + ' Days';
+            dateEl.textContent = shortDate(u.due);
+            dateEl.classList.remove('hidden');
+            textEl.innerHTML = u.left < u.min - 0.5
+              ? '<strong class="text-on-surface">' + fmtAmt(u.left) + '</strong> left of the ' + fmtAmt(u.min) + ' minimum.'
+              : 'Minimum Required: <strong class="text-on-surface">' + fmtAmt(u.left) + '</strong> to avoid late fees and interest penalties.';
+            cardEl.innerHTML = cardChip(u.card);
+            btn.classList.remove('hidden'); btn.parentElement.classList.remove('hidden');
+            btn.onclick = function () { openLogSheet({ cardId: u.card.id, type: 'payment', prefill: u.left }); };
+            elPay.classList.remove('hidden');
+            count++;
+          } else if (tracked && !overdue.length) {
+            countdown.textContent = 'All minimums paid this cycle';
+            dateEl.classList.add('hidden');
+            textEl.textContent = 'Nice work. We\u2019ll remind you when the next statements arrive.';
+            cardEl.innerHTML = '';
+            btn.classList.add('hidden'); btn.parentElement.classList.add('hidden');
+            elPay.classList.remove('hidden');
+          } else {
+            elPay.classList.add('hidden');
+          }
+        }
+
+        // Overdue: ask first, then warn by how late it is
+        overdue.sort(function (a, b) { return b.st.overdue.days - a.st.overdue.days; });
+        var worst = overdue[0];
+        var elAsk = document.getElementById('home-alert-ask');
+        var elLate = document.getElementById('home-alert-overdue');
+        var elCrib = document.getElementById('home-alert-crib');
+        [elAsk, elLate, elCrib].forEach(function (e) { if (e) e.classList.add('hidden'); });
+        if (worst) {
+          var o = worst.st.overdue, c = worst.card, more = overdue.length > 1 ? ' · ' + (overdue.length - 1) + ' more card' + (overdue.length > 2 ? 's' : '') + ' overdue' : '';
+          count++;
+          if (!o.answered && elAsk) {
+            document.getElementById('home-alert-ask-text').textContent = 'Did you pay ' + cardName(c) + '\u2019s ' + fmtAmt(o.amount) + ' minimum due ' + shortDate(o.since) + '?';
+            document.getElementById('home-alert-ask-card').innerHTML = cardChip(c);
+            document.getElementById('home-alert-ask-yes').onclick = function () { openLogSheet({ cardId: c.id, type: 'payment', prefill: o.amount }); };
+            document.getElementById('home-alert-ask-no').onclick = function () {
+              o.statements.forEach(function (s) { s.answered = 'no'; });
+              commitSpending();
+            };
+            elAsk.classList.remove('hidden');
+          } else if (o.days < 60 && elLate) {
+            document.getElementById('home-alert-overdue-title').textContent = 'Payment overdue · ' + o.days + (o.days === 1 ? ' day' : ' days');
+            document.getElementById('home-alert-overdue-text').textContent = 'Pay ' + fmtAmt(o.amount) + ' to catch up' +
+              (o.days >= 30 ? '. At 30+ days a missed payment can be reported to CRIB.' : '. Late fees and interest are building.') + more;
+            document.getElementById('home-alert-overdue-card').innerHTML = cardChip(c);
+            document.getElementById('home-alert-overdue-btn').onclick = function () { openRemedialSheet(c.id); };
+            elLate.classList.remove('hidden');
+          } else if (elCrib) {
+            var left = Math.max(0, 90 - o.days);
+            document.getElementById('home-alert-crib-text').textContent = cardName(c) + ' is ' + o.days + ' days past due. ' +
+              (left > 0 ? left + (left === 1 ? ' day' : ' days') + ' before it\u2019s classed as non-performing (90 days) and reported to CRIB.' : 'It has passed 90 days and is likely reported to CRIB as non-performing.') + more;
+            document.getElementById('home-alert-crib-btn').onclick = function () { openRemedialSheet(c.id); };
+            elCrib.classList.remove('hidden');
+          }
+        }
+        return count;
+      }
+
+      // Step-by-step catch-up plan for an overdue card
+      function openRemedialSheet(cardId) {
+        var card = findCard(cardId);
+        if (!card) return;
+        var today = ymd(new Date()), st = cycleStatus(card, today), o = st && st.overdue;
+        var owed = o ? o.amount : amountDueNow(card);
+        var untracked = cards.filter(function (c) { return c.balance > 0 && !(isValidDay(c.statementDay) && isValidDay(c.dueDay)); }).length;
+        var step = function (n, title, body, btn) {
+          return '<li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-surface-container-low text-on-surface text-[13px] font-bold flex items-center justify-center shrink-0">' + n + '</span>' +
+            '<div class="flex-1 min-w-0"><p class="text-[13px] font-semibold text-on-surface">' + title + '</p><p class="text-[12px] text-secondary mt-0.5 leading-relaxed">' + body + '</p>' + (btn || '') + '</div></li>';
+        };
+        var BTN = 'mt-2 h-9 px-4 rounded-full text-[12px] font-bold active:scale-95 transition-all';
+        var bank = escapeHtml(card.bank);
+        var html = sheetCardLine(card) +
+          (o ? '<div class="rounded-xl bg-rose-50 border border-rose-200 p-3 mb-4"><p class="text-[13px] font-bold text-rose-800">' + fmtAmt(o.amount) + ' overdue since ' + shortDate(o.since) + '</p>' +
+            '<p class="text-[12px] text-rose-700 mt-0.5">' + o.days + (o.days === 1 ? ' day' : ' days') + ' past due. Accounts 90 days past due are classed as non-performing and reported to CRIB.</p></div>' : '') +
+          '<ol class="space-y-4">' +
+          step(1, 'Pay ' + fmtAmt(owed) + ' to catch up', 'This brings the missed minimums up to date. Log it here once you\u2019ve paid in your banking app.',
+            '<button type="button" id="rem-pay" class="' + BTN + ' bg-primary-container text-white">Log payment</button>') +
+          step(2, 'Pause new spending on this card', 'Every new purchase adds to what\u2019s owed. Set a small budget so the app warns you before you spend.',
+            '<button type="button" id="rem-budget" class="' + BTN + ' border border-outline-variant text-on-surface">Set budgets</button>') +
+          step(3, 'Talk to ' + bank + ' before 90 days', 'Call the number on the back of your card and ask about a payment plan or restructuring. Banks are usually more flexible before an account reaches 90 days past due.') +
+          (untracked ? step(4, 'Track due dates on your other cards', untracked + ' other card' + (untracked === 1 ? '' : 's') + ' ha' + (untracked === 1 ? 's' : 've') + ' no billing cycle, so the app can\u2019t warn you before they\u2019re due.') : '') +
+          '</ol>';
+        setSheetAccent(card);
+        openSpendSheet('Catch-up plan', html, function () {
+          document.getElementById('rem-pay').addEventListener('click', function () { openLogSheet({ cardId: card.id, type: 'payment', prefill: owed }); });
+          document.getElementById('rem-budget').addEventListener('click', function () { openBudgetSheet(card.id); });
+        });
+      }
+
+      /* Share progress: utilisation and debt-free month only; no amounts, limits or bank details */
+      function shareText(card) {
+        var intro = 'My credit card progress on Serendib: ';
+        if (!(card.balance > 0)) return intro + 'this card is fully paid off.';
+        var util = card.limit > 0 ? Math.round(card.balance / card.limit * 100) : null;
+        var line = util === null ? 'paying it down' : util + '% of my limit used';
+        var monthAgo = addDays(ymd(new Date()), -30);
+        if (util !== null && (card.ledger || []).some(function (e) { return e.date > monthAgo; })) {
+          var then = Math.round(balanceAt(card, monthAgo) / card.limit * 100);
+          if (then > util) line += ' (down from ' + then + '% last month)';
+          else if (then < util) line += ' (up from ' + then + '% last month)';
+        }
+        var res = calcPayoff(card.balance, planAllocationFor(card), cardApr(card));
+        var tail = '';
+        if (isFinite(res.months) && res.months > 0) {
+          var d = new Date();
+          d.setDate(1);
+          d.setMonth(d.getMonth() + res.months);
+          tail = ' On track to be debt-free by ' + d.toLocaleString('en-US', { month: 'short', year: 'numeric' }) + '.';
+        }
+        return intro + line + '.' + tail;
+      }
+      function copyText(text) {
+        function fallback() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          var ok = false;
+          try { ok = document.execCommand('copy'); } catch (e) {}
+          ta.remove();
+          return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(fallback);
+        return fallback();
+      }
+      function openShareSheet(cardId) {
+        var card = findCard(cardId);
+        if (!card) return;
+        var text = shareText(card);
+        var canShare = typeof navigator.share === 'function';
+        var html = sheetCardLine(card) +
+          '<p class="' + LABEL + '">This is exactly what will be shared</p>' +
+          '<div id="share-preview" class="rounded-xl bg-surface-container-low border border-outline-variant/40 p-4 text-[14px] text-on-surface leading-relaxed"></div>' +
+          '<p class="text-[11px] text-secondary mt-2 flex items-center gap-1"><span class="material-symbols-outlined text-[16px]" aria-hidden="true">lock</span>No balances, limits or bank details are included.</p>' +
+          '<div class="flex gap-3 mt-5">' +
+          '<button type="button" id="share-copy" class="' + BTN_SECONDARY + ' flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">content_copy</span>Copy</button>' +
+          (canShare ? '<button type="button" id="share-go" class="' + BTN_PRIMARY + ' flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">ios_share</span>Share</button>' : '') +
+          '</div>';
+        setSheetAccent(card);
+        openSpendSheet('Share progress', html, function () {
+          document.getElementById('share-preview').textContent = text;
+          document.getElementById('share-copy').addEventListener('click', function () {
+            copyText(text).then(function () { closeSpendSheet(); window.showToast('Copied. Paste it anywhere to share.', 'percent', { card: card }); },
+              function () { window.showToast('Couldn\u2019t copy. Select the text and copy it instead.', 'info'); });
+          });
+          var go = document.getElementById('share-go');
+          if (go) go.addEventListener('click', function () {
+            navigator.share({ title: 'My credit card progress', text: text }).then(closeSpendSheet, function () {});
+          });
+        });
+      }
+
+      /* Spaces: one space's sheet, the all-spaces summary, withdraw, pay a card */
+      function findSpace(id) { return spaces.find(function (s) { return String(s.id) === String(id); }) || null; }
+      function spaceHistoryRow(h) {
+        var card = h.cardId ? findCard(h.cardId) : null;
+        var out = h.type !== 'deposit';
+        var label = h.type === 'deposit' ? (h.note || 'Deposit') : h.type === 'withdraw' ? (h.note || 'Withdrawal') : 'Paid a card';
+        var icon = h.type === 'deposit' ? 'south_west' : h.type === 'withdraw' ? 'north_east' : 'credit_card';
+        return '<div class="flex items-center gap-3 py-2">' +
+          '<span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + (out ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700') + '"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">' + icon + '</span></span>' +
+          '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + escapeHtml(label) + '</span>' +
+          '<span class="block text-[11px] text-secondary">' + shortDate(h.date) + '</span>' + (card ? '<span class="block mt-1">' + cardChip(card) + '</span>' : '') + '</span>' +
+          '<span class="text-[13px] font-bold num whitespace-nowrap ' + (out ? 'text-on-surface' : 'text-emerald-700') + '">' + (out ? '\u2212 ' : '+ ') + fmtAmt(Number(h.amount) || 0) + '</span></div>';
+      }
+      function spaceStatusLine(s, today) {
+        var cur = Number(s.currentLKR) || 0, target = Number(s.targetLKR) || 0;
+        if (target > 0 && cur >= target) return { text: 'Goal reached', tone: 'text-emerald-700' };
+        var months = spaceMonthsLeft(s.targetDate, today), need = spaceMonthlyNeeded(s, today), pace = spaceRecentPace(s, today);
+        if (!months) return { text: 'Target date passed · ' + fmtAmt(target - cur) + ' to go', tone: 'text-amber-700' };
+        var line = fmtAmt(Math.ceil(need)) + ' a month for ' + months + (months === 1 ? ' month' : ' months');
+        if (pace >= need - 0.5) return { text: line + ' · on track', tone: 'text-emerald-700' };
+        return { text: line + (pace > 0 ? ' · you\u2019re adding about ' + fmtAmt(Math.round(pace)) + ' a month' : ' · no deposits in the last 3 months'), tone: 'text-amber-700' };
+      }
+      function openSpaceSheet(id) {
+        var s = findSpace(id);
+        if (!s) return;
+        ensureSpaceHistory(s);
+        var today = ymd(new Date()), cur = Number(s.currentLKR) || 0, target = Number(s.targetLKR) || 0;
+        var pct = target > 0 ? Math.min(100, cur / target * 100) : 0, status = spaceStatusLine(s, today);
+        var BTN = 'flex-1 h-11 rounded-full text-[12px] font-bold flex items-center justify-center gap-1 active:scale-[0.98] transition-all';
+        var html = '<p class="text-[20px] font-bold text-on-surface num">' + fmtAmt(cur) + ' <span class="text-[13px] font-semibold text-secondary">of ' + fmtAmt(target) + '</span></p>' +
+          '<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden mt-2"><div class="h-full bg-emerald-500 rounded-full" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+          '<p class="text-[12px] mt-2 font-semibold ' + status.tone + '" id="space-status">' + escapeHtml(status.text) + '</p>' +
+          (isRealYmd(s.targetDate) ? '<p class="text-[11px] text-secondary mt-0.5">Target date ' + parseYmd(s.targetDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</p>' : '') +
+          '<div class="flex gap-2 mt-4">' +
+          '<button type="button" id="space-add" class="' + BTN + ' bg-primary-container text-white"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>Add</button>' +
+          '<button type="button" id="space-withdraw" class="' + BTN + ' border border-outline-variant text-on-surface"' + (cur > 0 ? '' : ' disabled') + '>Withdraw</button>' +
+          '<button type="button" id="space-pay" class="' + BTN + ' border border-outline-variant text-on-surface"' + (cur > 0 ? '' : ' disabled') + '>Pay a card</button></div>' +
+          '<h4 class="text-[13px] font-semibold text-on-surface mt-5 mb-1">History</h4>' +
+          (s.history.length ? s.history.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt || 0) - (a.createdAt || 0); }).map(spaceHistoryRow).join('')
+            : '<p class="text-[12px] text-secondary py-4 text-center">No activity yet.</p>');
+        openSpendSheet(s.name, html, function () {
+          document.getElementById('space-add').addEventListener('click', function () { closeSpendSheet(); window.openAddFundsModal(s.id); });
+          document.getElementById('space-withdraw').addEventListener('click', function () { openSpaceWithdraw(s.id); });
+          document.getElementById('space-pay').addEventListener('click', function () { openSpacePay(s.id); });
+        });
+      }
+      function openSpacesSummary() {
+        var today = ymd(new Date()), all = [];
+        spaces.forEach(function (s) { ensureSpaceHistory(s); s.history.forEach(function (h) { all.push({ h: h, s: s }); }); });
+        all.sort(function (a, b) { return a.h.date < b.h.date ? 1 : a.h.date > b.h.date ? -1 : (b.h.createdAt || 0) - (a.h.createdAt || 0); });
+        var html = spaces.length ? spaces.map(function (s) {
+          var cur = Number(s.currentLKR) || 0, target = Number(s.targetLKR) || 0, pct = target > 0 ? Math.min(100, cur / target * 100) : 0, st = spaceStatusLine(s, today);
+          return '<button type="button" data-space="' + safeId(s.id) + '" class="w-full text-left py-3 border-b border-outline-variant/30">' +
+            '<span class="flex justify-between items-center gap-2"><span class="text-[14px] font-semibold text-on-surface truncate">' + escapeHtml(s.name) + '</span><span class="text-[12px] font-bold text-on-surface num">' + Math.round(pct) + '%</span></span>' +
+            '<span class="block w-full h-1.5 bg-surface-container rounded-full overflow-hidden mt-1.5"><span class="block h-full bg-emerald-500 rounded-full" style="width:' + pct.toFixed(1) + '%"></span></span>' +
+            '<span class="block text-[11px] mt-1.5 font-semibold ' + st.tone + '">' + escapeHtml(st.text) + '</span></button>';
+        }).join('') : '<p class="text-[13px] text-secondary text-center py-6">No spaces yet.</p>';
+        if (all.length) html += '<h4 class="text-[13px] font-semibold text-on-surface mt-5 mb-1">Recent activity</h4>' + all.slice(0, 10).map(function (x) {
+          return '<p class="text-[11px] font-semibold text-secondary mt-2">' + escapeHtml(x.s.name) + '</p>' + spaceHistoryRow(x.h);
+        }).join('');
+        openSpendSheet('Spaces summary', html, function (body) {
+          body.addEventListener('click', function (e) { var b = e.target.closest('[data-space]'); if (b) openSpaceSheet(b.getAttribute('data-space')); });
+        });
+      }
+      function openSpaceWithdraw(id) {
+        var s = findSpace(id);
+        if (!s) return;
+        var html = '<p class="text-[12px] text-secondary -mt-1 mb-4">' + escapeHtml(s.name) + ' has ' + fmtAmt(Number(s.currentLKR) || 0) + '.</p>' +
+          '<label for="sw-amount" class="' + LABEL + '">Amount</label><div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-secondary">LKR</span>' +
+          '<input id="sw-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" class="stitch-input h-14 pl-14 text-[20px] font-bold num"></div>' +
+          '<label for="sw-note" class="' + LABEL + ' mt-4">What for? <span class="font-normal">(optional)</span></label><input id="sw-note" type="text" maxlength="60" autocomplete="off" class="stitch-input" placeholder="e.g. Car repair">' +
+          '<p id="sw-error" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
+          '<div class="flex gap-3 mt-5"><button type="button" id="sw-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="sw-save" class="' + BTN_PRIMARY + '">Withdraw</button></div>';
+        openSpendSheet('Withdraw from space', html, function () {
+          document.getElementById('sw-cancel').addEventListener('click', closeSpendSheet);
+          document.getElementById('sw-save').addEventListener('click', function () {
+            var amt = parseAmountInput(document.getElementById('sw-amount').value), have = Number(s.currentLKR) || 0;
+            if (!(amt > 0)) return showSheetError('sw-error', 'Enter an amount.');
+            if (amt > have + 0.001) return showSheetError('sw-error', 'This space only has ' + fmtAmt(have) + '.');
+            ensureSpaceHistory(s);
+            var item = { id: uid(), date: ymd(new Date()), type: 'withdraw', amount: amt, note: document.getElementById('sw-note').value.trim().slice(0, 60), createdAt: Date.now() };
+            s.history.push(item);
+            s.currentLKR = Math.round((have - amt) * 100) / 100;
+            commitSpending();
+            closeSpendSheet();
+            window.showToast(fmtAmt(amt) + ' withdrawn from ' + s.name, 'info', { actionLabel: 'Undo', onAction: function () {
+              var sp = findSpace(s.id);
+              if (!sp) return;
+              var i = sp.history.findIndex(function (h) { return h.id === item.id; });
+              if (i === -1) return;
+              sp.history.splice(i, 1);
+              sp.currentLKR = Math.round(((Number(sp.currentLKR) || 0) + amt) * 100) / 100;
+              commitSpending();
+            } });
+          });
+          focusLater('sw-amount');
+        });
+      }
+      function openSpacePay(id) {
+        var s = findSpace(id);
+        if (!s) return;
+        var owing = cards.filter(function (c) { return c.balance > 0; });
+        var have = Number(s.currentLKR) || 0;
+        if (!owing.length) { window.showToast('None of your cards has a balance to pay.', 'info'); return; }
+        var pick = owing.slice().sort(function (a, b) { return amountDueNow(b) - amountDueNow(a); })[0];
+        var suggest = function (c) { var due = amountDueNow(c); return Math.min(have, due > 0 ? due : c.balance); };
+        var html = '<p class="text-[12px] text-secondary -mt-1 mb-4">From ' + escapeHtml(s.name) + ' (' + fmtAmt(have) + '). This logs a payment on the card and takes it from the space.</p>' +
+          '<p class="' + LABEL + '" id="sp-card-label">Card</p><div id="sp-cards" role="radiogroup" aria-labelledby="sp-card-label" class="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-4">' +
+          owing.map(function (c) {
+            var t = cardTheme(c), on = c === pick;
+            return '<button type="button" role="radio" aria-checked="' + on + '" data-card="' + escapeHtml(c.id) + '" style="--chip-accent:' + t.hex + ';--chip-soft:' + t.soft + '" class="spend-chip shrink-0' + (on ? ' is-on' : '') + '">' + cardDot(c, 8) + escapeHtml(cardName(c)) + '</button>';
+          }).join('') + '</div>' +
+          '<label for="sp-amount" class="' + LABEL + '">Amount</label><div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-secondary">LKR</span>' +
+          '<input id="sp-amount" type="text" inputmode="decimal" autocomplete="off" class="stitch-input h-14 pl-14 text-[20px] font-bold num" value="' + (Math.round(suggest(pick) * 100) / 100) + '"></div>' +
+          '<p id="sp-hint" class="text-[11px] text-secondary mt-1.5"></p>' +
+          '<p id="sp-error" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
+          '<div class="flex gap-3 mt-5"><button type="button" id="sp-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="sp-save" class="' + BTN_PRIMARY + '">Pay card</button></div>';
+        var chosen = pick;
+        setSheetAccent(chosen);
+        openSpendSheet('Pay a card from ' + s.name, html, function () {
+          var amountEl = document.getElementById('sp-amount');
+          function hint() {
+            var due = amountDueNow(chosen);
+            document.getElementById('sp-hint').textContent = (due > 0 ? fmtAmt(due) + ' due now · ' : '') + fmtAmt(chosen.balance) + ' balance';
+          }
+          bindChoice(document.getElementById('sp-cards'), 'data-card', function (cid) {
+            chosen = findCard(cid);
+            setSheetAccent(chosen);
+            amountEl.value = String(Math.round(suggest(chosen) * 100) / 100);
+            hint();
+          });
+          hint();
+          document.getElementById('sp-cancel').addEventListener('click', closeSpendSheet);
+          document.getElementById('sp-save').addEventListener('click', function () {
+            var amt = parseAmountInput(amountEl.value), cur = Number(s.currentLKR) || 0;
+            if (!(amt > 0)) return showSheetError('sp-error', 'Enter an amount.');
+            if (amt > cur + 0.001) return showSheetError('sp-error', 'This space only has ' + fmtAmt(cur) + '.');
+            if (amt > chosen.balance + 0.001) return showSheetError('sp-error', 'That\u2019s more than the card\u2019s ' + fmtAmt(chosen.balance) + ' balance.');
+            var today = ymd(new Date());
+            if (!Array.isArray(chosen.ledger)) chosen.ledger = [];
+            var item = { id: uid(), date: today, type: 'card-payment', amount: amt, cardId: chosen.id, note: '', createdAt: Date.now() };
+            var entry = { id: uid(), date: today, type: 'payment', amount: amt, merchant: '', note: 'From ' + s.name, source: 'space', spaceId: s.id, createdAt: Date.now() };
+            item.ledgerId = entry.id;
+            applyLedgerEffect(chosen, entry, 1);
+            chosen.ledger.push(entry);
+            afterBalanceChange(chosen);
+            ensureSpaceHistory(s);
+            s.history.push(item);
+            s.currentLKR = Math.round((cur - amt) * 100) / 100;
+            commitSpending();
+            closeSpendSheet();
+            var cardId = chosen.id;
+            window.showToast('Paid ' + fmtAmt(amt) + ' to ' + cardName(chosen) + ' from ' + s.name, 'percent', { card: chosen, actionLabel: 'Undo', onAction: function () { undoAdd(cardId, entry.id, 'Payment undone; ' + s.name + ' restored'); } });
+          });
+        });
+      }
+
+      /* Backup and restore */
+      function buildBackup() {
+        var u = window.currentUserData || {};
+        return { app: 'serendib', version: BACKUP_VERSION, exportedAt: new Date().toISOString(),
+          profile: { firstName: u.firstName || '', lastName: u.lastName || '', income: u.income || '', strategy: window.currentStrategy || 'avalanche' },
+          cards: JSON.parse(JSON.stringify(cards)), spaces: JSON.parse(JSON.stringify(spaces)) };
+      }
+      function downloadBackup() {
+        var blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'serendib-backup-' + ymd(new Date()) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        window.showToast('Backup downloaded', 'percent');
+      }
+      function countsText(cs, ss) {
+        var entries = cs.reduce(function (n, c) { return n + ((c.ledger || []).length); }, 0);
+        return cs.length + (cs.length === 1 ? ' card' : ' cards') + ' · ' + ss.length + (ss.length === 1 ? ' space' : ' spaces') + ' · ' + entries + (entries === 1 ? ' entry' : ' entries');
+      }
+      function openRestoreFile(file) {
+        if (file.size > 2 * 1024 * 1024) { showRestoreError('This file is too large to be a Serendib backup.'); return; }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var parsed;
+          try { parsed = JSON.parse(String(reader.result)); } catch (e) { showRestoreError('This file isn\u2019t a Serendib backup.'); return; }
+          var res = readBackup(parsed);
+          if (!res.ok) { showRestoreError(res.error); return; }
+          openRestoreSheet(res.data);
+        };
+        reader.onerror = function () { showRestoreError('Couldn\u2019t read that file.'); };
+        reader.readAsText(file);
+      }
+      function showRestoreError(msg) {
+        openSpendSheet('Restore from a backup', '<div class="rounded-xl bg-rose-50 border border-rose-200 p-4"><p class="text-[13px] font-semibold text-rose-800" id="restore-error">' + escapeHtml(msg) + '</p>' +
+          '<p class="text-[12px] text-rose-700 mt-1">Nothing was changed.</p></div>' +
+          '<button type="button" id="restore-close" class="w-full mt-5 ' + BTN_SECONDARY + '">Close</button>', function () {
+          document.getElementById('restore-close').addEventListener('click', closeSpendSheet);
+        });
+      }
+      function openRestoreSheet(data) {
+        var haveC = {}, haveS = {};
+        cards.forEach(function (c) { haveC[String(c.id)] = true; });
+        spaces.forEach(function (s) { haveS[String(s.id)] = true; });
+        var newCards = data.cards.filter(function (c) { return !haveC[c.id]; }), newSpaces = data.spaces.filter(function (s) { return !haveS[s.id]; });
+        var when = data.exportedAt && !isNaN(new Date(data.exportedAt)) ? new Date(data.exportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'an unknown date';
+        var row = function (label, value) { return '<div class="flex justify-between gap-3 py-2 border-b border-outline-variant/30"><span class="text-[12px] text-secondary">' + label + '</span><span class="text-[12px] font-semibold text-on-surface text-right">' + escapeHtml(value) + '</span></div>'; };
+        var html = '<p class="text-[13px] text-on-surface mb-3">Backup from <strong>' + escapeHtml(when) + '</strong></p>' +
+          row('In the backup', countsText(data.cards, data.spaces)) + row('In the app now', countsText(cards, spaces)) +
+          '<div class="mt-4 space-y-2" role="radiogroup" aria-label="How to restore">' +
+          '<label class="flex items-start gap-3 rounded-xl border border-outline-variant/60 p-3 cursor-pointer"><input type="radio" name="restore-mode" value="replace" checked class="mt-0.5 w-5 h-5 accent-emerald-600 shrink-0">' +
+          '<span><span class="block text-[13px] font-semibold text-on-surface">Replace everything</span><span class="block text-[11px] text-secondary mt-0.5">Your current cards and spaces are swapped for the backup\u2019s.</span></span></label>' +
+          '<label class="flex items-start gap-3 rounded-xl border border-outline-variant/60 p-3 cursor-pointer"><input type="radio" name="restore-mode" value="merge" class="mt-0.5 w-5 h-5 accent-emerald-600 shrink-0"' + (newCards.length || newSpaces.length ? '' : ' disabled') + '>' +
+          '<span><span class="block text-[13px] font-semibold text-on-surface">Add what\u2019s missing</span><span class="block text-[11px] text-secondary mt-0.5">' +
+          (newCards.length || newSpaces.length ? 'Adds ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') + ' you don\u2019t have. Nothing else changes.' : 'Everything in this backup is already here.') + '</span></span></label></div>' +
+          '<p id="restore-warn" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
+          '<div class="flex gap-3 mt-5"><button type="button" id="restore-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="restore-go" class="' + BTN_PRIMARY + '">Restore</button></div>';
+        openSpendSheet('Restore from a backup', html, function (body) {
+          var armed = false, go = document.getElementById('restore-go');
+          body.addEventListener('change', function () { armed = false; go.textContent = 'Restore'; document.getElementById('restore-warn').classList.add('hidden'); });
+          document.getElementById('restore-cancel').addEventListener('click', closeSpendSheet);
+          go.addEventListener('click', function () {
+            var mode = (body.querySelector('input[name="restore-mode"]:checked') || {}).value || 'replace';
+            if (mode === 'replace' && !armed) {
+              armed = true;
+              go.textContent = 'Yes, replace my data';
+              showSheetError('restore-warn', 'This replaces your ' + countsText(cards, spaces) + '. You can undo straight after.');
+              return;
+            }
+            applyRestore(data, mode, newCards, newSpaces);
+          });
+        });
+      }
+      function applyRestore(data, mode, newCards, newSpaces) {
+        var before = JSON.parse(JSON.stringify(Object.assign({}, window.currentUserData || {}, { cards: cards, spaces: spaces, strategy: window.currentStrategy })));
+        var next = Object.assign({}, window.currentUserData || {});
+        if (mode === 'merge') {
+          next.cards = cards.concat(JSON.parse(JSON.stringify(newCards)));
+          next.spaces = spaces.concat(JSON.parse(JSON.stringify(newSpaces)));
+        } else {
+          next.cards = JSON.parse(JSON.stringify(data.cards));
+          next.spaces = JSON.parse(JSON.stringify(data.spaces));
+          Object.keys(data.profile).forEach(function (k) { if (data.profile[k] !== '') next[k] = data.profile[k]; });
+        }
+        activeId = null;
+        setCloudData(next);
+        saveUserData();
+        window.renderDashboard();
+        closeSpendSheet();
+        navigateTo('screen-home', 'btn-nav-home');
+        window.showToast(mode === 'merge' ? 'Added ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') : 'Backup restored', 'percent',
+          { actionLabel: 'Undo', onAction: function () {
+            setCloudData(before);
+            saveUserData();
+            window.renderDashboard();
+            window.showToast('Restore undone', 'info');
+          } });
       }
 
       function quickLog(type) {
@@ -7868,13 +8979,12 @@ renderSpaces();
         }
 
         var elExport = document.getElementById("btn-export-data");
-        if (elExport) elExport.addEventListener("click", function () {
-          var payload = { cards: cards, spaces: spaces, income: window.TOTAL_MONTHLY_BUDGET * 4, strategy: window.currentStrategy };
-          var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-          var link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = "my_card_data.json";
-          link.click();
+        if (elExport) elExport.addEventListener("click", downloadBackup);
+        var elRestoreFile = document.getElementById("input-restore-file");
+        if (elRestoreFile) elRestoreFile.addEventListener("change", function () {
+          var file = elRestoreFile.files && elRestoreFile.files[0];
+          elRestoreFile.value = "";
+          if (file) openRestoreFile(file);
         });
 
         var elReset = document.getElementById("btn-reset-data");
@@ -8221,8 +9331,13 @@ renderSpaces();
           }
           if (errEl) errEl.classList.add('hidden');
 
-          card.statementDay = statementDay;
-          card.dueDay = dueDay;
+          if (card.statementDay !== statementDay || card.dueDay !== dueDay) {
+              card.statementDay = statementDay;
+              card.dueDay = dueDay;
+              card.statements = [];
+              initCycleTracking(card, ymd(new Date()));
+              recordStatements(card, ymd(new Date()));
+          }
           saveCards();
           
           window.renderDashboard();
@@ -8412,7 +9527,7 @@ renderSpaces();
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 mb-2">No Spaces Found</h3>
                 <p class="text-sm text-slate-500 mb-6 max-w-[250px] leading-relaxed">Create a space to start allocating money for upcoming bills and emergencies.</p>
-                <button onclick="openCreateSpaceModal()" class="bg-emerald-600 text-white font-semibold rounded-xl px-6 py-3 text-sm active:scale-95 transition-all hover:bg-emerald-700 shadow-sm border border-emerald-700/20">
+                <button onclick="openCreateSpaceModal()" class="bg-emerald-700 text-white font-semibold rounded-xl px-6 py-3 text-sm active:scale-95 transition-all hover:bg-emerald-800 shadow-sm border border-emerald-700/20">
                   + Add Space
                 </button>
               </div>
@@ -8431,18 +9546,30 @@ renderSpaces();
                   <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-5 transition hover:shadow-md relative">
                     <div class="flex justify-between items-start mb-4">
                       <div>
-                        <h3 class="text-base font-bold text-slate-900">${s.name}</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Target: ${s.targetDate}</p>
+                        <button type="button" onclick="App.openSpace('${safeId(s.id)}')" class="text-left">
+                          <h3 class="text-base font-bold text-slate-900">${escapeHtml(s.name)}</h3>
+                          <p class="text-xs text-slate-500 mt-0.5">Target: ${isRealYmd(s.targetDate) ? parseYmd(s.targetDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : escapeHtml(s.targetDate)}</p>
+                        </button>
                       </div>
                       <button aria-label="Buffer options" class="kebab-menu-btn w-10 h-10 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 active:scale-95 transition-all relative cursor-pointer">
                         <span class="material-symbols-outlined text-[22px] pointer-events-none">more_vert</span>
                         <div class="kebab-dropdown hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden origin-top-right">
-                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer" onclick="openEditSpaceModal('${s.id}')">
+                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer" onclick="App.openSpaceWithdraw('${safeId(s.id)}')">
+                            <span class="text-sm font-medium text-slate-700">Withdraw</span>
+                            <span class="material-symbols-outlined text-[18px] text-slate-400" aria-hidden="true">outbound</span>
+                          </span>
+                          <div class="h-px bg-slate-100 w-full"></div>
+                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer" onclick="App.openSpacePay('${safeId(s.id)}')">
+                            <span class="text-sm font-medium text-slate-700">Pay a card</span>
+                            <span class="material-symbols-outlined text-[18px] text-slate-400" aria-hidden="true">credit_card</span>
+                          </span>
+                          <div class="h-px bg-slate-100 w-full"></div>
+                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer" onclick="openEditSpaceModal('${safeId(s.id)}')">
                             <span class="text-sm font-medium text-slate-700">Edit Space</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-slate-400 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
                           </span>
                           <div class="h-px bg-slate-100 w-full"></div>
-                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-rose-50 cursor-pointer" onclick="openDeleteSpaceModal('${s.id}')">
+                          <span class="flex justify-between items-center w-full px-4 py-3.5 text-left transition-colors hover:bg-rose-50 cursor-pointer" onclick="openDeleteSpaceModal('${safeId(s.id)}')">
                             <span class="text-sm font-medium text-rose-600">Delete Space</span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-rose-500 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                           </span>
@@ -8460,8 +9587,8 @@ renderSpaces();
                         </div>
                       </div>
                       <div>
-                        <div class="text-lg font-bold ${theme.amountText}">LKR ${s.currentLKR.toLocaleString()}</div>
-                        <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wide mt-0.5">OF LKR ${s.targetLKR.toLocaleString()} GOAL</div>
+                        <div class="text-lg font-bold ${theme.amountText}">LKR ${(Number(s.currentLKR) || 0).toLocaleString()}</div>
+                        <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wide mt-0.5">OF LKR ${(Number(s.targetLKR) || 0).toLocaleString()} GOAL</div>
                       </div>
                     </div>
                     <div class="border-t border-slate-100 pt-3 flex justify-between items-center gap-3">
@@ -8469,7 +9596,7 @@ renderSpaces();
                         <span class="w-1.5 h-1.5 rounded-full ${theme.dotBg} flex-shrink-0"></span>
                         <span class="truncate">Active Sinking Fund</span>
                       </span>
-                      <button onclick="openAddFundsModal('${s.id}')" class="inline-flex items-center justify-center text-center leading-none ${theme.btnBg} ${theme.btnText} font-semibold px-3 py-1.5 rounded-full text-xs hover:opacity-80 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer">+ Add Funds</button>
+                      <button onclick="openAddFundsModal('${safeId(s.id)}')" class="inline-flex items-center justify-center text-center leading-none ${theme.btnBg} ${theme.btnText} font-semibold px-3 py-1.5 rounded-full text-xs hover:opacity-80 active:scale-95 transition-all shrink-0 whitespace-nowrap cursor-pointer">+ Add Funds</button>
                     </div>
                   </div>
                 `;
@@ -8746,6 +9873,8 @@ renderSpaces();
           const space = spaces.find(s => s.id === id);
           if (space) {
               space.currentLKR += amt;
+              ensureSpaceHistory(space);
+              space.history.push({ id: uid(), date: ymd(new Date()), type: 'deposit', amount: amt, note: '', createdAt: Date.now() });
               if (space.currentLKR > space.targetLKR) {
                   // limit it or just let it go over?
                   // space.currentLKR = space.targetLKR;
@@ -8762,7 +9891,12 @@ renderSpaces();
 
       return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData, saveUserData: saveUserData,
         getState: function () { return { cards: cards, spaces: spaces }; }, openAddCard: openModal, goDetail: goDetail,
-        quickLog: quickLog, openLogSheet: openLogSheet, closeSpendSheet: closeSpendSheet, runRecurring: runRecurring, ledgerCsv: function (id) { var c = findCard(id); return c ? ledgerCsv(c) : ''; },
+        quickLog: quickLog, openLogSheet: openLogSheet,
+        openRemedial: function () { if (activeId !== null) openRemedialSheet(activeId); },
+        openShare: function () { if (activeId !== null) openShareSheet(activeId); },
+        openSpace: openSpaceSheet, openSpacesSummary: openSpacesSummary, openSpaceWithdraw: openSpaceWithdraw, openSpacePay: openSpacePay,
+        buildBackup: buildBackup, restoreFile: openRestoreFile,
+        logDuePayment: function () { var c = findCard(activeId); if (c) openLogSheet({ cardId: c.id, type: 'payment', prefill: amountDueNow(c) }); }, closeSpendSheet: closeSpendSheet, runRecurring: runRecurring, ledgerCsv: function (id) { var c = findCard(id); return c ? ledgerCsv(c) : ''; },
         setCloudReady: function (v) { cloudReady = !!v; if (cloudReady) runRecurring(); }, isCloudReady: function () { return cloudReady; },
         isOwnWrite: function (stamp) { return ownWrites.indexOf(stamp) !== -1; } };
     })();
@@ -9171,6 +10305,28 @@ renderSpaces();
     </header>
     <!-- DRAWER BODY (Scrollable content) -->
     <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <!-- SECTION 0: APPEARANCE -->
+      <section id="menu-appearance">
+        <div class="px-2 mb-2">
+          <span class="text-[11px] text-secondary font-bold tracking-wider">APPEARANCE</span>
+        </div>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high p-2.5">
+          <div class="flex items-center gap-3 mb-2.5 px-0.5">
+            <div class="w-11 h-11 rounded-xl bg-surface-container text-secondary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">contrast</span>
+            </div>
+            <div>
+              <h2 class="text-[15px] leading-5 text-on-surface font-semibold">Theme</h2>
+              <p class="text-[12px] text-secondary mt-0.5">Auto follows your phone's setting</p>
+            </div>
+          </div>
+          <div class="flex bg-surface-container-low p-1 rounded-xl gap-1" role="radiogroup" aria-label="Appearance">
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="light" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">light_mode</span>Light</button>
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">dark_mode</span>Dark</button>
+            <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">brightness_auto</span>Auto</button>
+          </div>
+        </div>
+      </section>
       <!-- SECTION 1: STRATEGY & CONTROLS -->
       <section>
         <div class="px-2 mb-2">
@@ -9269,7 +10425,7 @@ renderSpaces();
       <!-- App security badge -->
       <div class="flex items-center gap-1.5 text-secondary">
         <span class="material-symbols-outlined text-[16px] text-primary">shield</span>
-        <span class="text-[11px] text-secondary font-semibold">Encrypted &amp; Stored Locally on iPhone</span>
+        <span class="text-[11px] text-secondary font-semibold">Private by design &middot; saved to your account</span>
       </div>
       <!-- System info version -->
       <p class="text-[10px] text-outline mt-1 tracking-tight font-medium">
@@ -9385,7 +10541,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
               <button onclick="closeSettleModal()" class="flex-1 py-3 px-4 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors text-sm" type="button">
                   Cancel
               </button>
-              <button id="btn-confirm-settle" onclick="confirmSettleCard()" class="flex-1 py-3 px-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm shadow-sm shadow-emerald-200" type="button">
+              <button id="btn-confirm-settle" onclick="confirmSettleCard()" class="flex-1 py-3 px-4 bg-emerald-700 text-white rounded-xl font-semibold hover:bg-emerald-800 transition-colors text-sm shadow-sm shadow-emerald-200" type="button">
                   Settle
               </button>
           </div>
@@ -9415,7 +10571,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       </div>
       <div class="flex gap-3 mt-8 w-full">
         <button onclick="closeBillingModal()" class="w-1/3 py-3.5 bg-slate-50 border border-slate-100 text-slate-700 font-semibold rounded-xl text-sm text-center transition-colors hover:bg-slate-100" type="button">Cancel</button>
-        <button id="btn-save-billing" onclick="saveBillingCycle()" class="w-2/3 py-3.5 bg-emerald-600 text-white font-semibold rounded-xl text-sm text-center transition-colors hover:bg-emerald-700" type="button">Save Changes</button>
+        <button id="btn-save-billing" onclick="saveBillingCycle()" class="w-2/3 py-3.5 bg-emerald-700 text-white font-semibold rounded-xl text-sm text-center transition-colors hover:bg-emerald-800" type="button">Save Changes</button>
       </div>
     </div>
   </div>
@@ -9546,7 +10702,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           
           <div class="flex items-center gap-3 pt-2">
               <button onclick="closeEditCardModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-sm" type="button">Cancel</button>
-              <button onclick="saveCardDetails()" class="flex-[2] py-3.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 active:scale-95 transition-all text-sm shadow-sm flex items-center justify-center gap-1.5" type="button">
+              <button onclick="saveCardDetails()" class="flex-[2] py-3.5 bg-emerald-700 text-white font-semibold rounded-xl hover:bg-emerald-800 active:scale-95 transition-all text-sm shadow-sm flex items-center justify-center gap-1.5" type="button">
                   <span>Save Changes</span>
               </button>
           </div>
@@ -9742,7 +10898,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
                   </div>
               </div>
               <p id="create-space-error" class="text-[12px] text-rose-600 font-semibold hidden text-center mb-3 mt-1"></p>
-              <button onclick="saveSpace()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-3.5 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all">
+              <button onclick="saveSpace()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl py-3.5 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all">
                   Create Space
               </button>
           </div>
@@ -9773,7 +10929,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
               </div>
               <input type="hidden" id="input-add-funds-id">
               <p id="add-funds-error" class="text-[12px] text-rose-600 font-semibold hidden text-center mb-3"></p>
-              <button onclick="saveFunds()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-3.5 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all">
+              <button onclick="saveFunds()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl py-3.5 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all">
                   Confirm Addition
               </button>
           </div>
@@ -9877,7 +11033,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           <p id="edit-space-error" class="text-[12px] text-rose-600 font-semibold hidden text-center mb-2"></p>
           <div class="flex items-center gap-3 pt-2">
               <button onclick="closeEditSpaceModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-sm" type="button">Cancel</button>
-              <button onclick="saveEditSpace()" class="flex-[2] py-3.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 active:scale-95 transition-all text-sm shadow-sm flex items-center justify-center gap-1.5" type="button">
+              <button onclick="saveEditSpace()" class="flex-[2] py-3.5 bg-emerald-700 text-white font-semibold rounded-xl hover:bg-emerald-800 active:scale-95 transition-all text-sm shadow-sm flex items-center justify-center gap-1.5" type="button">
                   <span>Save Changes</span>
               </button>
           </div>
