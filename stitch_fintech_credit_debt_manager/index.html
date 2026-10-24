@@ -400,6 +400,47 @@
       box-shadow: 0 1px 3px rgba(15, 23, 42, .12)
     }
 
+    /* ── Card accent (the card's chosen colour, set by applyCardAccent) ── */
+    #screen-detail,
+    #spend-sheet {
+      --card-accent: #00bfa5;
+      --card-accent-soft: rgba(0, 191, 165, .12)
+    }
+
+    #ps-slider::-webkit-slider-thumb {
+      background: var(--card-accent)
+    }
+
+    #ps-slider::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, var(--card-accent) var(--track-fill, 0%), #e1e3e4 var(--track-fill, 0%))
+    }
+
+    #ps-slider::-moz-range-thumb {
+      background: var(--card-accent)
+    }
+
+    #ps-slider::-moz-range-progress {
+      background: var(--card-accent)
+    }
+
+    #screen-detail .calc-tab.active {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .08), inset 0 -2px 0 var(--card-accent)
+    }
+
+    #spend-sheet .spend-seg.is-on {
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .12), inset 0 -2px 0 var(--card-accent)
+    }
+
+    #spend-sheet-handle {
+      background: var(--card-accent)
+    }
+
+    .spend-chip[data-card].is-on {
+      border-color: var(--chip-accent, #00897b);
+      background: var(--chip-soft, rgba(0, 191, 165, .12));
+      color: #191c1d
+    }
+
     /* ── Calculator tabs ── */
     .calc-tab {
       transition: background .15s, color .15s, box-shadow .15s
@@ -1164,6 +1205,7 @@
                     Minimum Required: <strong id="home-alert-payment-amount" class="text-on-surface">--</strong> to avoid statutory late
                     penalties.
                   </p>
+                  <div id="home-alert-payment-card" class="mt-2"></div>
                 </div>
               </div>
             </div>
@@ -1216,6 +1258,7 @@
               <span class="flex-1 min-w-0">
                 <span id="home-alert-budget-title" class="block text-[14px] text-on-surface font-bold">--</span>
                 <span id="home-alert-budget-text" class="block text-[12px] text-secondary mt-1">--</span>
+                <span id="home-alert-budget-card" class="block mt-2"></span>
               </span>
               <span class="material-symbols-outlined text-secondary text-[20px] self-center" aria-hidden="true">chevron_right</span>
             </button>
@@ -1230,6 +1273,7 @@
               <span class="flex-1 min-w-0">
                 <span id="home-alert-recurring-title" class="block text-[14px] text-on-surface font-bold">--</span>
                 <span id="home-alert-recurring-text" class="block text-[12px] text-secondary mt-1">--</span>
+                <span id="home-alert-recurring-card" class="block mt-2"></span>
               </span>
               <span class="material-symbols-outlined text-secondary text-[20px] self-center" aria-hidden="true">chevron_right</span>
             </button>
@@ -1582,7 +1626,7 @@
             <span class="material-symbols-outlined text-[24px]">arrow_back</span>
           </button>
           <div>
-            <h1 id="detail-title" class="text-[18px] font-semibold text-on-surface leading-tight"></h1>
+            <h1 class="text-[18px] font-semibold text-on-surface leading-tight flex items-center gap-2"><span id="detail-title-dot" class="w-2.5 h-2.5 rounded-full shrink-0" style="background:var(--card-accent)" aria-hidden="true"></span><span id="detail-title"></span></h1>
             <p class="text-[11px] font-semibold text-secondary">Card Management &amp; Simulators</p>
           </div>
         </div>
@@ -1595,6 +1639,7 @@
               class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all"><span
                 class="material-symbols-outlined text-[22px]">more_vert</span></button>
             <div id="card-action-menu" class="hidden absolute right-0 top-12 mt-2 w-72 origin-top-right bg-white border border-slate-100 rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden">
+                <div id="card-menu-chip" class="px-4 pt-3 pb-2.5 border-b border-slate-100"></div>
                 <div class="py-1 flex flex-col">
                     <button onclick="editCardDetails()" class="w-full flex items-center justify-between gap-4 px-4 py-3 hover:bg-slate-50 transition-colors group text-left">
                         <span class="text-sm font-medium text-slate-700 leading-snug">Edit Card Details</span>
@@ -1626,8 +1671,9 @@
       </header>
       <main class="px-4 flex-1 flex flex-col gap-4 pt-1">
         <!-- Card Spotlight -->
-        <section
+        <section id="detail-spotlight"
           class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/40 shadow-sm relative overflow-hidden">
+          <div class="absolute inset-x-0 top-0 h-1" style="background:var(--card-accent)" aria-hidden="true"></div>
           <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-2">
               <div id="detail-bank-icon" class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-primary"><span
@@ -1647,7 +1693,7 @@
             <span id="detail-balance" class="text-[32px] font-bold text-on-surface tracking-tight num block mt-0.5">LKR
               0.00</span>
             <p class="text-[12px] text-secondary mt-0.5">
-              <span id="detail-remaining" class="text-[12px] font-semibold text-on-surface num"></span> remaining of
+              <span id="detail-remaining" class="text-[12px] font-semibold text-on-surface num"></span> <span id="detail-remaining-label">remaining of</span>
               <span id="detail-limit-val" class="font-semibold text-on-surface num"></span> limit
             </p>
           </div>
@@ -1666,9 +1712,6 @@
             </div>
           </div>
         </section>
-        <!-- Spending: real per-card log, recurring payments, budgets and insights -->
-        <section id="card-spending" aria-labelledby="spend-title"
-          class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/40 shadow-sm"></section>
         <!-- Tab Switcher -->
         <section class="flex bg-surface-container-low p-1 rounded-xl gap-1">
           <button id="tab-payoff"
@@ -1692,7 +1735,7 @@
                   <span class="w-2 h-2 rounded-full bg-error"></span>
                   <h2 class="text-[18px] font-semibold text-on-surface">Minimum Payment Trap</h2>
                 </div>
-                <p class="text-[12px] text-secondary">Paying only 4% min. locks you into 28% APR compounding for years.
+                <p id="ps-trap-desc" class="text-[12px] text-secondary">Paying only 4% min. locks you into 28% APR compounding for years.
                 </p>
               </div>
               <button id="btn-info-payoff" data-sheet="payoff" aria-label="About minimum payment trap"
@@ -1933,6 +1976,10 @@
             </div>
           </div>
         </section>
+
+        <!-- Spending: real per-card log, recurring payments, budgets and insights -->
+        <section id="card-spending" aria-labelledby="spend-title"
+          class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/40 shadow-sm mb-28"></section>
       </main>
     </div><!-- /screen-detail -->
 
@@ -2306,6 +2353,7 @@
           <select id="sim-data-source" class="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2.5 w-full active:scale-95 transition-all text-[14px] font-semibold text-on-surface appearance-none focus:ring-2 focus:ring-primary-container outline-none">
             <option value="custom">Custom Scenario</option>
           </select>
+          <div id="sim-card-chip" class="hidden"></div>
         </div>
         <!-- Input Fields -->
         <div class="flex flex-col gap-3.5">
@@ -2435,6 +2483,7 @@
             <select id="sim-adv-data-source" class="bg-surface-container-low border border-outline-variant/30 rounded-xl px-3 py-2.5 w-full active:scale-95 transition-all text-[14px] font-semibold text-on-surface appearance-none focus:ring-2 focus:ring-primary-container outline-none">
               <option value="custom">Custom Scenario</option>
             </select>
+            <div id="sim-adv-card-chip" class="hidden"></div>
           </div>
           <!-- Input Fields -->
           <div class="flex flex-col gap-3.5">
@@ -3035,7 +3084,7 @@
   <div id="spend-sheet" role="dialog" aria-modal="true" aria-labelledby="spend-sheet-title" aria-hidden="true">
     <div id="spend-sheet-panel">
       <div class="flex justify-center pt-3 pb-1">
-        <div class="w-10 h-1 bg-outline-variant rounded-full"></div>
+        <div id="spend-sheet-handle" class="w-10 h-1 rounded-full"></div>
       </div>
       <div class="flex items-center justify-between px-5 pt-1 pb-3">
         <h2 id="spend-sheet-title" class="text-[18px] font-bold text-on-surface"></h2>
@@ -3677,6 +3726,12 @@
       return { months: res.minMonths, totalInterest: res.minTotalInterest };
     }
 
+    // "Today, 24 Oct" / "1 day, on 24 Oct" / "8 days, on 24 Oct"
+    function statementWhenText(daysLeft, dateString) {
+        if (daysLeft === 0) return 'Today, ' + dateString;
+        return daysLeft + (daysLeft === 1 ? ' day' : ' days') + ', on ' + dateString;
+    }
+
     function calculateNextStatement(statementDayInt) {
         var today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -3687,7 +3742,8 @@
         var y = today.getFullYear(), m = today.getMonth();
         var nextStatementDate = new Date(y, m, clampDay(y, m, sd));
 
-        if (today >= nextStatementDate) {
+        // On the statement day itself the statement is today (matches the Spending period)
+        if (today > nextStatementDate) {
             nextStatementDate = new Date(y, m + 1, clampDay(y, m + 1, sd));
         }
         
@@ -3729,6 +3785,42 @@
       }
       var effectiveAPR = (Math.pow(1 + r, 12) - 1) * 100;
       return { effectiveAPR: effectiveAPR, surchargeAmt: surchargeAmt, totalPay: totalPay, monthly: monthly };
+    }
+
+    /* ── Card colours: one table for every place a card is shown ──
+       bg/icon/bar are the Tailwind classes the card list and card screen already used;
+       hex/ink/soft are for inline styles and CSS variables (accent, text on tint, tint). */
+    var CARD_THEMES = {
+      teal:    { name: 'Teal (default)',    bg: 'bg-teal-50',    icon: 'text-teal-600',    text: 'text-teal-700',    bar: 'bg-teal-500',    hex: '#14b8a6', ink: '#0f766e', soft: 'rgba(20,184,166,.12)' },
+      rose:    { name: 'Rose',              bg: 'bg-rose-50',    icon: 'text-rose-600',    text: 'text-rose-700',    bar: 'bg-rose-500',    hex: '#f43f5e', ink: '#be123c', soft: 'rgba(244,63,94,.12)' },
+      amber:   { name: 'Amber / Gold',      bg: 'bg-amber-50',   icon: 'text-amber-600',   text: 'text-amber-700',   bar: 'bg-amber-500',   hex: '#f59e0b', ink: '#b45309', soft: 'rgba(245,158,11,.14)' },
+      emerald: { name: 'Emerald',           bg: 'bg-emerald-50', icon: 'text-emerald-600', text: 'text-emerald-700', bar: 'bg-emerald-500', hex: '#10b981', ink: '#047857', soft: 'rgba(16,185,129,.12)' },
+      violet:  { name: 'Violet',            bg: 'bg-violet-50',  icon: 'text-violet-600',  text: 'text-violet-700',  bar: 'bg-violet-500',  hex: '#8b5cf6', ink: '#6d28d9', soft: 'rgba(139,92,246,.12)' },
+      sky:     { name: 'Sky Blue',          bg: 'bg-sky-50',     icon: 'text-sky-600',     text: 'text-sky-700',     bar: 'bg-sky-500',     hex: '#0ea5e9', ink: '#0369a1', soft: 'rgba(14,165,233,.12)' },
+      slate:   { name: 'Slate / Titanium',  bg: 'bg-slate-100',  icon: 'text-slate-600',   text: 'text-slate-700',   bar: 'bg-slate-600',   hex: '#475569', ink: '#334155', soft: 'rgba(71,85,105,.12)' },
+      indigo:  { name: 'Indigo / Navy',     bg: 'bg-indigo-50',  icon: 'text-indigo-600',  text: 'text-indigo-700',  bar: 'bg-indigo-600',  hex: '#4f46e5', ink: '#4338ca', soft: 'rgba(79,70,229,.12)' },
+      red:     { name: 'Crimson / Ruby',    bg: 'bg-red-50',     icon: 'text-red-600',     text: 'text-red-700',     bar: 'bg-red-600',     hex: '#dc2626', ink: '#b91c1c', soft: 'rgba(220,38,38,.12)' },
+      fuchsia: { name: 'Fuchsia / Magenta', bg: 'bg-fuchsia-50', icon: 'text-fuchsia-600', text: 'text-fuchsia-700', bar: 'bg-fuchsia-500', hex: '#d946ef', ink: '#a21caf', soft: 'rgba(217,70,239,.12)' },
+      cyan:    { name: 'Cyan / Ocean',      bg: 'bg-cyan-50',    icon: 'text-cyan-600',    text: 'text-cyan-700',    bar: 'bg-cyan-500',    hex: '#06b6d4', ink: '#0e7490', soft: 'rgba(6,182,212,.12)' }
+    };
+    function cardTheme(card) { return CARD_THEMES[card && card.color] || CARD_THEMES.teal; }
+    function cardName(c) { return String(c.bank || '').split(' ')[0] + ' ' + (c.nick || ''); }
+    function cardDot(card, size) {
+      var s = size || 10;
+      return '<span class="card-dot inline-block rounded-full shrink-0" style="width:' + s + 'px;height:' + s + 'px;background:' + cardTheme(card).hex + '" aria-hidden="true"></span>';
+    }
+    // "● Sampath Visa Platinum" pill in the card's colour; the name is always beside the colour
+    function cardChip(card) {
+      var t = cardTheme(card);
+      return '<span class="card-chip inline-flex items-center gap-1.5 max-w-full px-2.5 py-1 rounded-full text-[12px] font-semibold" style="background:' + t.soft + ';color:' + t.ink + '">' +
+        cardDot(card, 8) + '<span class="truncate">' + suggestEscape(cardName(card)) + '</span></span>';
+    }
+    // Sets --card-accent / --card-accent-soft on an element (card screen, spending sheet)
+    function applyCardAccent(el, card) {
+      if (!el) return;
+      var t = cardTheme(card);
+      el.style.setProperty('--card-accent', t.hex);
+      el.style.setProperty('--card-accent-soft', t.soft);
     }
 
     /* ── Spend ledger: categories, statement periods, balance effects, recurring charges, SMS parsing ── */
@@ -3997,10 +4089,7 @@
     ];
 
 
-    var COLOR_MAP = {
-      teal: "card-icon-teal", rose: "card-icon-rose", amber: "card-icon-amber",
-      emerald: "card-icon-emerald", violet: "card-icon-violet", sky: "card-icon-sky"
-    };
+
 
     /* APPLICATION */
     var App = (function () {
@@ -4029,6 +4118,8 @@
       // True once this account's cloud document has been read (or created). Until then saves
       // go only to this account's local cache, so stale or empty data can't overwrite the cloud.
       var cloudReady = false;
+      // lastUpdated stamps of this device's recent cloud writes (their echo is not a remote change)
+      var ownWrites = [];
 
       function saveUserData() {
         var user = window.currentUser;
@@ -4072,6 +4163,8 @@
 
         // 2. Cloud Firestore, only once this account's cloud copy has been loaded
         if (!cloudReady || typeof db === 'undefined') return Promise.resolve();
+        ownWrites.push(userData.lastUpdated);
+        if (ownWrites.length > 50) ownWrites.shift();
         return db.collection("users").doc(uid).set(userData, { merge: true }).catch(function(err) {
             console.warn("Cloud save failed (kept on this device):", err.message);
         });
@@ -4458,20 +4551,6 @@ var checkSnowball = document.getElementById('check-snowball');
           });
         }
 
-        const themeMap = {
-          'teal': { bg: 'bg-teal-50', text: 'text-teal-700' },
-          'rose': { bg: 'bg-rose-50', text: 'text-rose-700' },
-          'amber': { bg: 'bg-amber-50', text: 'text-amber-700' },
-          'emerald': { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-          'violet': { bg: 'bg-violet-50', text: 'text-violet-700' },
-          'sky': { bg: 'bg-sky-50', text: 'text-sky-700' },
-          'slate': { bg: 'bg-slate-100', text: 'text-slate-700' },
-          'indigo': { bg: 'bg-indigo-50', text: 'text-indigo-700' },
-          'red': { bg: 'bg-red-50', text: 'text-red-700' },
-          'fuchsia': { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700' },
-          'cyan': { bg: 'bg-cyan-50', text: 'text-cyan-700' }
-        };
-
         const today = localDateStr(new Date());
         const userCards = (cards || []).filter(function (c) { return c && c.bank; });
         const myIssuers = {};
@@ -4584,7 +4663,7 @@ var checkSnowball = document.getElementById('check-snowball');
         shown.forEach(function (offer) {
           const match = offerCardMatch(offer, userCards);
           const userCard = match ? match.card : null;
-          const theme = userCard && themeMap[userCard.color] ? themeMap[userCard.color] : { bg: 'bg-surface-container', text: 'text-on-surface' };
+          const theme = userCard ? cardTheme(userCard) : { bg: 'bg-surface-container', text: 'text-on-surface' };
           const cat = categoryMeta(offer.category);
 
           let urgencyHtml = "";
@@ -4627,7 +4706,7 @@ var checkSnowball = document.getElementById('check-snowball');
             '</div>' +
             '<div class="flex flex-col gap-1 text-[12px]">' +
               '<p class="text-secondary flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]" aria-hidden="true">credit_card</span>' + escapeHtml(eligibility) + '</p>' +
-              (matchLine ? '<p class="font-semibold ' + (match.certain ? 'text-emerald-700' : 'text-amber-700') + ' flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]" aria-hidden="true">' + (match.certain ? 'check_circle' : 'help') + '</span>' + escapeHtml(matchLine) + '</p>' : '') +
+              (matchLine ? '<p class="font-semibold ' + (match.certain ? 'text-emerald-700' : 'text-amber-700') + ' flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]" aria-hidden="true">' +(match.certain ? 'check_circle' : 'help') + '</span>' + cardDot(userCard, 8) + escapeHtml(matchLine) + '</p>' : '') +
               (meta.length ? '<p class="text-secondary flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]" aria-hidden="true">event</span>' + escapeHtml(meta.join(' · ')) + '</p>' : '') +
             '</div>' +
             '<div class="border-t border-surface-container-high pt-3 mt-1 flex items-center justify-between gap-3">' +
@@ -4978,7 +5057,9 @@ var checkSnowball = document.getElementById('check-snowball');
                 var elDate = document.getElementById("home-alert-payment-date");
                 var elAmount = document.getElementById("home-alert-payment-amount");
 
-                if (elCountdown) elCountdown.innerText = "Next Payment Due in " + smallestDelta + " Day" + (smallestDelta !== 1 ? "s" : "");
+                if (elCountdown) elCountdown.innerText = smallestDelta === 0 ? "Payment Due Today"
+                    : smallestDelta === 1 ? "Payment Due Tomorrow"
+                    : "Next Payment Due in " + smallestDelta + " Days";
                 if (elDate) {
                     var options = { day: 'numeric', month: 'short' };
                     elDate.innerText = nextPaymentDateObj.toLocaleDateString('en-GB', options);
@@ -4987,6 +5068,8 @@ var checkSnowball = document.getElementById('check-snowball');
                     var reqMin = Math.round(minPaymentFor(nextPaymentCard));
                     elAmount.innerText = "LKR " + reqMin.toLocaleString();
                 }
+                var elPayCard = document.getElementById("home-alert-payment-card");
+                if (elPayCard) elPayCard.innerHTML = cardChip(nextPaymentCard);
             } else if (elAlertPayment) {
                 elAlertPayment.classList.add("hidden");
             }
@@ -5075,9 +5158,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var elTargetBar = document.getElementById("home-strategy-target-bar");
         if (elTargetBar) elTargetBar.style.width = targetPct + "%";
 
-        var multiplier = totalMinPayment > 0 ? (TOTAL_MONTHLY_BUDGET / totalMinPayment) : 0;
-        var elMult = document.getElementById("home-strategy-multiplier");
-        if (elMult) elMult.innerText = multiplier > 0 ? multiplier.toFixed(1) + "x" : "--";
+
 
         var portfolioBaseline = cards.filter(function(c) { return c.balance > 0; }).map(function(c) { return Object.assign({}, c); });
         var portfolioTarget = cards.filter(function(c) { return c.balance > 0; }).map(function(c) { return Object.assign({}, c); });
@@ -5159,7 +5240,15 @@ var checkSnowball = document.getElementById('check-snowball');
         var elMonths = document.getElementById("home-strategy-months");
         if (elMonths) {
             if (targetMonths >= safetyLimit || targetMonths === Infinity) elMonths.innerText = "Never";
-            else elMonths.innerText = targetMonths + " months";
+            else elMonths.innerText = targetMonths + (targetMonths === 1 ? " month" : " months");
+        }
+
+        // How many times faster the plan clears the debt than paying minimums only
+        var elMult = document.getElementById("home-strategy-multiplier");
+        if (elMult) {
+            var planDone = targetMonths > 0 && targetMonths < safetyLimit && targetMonths !== Infinity;
+            var speedUp = planDone && baselineMaxMonths !== Infinity ? baselineMaxMonths / targetMonths : 0;
+            elMult.innerText = speedUp >= 1 ? speedUp.toFixed(1) + "x" : "--";
         }
         
         var elSavings = document.getElementById("home-strategy-savings");
@@ -5264,6 +5353,7 @@ var checkSnowball = document.getElementById('check-snowball');
         sortedCards.forEach(function(card, index) {
           var isTarget = index === 0 && card.balance > 0;
           var isSettled = card.balance === 0;
+          var theme = cardTheme(card);
           
           var div = document.createElement("div");
           div.setAttribute("data-card-nick", card.nick);
@@ -5279,11 +5369,11 @@ var checkSnowball = document.getElementById('check-snowball');
             div.innerHTML = 
               '<div class="flex items-center justify-between mb-2">' +
                 '<div class="flex items-center gap-2.5">' +
-                  '<div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">' +
+                  '<div class="w-8 h-8 rounded-xl flex items-center justify-center font-bold ' + theme.bg + ' ' + theme.icon + '">' +
                     '<span class="material-symbols-outlined text-[18px]">priority_high</span>' +
                   '</div>' +
                   '<div>' +
-                    '<p class="text-[14px] text-slate-900 font-bold">' + card.bank + ' ' + card.nick + '</p>' +
+                    '<p class="text-[14px] text-slate-900 font-bold">' + escapeHtml(card.bank + ' ' + card.nick) + '</p>' +
                     '<p class="text-[18px] text-teal-800 font-bold tracking-tight">Target Payment: ' + fmtLKR(allocation.alloc[card.id]) + '</p>' +
                   '</div>' +
                 '</div>' +
@@ -5305,11 +5395,11 @@ var checkSnowball = document.getElementById('check-snowball');
             var pmtText = isSettled ? "Settled" : (getsSurplus ? 'Pay: ' + fmtLKR(cardAlloc) : 'Pay Minimum: ' + fmtLKR(cardMin));
             div.innerHTML =
               '<div class="flex items-center gap-2.5">' +
-                '<div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-slate-500 border border-slate-200">' +
+                '<div class="w-8 h-8 rounded-xl flex items-center justify-center ' + theme.bg + ' ' + theme.icon + '">' +
                   '<span class="material-symbols-outlined text-[18px]">credit_card</span>' +
                 '</div>' +
                 '<div>' +
-                  '<p class="text-[12px] text-slate-900 font-semibold">' + card.bank + ' ' + card.nick + '</p>' +
+                  '<p class="text-[12px] text-slate-900 font-semibold">' + escapeHtml(card.bank + ' ' + card.nick) + '</p>' +
                   '<p class="text-[12px] text-slate-500 font-medium">' + pmtText + '</p>' +
                 '</div>' +
               '</div>' +
@@ -5322,20 +5412,6 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       function renderList() {
-        const themeMap = {
-          'teal': { iconBg: 'bg-teal-50', iconText: 'text-teal-600', barFill: 'bg-teal-500' },
-          'rose': { iconBg: 'bg-rose-50', iconText: 'text-rose-600', barFill: 'bg-rose-500' },
-          'amber': { iconBg: 'bg-amber-50', iconText: 'text-amber-600', barFill: 'bg-amber-500' },
-          'emerald': { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', barFill: 'bg-emerald-500' },
-          'violet': { iconBg: 'bg-violet-50', iconText: 'text-violet-600', barFill: 'bg-violet-500' },
-          'sky': { iconBg: 'bg-sky-50', iconText: 'text-sky-600', barFill: 'bg-sky-500' },
-          'slate': { iconBg: 'bg-slate-100', iconText: 'text-slate-600', barFill: 'bg-slate-600' },
-          'indigo': { iconBg: 'bg-indigo-50', iconText: 'text-indigo-600', barFill: 'bg-indigo-600' },
-          'red': { iconBg: 'bg-red-50', iconText: 'text-red-600', barFill: 'bg-red-600' },
-          'fuchsia': { iconBg: 'bg-fuchsia-50', iconText: 'text-fuchsia-600', barFill: 'bg-fuchsia-500' },
-          'cyan': { iconBg: 'bg-cyan-50', iconText: 'text-cyan-600', barFill: 'bg-cyan-500' }
-        };
-
         elFeed.innerHTML = "";
         
         if (cards.length === 0) {
@@ -5373,8 +5449,8 @@ var checkSnowball = document.getElementById('check-snowball');
           var isSettled = card.balance === 0;
           var rem = card.limit - card.balance;
           var util = Math.min(100, (card.balance / card.limit) * 100);
-          var theme = themeMap[card.color] || themeMap['teal'];
-          
+          var theme = cardTheme(card);
+
           var hasBilling = isValidDay(card.statementDay);
           var result = hasBilling ? calculateNextStatement(card.statementDay) : null;
           if (!isSettled && result && result.daysLeft < closestDays) {
@@ -5395,22 +5471,22 @@ var checkSnowball = document.getElementById('check-snowball');
           el.innerHTML =
             '<div class="flex items-start justify-between">' +
             '<div class="flex items-center space-x-3">' +
-            '<div class="w-10 h-10 rounded-[12px] flex items-center justify-center ' + theme.iconBg + ' ' + theme.iconText + '">' +
+            '<div class="w-10 h-10 rounded-[12px] flex items-center justify-center ' + theme.bg + ' ' + theme.icon + '">' +
             '<span class="material-symbols-outlined text-[20px]">credit_card</span></div>' +
             '<div class="flex flex-col">' +
-            '<h3 class="text-on-surface text-[18px] font-semibold tracking-tight leading-snug">' + card.bank + ' &bull; ' + card.nick + '</h3>' +
-            '<span class="text-secondary text-[12px] mt-0.5 num">' + fmtLKR(rem) + ' remaining limit</span>' +
+            '<h3 class="text-on-surface text-[18px] font-semibold tracking-tight leading-snug">' + escapeHtml(card.bank) + ' &bull; ' + escapeHtml(card.nick) + '</h3>' +
+            '<span class="text-[12px] mt-0.5 num ' + (rem < 0 ? 'text-error font-semibold' : 'text-secondary') + '">' + fmtLKR(Math.abs(rem)) + (rem < 0 ? ' over limit' : ' remaining limit') + '</span>' +
             '</div></div>' +
             badge + '</div>' +
             '<div class="mt-4 flex justify-between items-center">' +
             (result
-              ? '<span class="text-secondary text-[12px]">Billing cycle resets in</span>' +
-                '<span class="font-bold text-slate-900">' + result.daysLeft + ' days, on ' + result.dateString + '</span>'
+              ? '<span class="text-secondary text-[12px]">' + (result.daysLeft === 0 ? 'Statement date' : 'Billing cycle resets in') + '</span>' +
+                '<span class="font-bold text-slate-900">' + statementWhenText(result.daysLeft, result.dateString) + '</span>'
               : '<span class="text-secondary text-[12px]">Billing cycle</span>' +
                 '<span class="text-slate-400 text-[12px] font-medium">Not set</span>') +
             '</div>' +
             '<div class="mt-2 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">' +
-            '<div class="' + theme.barFill + ' h-full rounded-full transition-all duration-500" style="width:' + util.toFixed(1) + '%"></div></div>' +
+            '<div class="' + theme.bar + ' h-full rounded-full transition-all duration-500" style="width:' + util.toFixed(1) + '%"></div></div>' +
             '<div class="mt-2.5 flex justify-between items-center text-secondary text-[12px]">' +
             '<span class="num">' + fmtLKR(card.balance) + ' spent</span>' +
             '<span class="num">' + fmtLKR(card.limit) + ' limit</span></div>';
@@ -5423,7 +5499,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var elBillingDays = document.getElementById("billing-days");
         if (elBillingDays) {
             if (closestDays !== Infinity) {
-                elBillingDays.innerHTML = '<span class="font-bold text-slate-900">' + closestDays + ' days, on ' + closestDateStr + '</span>';
+                elBillingDays.innerHTML = '<span class="font-bold text-slate-900">' + statementWhenText(closestDays, closestDateStr) + '</span>';
             } else if (cards.some(function (c) { return c.balance > 0; })) {
                 elBillingDays.innerHTML = '<span class="text-slate-400 text-[16px] font-medium">Not configured</span>';
             } else {
@@ -5433,42 +5509,45 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       function renderDetail() {
-        const themeMap = {
-          'teal': { iconBg: 'bg-teal-50', iconText: 'text-teal-600', barFill: 'bg-teal-500' },
-          'rose': { iconBg: 'bg-rose-50', iconText: 'text-rose-600', barFill: 'bg-rose-500' },
-          'amber': { iconBg: 'bg-amber-50', iconText: 'text-amber-600', barFill: 'bg-amber-500' },
-          'emerald': { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', barFill: 'bg-emerald-500' },
-          'violet': { iconBg: 'bg-violet-50', iconText: 'text-violet-600', barFill: 'bg-violet-500' },
-          'sky': { iconBg: 'bg-sky-50', iconText: 'text-sky-600', barFill: 'bg-sky-500' },
-          'slate': { iconBg: 'bg-slate-100', iconText: 'text-slate-600', barFill: 'bg-slate-600' },
-          'indigo': { iconBg: 'bg-indigo-50', iconText: 'text-indigo-600', barFill: 'bg-indigo-600' },
-          'red': { iconBg: 'bg-red-50', iconText: 'text-red-600', barFill: 'bg-red-600' },
-          'fuchsia': { iconBg: 'bg-fuchsia-50', iconText: 'text-fuchsia-600', barFill: 'bg-fuchsia-500' },
-          'cyan': { iconBg: 'bg-cyan-50', iconText: 'text-cyan-600', barFill: 'bg-cyan-500' }
-        };
-
         var c = cards.filter(function (x) { return x.id === activeId; })[0];
         if (!c) return;
         var rem = c.limit - c.balance;
         var util = Math.min(100, (c.balance / c.limit) * 100);
-        var theme = themeMap[c.color] || themeMap['teal'];
+        var theme = cardTheme(c);
+        applyCardAccent(document.getElementById("screen-detail"), c);
+        var menuChip = document.getElementById("card-menu-chip");
+        if (menuChip) menuChip.innerHTML = cardChip(c);
         
         document.getElementById("detail-title").textContent = c.bank.split(" ")[0] + " " + c.nick;
         document.getElementById("detail-bank").textContent = c.bank;
         document.getElementById("detail-card-label").textContent = c.nick + (c.last4 ? " \u2022\u2022\u2022\u2022 " + c.last4 : "");
         document.getElementById("detail-balance").textContent = fmtLKR(c.balance, 2);
-        document.getElementById("detail-remaining").textContent = fmtLKR(rem);
+        var overLimit = rem < 0;
+        var elRemaining = document.getElementById("detail-remaining");
+        elRemaining.textContent = fmtLKR(Math.abs(rem));
+        elRemaining.className = "text-[12px] font-semibold num " + (overLimit ? "text-error" : "text-on-surface");
+        document.getElementById("detail-remaining-label").textContent = overLimit ? "over its" : "remaining of";
         document.getElementById("detail-limit-val").textContent = fmtLKR(c.limit);
-        document.getElementById("detail-util-pct").textContent = util.toFixed(0) + "% (Target < 30%)";
+        // The bar stops at 100%, the figure shows the real share
+        document.getElementById("detail-util-pct").textContent = (c.limit > 0 ? (c.balance / c.limit) * 100 : 0).toFixed(0) + "% (Target < 30%)";
+        var trapDesc = document.getElementById("ps-trap-desc");
+        if (trapDesc) {
+            var trapRule = cardMinRule(c);
+            var minText = "the " + +(trapRule.pct * 100).toFixed(1) + "% minimum" + (trapRule.floor ? " (at least " + fmtLKR(trapRule.floor) + ")" : "");
+            var realApr = parseFloat(c.apr) > 0 ? parseFloat(c.apr) : 28;
+            trapDesc.textContent = c.isZeroPercent
+                ? "0% plan: no interest now, but paying only " + minText + " stretches repayment for years, and " + +realApr.toFixed(1) + "% APR applies once the plan ends."
+                : "Paying only " + minText + " keeps you paying " + +cardApr(c).toFixed(1) + "% APR for years.";
+        }
         
         var iconWrap = document.getElementById("detail-bank-icon");
         if (iconWrap) {
-            iconWrap.className = "w-7 h-7 rounded-lg flex items-center justify-center " + theme.iconBg + " " + theme.iconText;
+            iconWrap.className = "w-7 h-7 rounded-lg flex items-center justify-center " + theme.bg + " " + theme.icon;
         }
         
         var utilDot = document.getElementById("detail-util-dot");
         if (utilDot) {
-            utilDot.className = "w-1.5 h-1.5 rounded-full " + theme.barFill;
+            utilDot.className = "w-1.5 h-1.5 rounded-full " + theme.bar;
         }
 
         var aprBadge = document.getElementById("btn-info-apr");
@@ -5484,7 +5563,7 @@ var checkSnowball = document.getElementById('check-snowball');
 
         var fill = document.getElementById("detail-util-fill");
         fill.style.width = util.toFixed(1) + "%";
-        fill.className = "h-full rounded-full transition-all duration-500 " + theme.barFill;
+        fill.className = "h-full rounded-full transition-all duration-500 " + theme.bar;
 
         var minPmt = minPaymentFor(c);
         var sl = document.getElementById("ps-slider");
@@ -5521,7 +5600,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var d = parseYmd(s);
         return d.getDate() + ' ' + d.toLocaleString('en-US', { month: 'short' });
       }
-      function cardName(c) { return c.bank.split(' ')[0] + ' ' + c.nick; }
+
       function ordinal(n) {
         var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
         return n + (s[(v - 20) % 10] || s[v] || s[0]);
@@ -5654,7 +5733,7 @@ var checkSnowball = document.getElementById('check-snowball');
           change = '<p class="text-[11px] font-semibold ' + (pct > 0 ? 'text-error' : 'text-emerald-700') + '">' + (pct > 0 ? '▲ ' : pct < 0 ? '▼ ' : '') + Math.abs(pct) + '% vs last period</p>';
         }
         var html = '<div class="flex justify-between items-start gap-3">' +
-          '<div class="min-w-0"><h3 id="spend-title" class="text-[18px] font-semibold text-on-surface">Spending</h3>' +
+          '<div class="min-w-0"><h3 id="spend-title" class="text-[18px] font-semibold text-on-surface flex items-center gap-2"><span class="w-1 h-5 rounded-full" style="background:var(--card-accent)" aria-hidden="true"></span>Spending</h3>' +
           '<p class="text-[11px] font-semibold text-secondary mt-0.5">' + shortDate(period.start) + ' – ' + shortDate(period.end) + ' · ' + when + '</p>' +
           (period.hasCycle ? '' : '<button type="button" data-act="billing" class="text-[11px] font-bold text-primary mt-0.5">Set billing cycle</button>') + '</div>' +
           '<div class="text-right shrink-0"><p id="spend-total" class="text-[20px] font-bold text-on-surface num leading-tight">' + fmtAmt(cur.spent) + '</p>' + change +
@@ -5814,6 +5893,11 @@ var checkSnowball = document.getElementById('check-snowball');
         ov._returnFocus = null;
         if (back && typeof back.focus === 'function' && document.body.contains(back)) back.focus();
       }
+      // "On ● Sampath Visa Platinum" line at the top of a sheet, and the sheet's accent colour
+      function sheetCardLine(card, id) {
+        return '<p' + (id ? ' id="' + id + '"' : '') + ' class="-mt-1 mb-4"><span class="sr-only">On </span>' + cardChip(card) + '</p>';
+      }
+      function setSheetAccent(card) { applyCardAccent(document.getElementById('spend-sheet'), card); }
       function focusLater(id) {
         setTimeout(function () { var f = document.getElementById(id); if (f) f.focus(); }, 280);
       }
@@ -5897,10 +5981,11 @@ var checkSnowball = document.getElementById('check-snowball');
           html += '<p class="' + LABEL + '" id="log-card-label">Card</p><div id="log-cards" role="radiogroup" aria-labelledby="log-card-label" class="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-4">' +
             cards.map(function (c) {
               var on = String(c.id) === String(card.id);
-              return '<button type="button" role="radio" aria-checked="' + on + '" data-card="' + escapeHtml(c.id) + '" class="spend-chip shrink-0' + (on ? ' is-on' : '') + '">' + escapeHtml(cardName(c)) + '</button>';
+              var t = cardTheme(c);
+              return '<button type="button" role="radio" aria-checked="' + on + '" data-card="' + escapeHtml(c.id) + '" style="--chip-accent:' + t.hex + ';--chip-soft:' + t.soft + '" class="spend-chip shrink-0' + (on ? ' is-on' : '') + '">' + cardDot(c, 8) + escapeHtml(cardName(c)) + '</button>';
             }).join('') + '</div>';
         } else {
-          html += '<p id="log-card-name" class="text-[12px] font-semibold text-secondary -mt-1 mb-4">On ' + escapeHtml(cardName(card)) + '</p>';
+          html += sheetCardLine(card, 'log-card-name');
         }
         if (!editing) {
           html += '<div class="mb-4"><button type="button" id="log-sms-toggle" aria-expanded="' + !!opts.sms + '" aria-controls="log-sms-box" class="text-[12px] font-bold text-primary flex items-center gap-1">' +
@@ -5937,6 +6022,7 @@ var checkSnowball = document.getElementById('check-snowball');
           : '<div class="flex gap-3 mt-5"><button type="button" id="log-save-another" class="' + BTN_SECONDARY + '">Save &amp; add another</button>' +
             '<button type="button" id="log-save" class="' + BTN_PRIMARY + '">Save</button></div>';
 
+        setSheetAccent(card);
         openSpendSheet(editing ? 'Edit entry' : 'Log spending', html, function () {
           var amountEl = document.getElementById('log-amount');
           var merchantEl = document.getElementById('log-merchant');
@@ -5966,7 +6052,7 @@ var checkSnowball = document.getElementById('check-snowball');
           }
           bindChoice(document.getElementById('log-types'), 'data-type', setType);
           bindChoice(catsEl, 'data-cat', function (k) { logState.category = k; });
-          bindChoice(document.getElementById('log-cards'), 'data-card', function (id) { logState.cardId = findCard(id).id; updateWarn(); });
+          bindChoice(document.getElementById('log-cards'), 'data-card', function (id) { var c = findCard(id); logState.cardId = c.id; setSheetAccent(c); updateWarn(); });
           amountEl.addEventListener('input', updateWarn);
           merchantEl.addEventListener('change', function () { categoryFor(merchantEl.value); });
           attachSuggest(merchantEl, {
@@ -6003,8 +6089,9 @@ var checkSnowball = document.getElementById('check-snowball');
               if (match) {
                 logState.cardId = match.id;
                 setChoice(document.getElementById('log-cards'), 'data-card', match.id);
+                setSheetAccent(match);
                 var nameEl = document.getElementById('log-card-name');
-                if (nameEl) nameEl.textContent = 'On ' + cardName(match);
+                if (nameEl) nameEl.innerHTML = '<span class="sr-only">On </span>' + cardChip(match);
                 filled.push('card');
               } else {
                 note = ' This SMS is for a card ending ' + r.last4 + '. Add those digits in Edit Card to match it next time.';
@@ -6107,7 +6194,7 @@ var checkSnowball = document.getElementById('check-snowball');
           : type === 'adjustment' ? 'Adjustment saved' : 'Logged ' + fmtAmt(amt) + (merchant ? ' at ' + merchant : '');
         var cardId = card.id, entryId = entry.id;
         window.showToast((editingWas ? 'Entry updated' : what) + (warn ? '. ' + warn : ''), warn ? 'warning' : 'percent',
-          editingWas ? null : { actionLabel: 'Undo', onAction: function () { undoAdd(cardId, entryId); } });
+          editingWas ? { card: card } : { card: card, actionLabel: 'Undo', onAction: function () { undoAdd(cardId, entryId); } });
 
         if (addAnother) {
           ['log-amount', 'log-merchant', 'log-note', 'log-sms'].forEach(function (id) { var f = document.getElementById(id); if (f) f.value = ''; });
@@ -6132,7 +6219,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var cardId = card.id, back = logState.returnTo;
         closeSpendSheet();
         if (back === 'history') openHistorySheet(cardId);
-        window.showToast('Entry deleted', 'info', { actionLabel: 'Undo', onAction: function () {
+        window.showToast('Entry deleted', 'info', { card: card, actionLabel: 'Undo', onAction: function () {
           var c = findCard(cardId);
           if (!c) return;
           if (!Array.isArray(c.ledger)) c.ledger = [];
@@ -6167,10 +6254,11 @@ var checkSnowball = document.getElementById('check-snowball');
       function announceRecurring(posted, prefix) {
         var total = posted.reduce(function (s, p) { return s + p.entry.amount; }, 0);
         var card = findCard(posted[0].cardId);
+        var oneCard = posted.every(function (p) { return String(p.cardId) === String(posted[0].cardId); });
         var msg = posted.length === 1
           ? posted[0].item.name + ' ' + fmtAmt(total) + ' added to ' + (card ? cardName(card) : 'your card')
           : posted.length + ' recurring charges added (' + fmtAmt(total) + ')';
-        window.showToast((prefix || '') + msg, 'calendar', { actionLabel: 'Undo', onAction: function () { undoRecurring(posted); } });
+        window.showToast((prefix || '') + msg, 'calendar', { card: oneCard ? card : null, actionLabel: 'Undo', onAction: function () { undoRecurring(posted); } });
       }
 
       // Posts every due recurring charge on every card. Runs once this account's cloud copy is
@@ -6201,7 +6289,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var today = ymd(new Date());
         var gone = item && isCancelled(item, today);
         var state = { category: item ? (item.category || 'subscriptions') : 'subscriptions' };
-        var html = '<p class="text-[12px] font-semibold text-secondary -mt-1 mb-4">On ' + escapeHtml(cardName(card)) + '</p>';
+        var html = sheetCardLine(card);
         if (item) {
           var next = recurringNextDue(item, today);
           html += '<p class="text-[12px] rounded-lg bg-surface-container-low px-3 py-2 mb-4 text-on-surface-variant">' +
@@ -6238,6 +6326,7 @@ var checkSnowball = document.getElementById('check-snowball');
             '<button type="button" id="rec-save" class="w-full mt-3 h-12 rounded-full bg-primary-container text-white text-[14px] font-bold hover:bg-primary-container/90 active:scale-[0.98] transition-all shadow-sm">Save changes</button>';
         }
 
+        setSheetAccent(card);
         openSpendSheet(item ? 'Recurring payment' : 'Add recurring payment', html, function () {
           var nameEl = document.getElementById('rec-name'), dayEl = document.getElementById('rec-day');
           var catsEl = document.getElementById('rec-cats');
@@ -6321,7 +6410,7 @@ var checkSnowball = document.getElementById('check-snowball');
         commitSpending();
         closeSpendSheet();
         if (posted.length) announceRecurring(posted, name + ' added. ');
-        else window.showToast(name + ' added. ' + fmtAmt(amount) + ' will be logged on the ' + ordinal(day) + ' of each month.', 'calendar');
+        else window.showToast(name + ' added. ' + fmtAmt(amount) + ' will be logged on the ' + ordinal(day) + ' of each month.', 'calendar', { card: card });
       }
 
       function toggleRecurringPause(cardId, itemId) {
@@ -6360,7 +6449,7 @@ var checkSnowball = document.getElementById('check-snowball');
         if (!card) return;
         var cur = periodSummary(card, billingPeriod(card, ymd(new Date())));
         var budgets = card.budgets || {};
-        var html = '<p class="text-[12px] text-secondary -mt-1 mb-4 leading-relaxed">A monthly limit per category on ' + escapeHtml(cardName(card)) + '. Leave blank for no budget. You’ll get a warning at 80% and when you go over.</p>' +
+        var html = sheetCardLine(card) + '<p class="text-[12px] text-secondary -mt-1 mb-4 leading-relaxed">A monthly limit per category on this card. Leave blank for no budget. You’ll get a warning at 80% and when you go over.</p>' +
           '<div class="space-y-2">' + SPEND_CATEGORIES.map(function (c) {
             return '<div class="flex items-center gap-3"><span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + c.bg + ' ' + c.text + '"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">' + c.icon + '</span></span>' +
               '<label for="bud-' + c.key + '" class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface">' + escapeHtml(c.label) + '</span>' +
@@ -6369,6 +6458,7 @@ var checkSnowball = document.getElementById('check-snowball');
           }).join('') + '</div>' +
           '<p id="bud-error" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
           '<div class="flex gap-3 mt-5"><button type="button" id="bud-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="bud-save" class="' + BTN_PRIMARY + '">Save budgets</button></div>';
+        setSheetAccent(card);
         openSpendSheet('Category budgets', html, function (body) {
           document.getElementById('bud-cancel').addEventListener('click', closeSpendSheet);
           document.getElementById('bud-save').addEventListener('click', function () {
@@ -6383,7 +6473,7 @@ var checkSnowball = document.getElementById('check-snowball');
             card.budgets = next;
             commitSpending();
             closeSpendSheet();
-            window.showToast(Object.keys(next).length ? 'Budgets saved' : 'Budgets cleared', 'percent');
+            window.showToast(Object.keys(next).length ? 'Budgets saved' : 'Budgets cleared', 'percent', { card: card });
           });
         });
       }
@@ -6406,7 +6496,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var card = findCard(cardId);
         if (!card) return;
         var SEL = 'stitch-select h-10 text-[13px]';
-        var html = '<p class="text-[12px] font-semibold text-secondary -mt-1 mb-3">' + escapeHtml(cardName(card)) + '</p>' +
+        var html = sheetCardLine(card) +
           '<label for="hist-q" class="sr-only">Search</label><input id="hist-q" type="search" autocomplete="off" placeholder="Search merchant or note" class="stitch-input h-10 text-[13px] mb-2">' +
           '<div class="grid grid-cols-2 gap-2 mb-3"><label class="sr-only" for="hist-type">Type</label><select id="hist-type" class="' + SEL + '">' +
           '<option value="">All types</option><option value="purchase">Purchases</option><option value="payment">Payments</option><option value="refund">Refunds</option><option value="adjustment">Adjustments</option></select>' +
@@ -6415,6 +6505,7 @@ var checkSnowball = document.getElementById('check-snowball');
           '<div id="hist-list"></div>' +
           '<button type="button" id="hist-export" class="w-full mt-4 h-11 rounded-full border border-outline-variant text-[13px] font-semibold text-on-surface flex items-center justify-center gap-1.5 hover:bg-surface-container active:scale-[0.98] transition-all">' +
           '<span class="material-symbols-outlined text-[18px]" aria-hidden="true">download</span>Export CSV</button>';
+        setSheetAccent(card);
         openSpendSheet('Spending history', html, function (body) {
           var q = document.getElementById('hist-q'), ft = document.getElementById('hist-type'), fc = document.getElementById('hist-cat');
           function paint() {
@@ -6474,13 +6565,14 @@ var checkSnowball = document.getElementById('check-snowball');
       function openMatchSheet(cardId) {
         var card = findCard(cardId);
         if (!card) return;
-        var html = '<p class="text-[13px] text-secondary -mt-1 mb-4 leading-relaxed">Enter the outstanding balance from your latest statement or banking app for ' + escapeHtml(cardName(card)) + '. The difference is logged as an adjustment, so your history still adds up.</p>' +
+        var html = sheetCardLine(card) + '<p class="text-[13px] text-secondary -mt-1 mb-4 leading-relaxed">Enter the outstanding balance from your latest statement or banking app. The difference is logged as an adjustment, so your history still adds up.</p>' +
           '<label for="match-amount" class="' + LABEL + '">Actual balance</label><div class="relative">' +
           '<span class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-secondary">LKR</span>' +
           '<input id="match-amount" type="text" inputmode="decimal" autocomplete="off" class="stitch-input h-14 pl-14 text-[20px] font-bold num" value="' + (Number(card.balance) || 0) + '"></div>' +
           '<p id="match-diff" class="text-[12px] text-secondary mt-2" aria-live="polite">The app shows ' + fmtAmt(Number(card.balance) || 0) + '.</p>' +
           '<p id="match-error" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
           '<div class="flex gap-3 mt-5"><button type="button" id="match-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="match-save" class="' + BTN_PRIMARY + '">Update balance</button></div>';
+        setSheetAccent(card);
         openSpendSheet('Match my statement', html, function () {
           var inp = document.getElementById('match-amount');
           inp.addEventListener('input', function () {
@@ -6498,7 +6590,7 @@ var checkSnowball = document.getElementById('check-snowball');
             var entry = logSystemEntry(card, 'adjustment', d, 'Matched to statement');
             afterBalanceChange(card);
             commitSpending();
-            window.showToast('Balance updated to ' + fmtAmt(card.balance), 'percent', { actionLabel: 'Undo', onAction: function () { undoAdd(card.id, entry.id, 'Balance restored'); } });
+            window.showToast('Balance updated to ' + fmtAmt(card.balance), 'percent', { card: card, actionLabel: 'Undo', onAction: function () { undoAdd(card.id, entry.id, 'Balance restored'); } });
           });
           focusLater('match-amount');
         });
@@ -6526,7 +6618,8 @@ var checkSnowball = document.getElementById('check-snowball');
           if (overs.length) {
             overs.sort(function (a, b) { return (b.spent - b.budget) - (a.spent - a.budget); });
             var o = overs[0];
-            document.getElementById('home-alert-budget-title').textContent = 'Over budget: ' + spendCategory(o.cat).label + ' on ' + cardName(o.card);
+            document.getElementById('home-alert-budget-title').textContent = 'Over budget: ' + spendCategory(o.cat).label;
+            document.getElementById('home-alert-budget-card').innerHTML = cardChip(o.card);
             document.getElementById('home-alert-budget-text').textContent = fmtAmt(o.spent) + ' spent of a ' + fmtAmt(o.budget) + ' budget this period' + (overs.length > 1 ? ' · ' + (overs.length - 1) + ' more over budget' : '');
             document.getElementById('home-alert-budget-btn').onclick = function () { goDetail(o.card.id); };
             count++;
@@ -6537,7 +6630,10 @@ var checkSnowball = document.getElementById('check-snowball');
           elR.classList.toggle('hidden', !dues.length);
           if (dues.length) {
             document.getElementById('home-alert-recurring-title').textContent = dues.length === 1 ? 'Recurring charge due tomorrow' : dues.length + ' recurring charges due tomorrow';
-            document.getElementById('home-alert-recurring-text').textContent = dues.slice(0, 2).map(function (d) { return d.item.name + ' ' + fmtAmt(Number(d.item.amount) || 0) + ' on ' + cardName(d.card); }).join(' · ') + (dues.length > 2 ? ' · +' + (dues.length - 2) + ' more' : '');
+            document.getElementById('home-alert-recurring-text').textContent = dues.slice(0, 2).map(function (d) { return d.item.name + ' ' + fmtAmt(Number(d.item.amount) || 0); }).join(' · ') + (dues.length > 2 ? ' · +' + (dues.length - 2) + ' more' : '');
+            var dueCards = [];
+            dues.forEach(function (d) { if (dueCards.indexOf(d.card) === -1) dueCards.push(d.card); });
+            document.getElementById('home-alert-recurring-card').innerHTML = '<span class="flex flex-wrap gap-1.5">' + dueCards.map(cardChip).join('') + '</span>';
             document.getElementById('home-alert-recurring-btn').onclick = function () { goDetail(dues[0].card.id); };
             count++;
           }
@@ -6594,6 +6690,25 @@ var checkSnowball = document.getElementById('check-snowball');
 
       function runPayoffSim(card, payment) {
         var balance = card.balance;
+        var paidOff = !(balance > 0);
+        var sliderEl = document.getElementById("ps-slider");
+        var saveTargetBtn = document.getElementById("btn-save-target");
+        if (sliderEl) sliderEl.disabled = paidOff;
+        if (saveTargetBtn) {
+          saveTargetBtn.disabled = paidOff;
+          saveTargetBtn.classList.toggle("opacity-50", paidOff);
+          saveTargetBtn.classList.toggle("pointer-events-none", paidOff);
+        }
+        if (paidOff) {
+          document.getElementById("ps-min-duration").textContent = "Paid off";
+          document.getElementById("ps-min-interest").textContent = fmtLKR(0);
+          document.getElementById("ps-plan-duration").textContent = "Paid off";
+          document.getElementById("ps-plan-interest").textContent = fmtLKR(0);
+          document.getElementById("ps-payment-display").textContent = fmtLKR(0) + " / mo";
+          document.getElementById("ps-savings-tag").textContent = "";
+          document.getElementById("ps-impact-headline").textContent = "This card is fully paid off. Nothing to pay this month.";
+          return;
+        }
         var minPmt = minPaymentFor(card);
         var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
         document.getElementById("ps-min-duration").textContent =
@@ -6854,6 +6969,15 @@ var checkSnowball = document.getElementById('check-snowball');
           }
       }
 
+      // A native <select> can't show colours, so the chosen saved card is shown as a chip under it
+      function syncSimCardChip(select, chipId) {
+          const chip = document.getElementById(chipId);
+          if (!select || !chip) return;
+          const c = select.value !== 'custom' ? findCard(select.value) : null;
+          chip.classList.toggle('hidden', !c);
+          chip.innerHTML = c ? cardChip(c) : '';
+      }
+
       function bindSimulatorEvents() {
           const dropdown = document.getElementById('sim-data-source');
           const inputBalance = document.getElementById('sim-input-balance');
@@ -6861,6 +6985,7 @@ var checkSnowball = document.getElementById('check-snowball');
           const presetsContainer = document.getElementById('sim-presets-container');
           
           if (dropdown) {
+              dropdown.addEventListener('change', function() { syncSimCardChip(dropdown, 'sim-card-chip'); });
               dropdown.addEventListener('change', function() {
                   const isCustom = (this.value === 'custom');
                   
@@ -6888,6 +7013,7 @@ var checkSnowball = document.getElementById('check-snowball');
           
           const advDropdown = document.getElementById('sim-adv-data-source');
           if (advDropdown) {
+              advDropdown.addEventListener('change', function() { syncSimCardChip(advDropdown, 'sim-adv-card-chip'); });
               advDropdown.addEventListener('change', function(e) {
                   const isCustom = e.target.value === 'custom';
                   
@@ -7927,6 +8053,8 @@ renderSpaces();
               if (card && cardNameEl) {
                   cardNameEl.textContent = `${card.bank} ${card.nick}`;
               }
+              const chipEl = document.getElementById('delete-card-chip');
+              if (card && chipEl) chipEl.innerHTML = cardChip(card);
           }
           
           if (modal) modal.classList.remove('hidden');
@@ -7970,6 +8098,8 @@ renderSpaces();
               if (card) {
                   if (cardNameEl) cardNameEl.textContent = `${card.bank} ${card.nick}`;
                   if (confirmBtn) confirmBtn.dataset.targetId = card.id;
+                  const chipEl = document.getElementById('settle-card-chip');
+                  if (chipEl) chipEl.innerHTML = cardChip(card);
               }
           }
           
@@ -8020,7 +8150,7 @@ renderSpaces();
                   
                   // Fire toast notification
                   if (typeof window.showToast === 'function') {
-                      window.showToast(`Balance settled for ${card.bank} ${card.nick}`, 'trophy');
+                      window.showToast(`Balance settled for ${card.bank} ${card.nick}`, 'trophy', { card: card });
                   }
               }
           }
@@ -8037,6 +8167,8 @@ renderSpaces();
           
           const saveBtn = document.getElementById('btn-save-billing');
           if (saveBtn) saveBtn.dataset.targetId = card.id;
+          const billingChip = document.getElementById('billing-card-chip');
+          if (billingChip) billingChip.innerHTML = cardChip(card);
           
           const inputStatement = document.getElementById('input-billing-statement');
           const inputDue = document.getElementById('input-billing-due');
@@ -8123,27 +8255,8 @@ renderSpaces();
                   const editErr = document.getElementById('edit-modal-error');
                   if (editErr) editErr.classList.add('hidden');
                   
-                  const colorMap = {
-                    'teal': { text: 'Teal (default)', bg: 'bg-teal-500' },
-                    'rose': { text: 'Rose', bg: 'bg-rose-500' },
-                    'amber': { text: 'Amber / Gold', bg: 'bg-amber-500' },
-                    'emerald': { text: 'Emerald', bg: 'bg-emerald-500' },
-                    'violet': { text: 'Violet', bg: 'bg-violet-500' },
-                    'sky': { text: 'Sky Blue', bg: 'bg-sky-500' },
-                    'slate': { text: 'Slate / Titanium', bg: 'bg-slate-600' },
-                    'indigo': { text: 'Indigo / Navy', bg: 'bg-indigo-600' },
-                    'red': { text: 'Crimson / Ruby', bg: 'bg-red-600' },
-                    'fuchsia': { text: 'Fuchsia / Magenta', bg: 'bg-fuchsia-500' },
-                    'cyan': { text: 'Cyan / Ocean', bg: 'bg-cyan-500' }
-                  };
-                  const colorKey = currentViewedCard.color || 'teal';
-                  const colorObj = colorMap[colorKey];
-                  
-                  if (colorObj) {
-                      document.getElementById('edit-input-color').value = colorKey;
-                      document.getElementById('edit-selected-color-text').innerText = colorObj.text;
-                      document.getElementById('edit-selected-color-swatch').className = 'w-4 h-4 rounded-full shadow-sm ' + colorObj.bg;
-                  }
+                  const colorKey = CARD_THEMES[currentViewedCard.color] ? currentViewedCard.color : 'teal';
+                  window.selectEditColor(colorKey, CARD_THEMES[colorKey].name, CARD_THEMES[colorKey].bar);
               }
           }
 
@@ -8211,7 +8324,6 @@ renderSpaces();
           if (!bank || !nick) return showErr('Please enter the bank name and card tier.');
           if (isNaN(limit) || limit <= 0) return showErr('Please enter a valid credit limit.');
           if (balanceStr === '' || isNaN(balance) || balance < 0) return showErr('Please enter a valid outstanding balance.');
-          if (balance > limit) return showErr('Balance cannot exceed the credit limit.');
           if (!isZeroPercent && (isNaN(apr) || apr <= 0 || apr > 60)) return showErr('APR must be between 0.1% and 60%.');
           if (last4 && !/^\d{4}$/.test(last4)) return showErr('Last 4 digits must be exactly 4 numbers.');
           if (errEl) errEl.classList.add('hidden');
@@ -8244,7 +8356,9 @@ renderSpaces();
           window.renderDashboard();
           
           if (typeof window.showToast === 'function') {
-              window.showToast(isZeroPercent ? '0% Installment Plan applied' : 'Card details updated', isZeroPercent ? 'percent' : 'info');
+              // Over the limit is allowed (cards do go over); say so rather than refusing to save
+              if (card.balance > card.limit) window.showToast('Saved. This card is ' + fmtLKR(card.balance - card.limit) + ' over its limit.', 'warning', { card: card });
+              else window.showToast(isZeroPercent ? '0% Installment Plan applied' : 'Card details updated', isZeroPercent ? 'percent' : 'info', { card: card });
           }
           closeEditCardModal();
       };
@@ -8649,7 +8763,8 @@ renderSpaces();
       return { init: init, psSetSlider: psSetSlider, saveTargetPayment: saveTargetPayment, calcCashAdvance: calcCashAdvanceUI, calcSurcharge: calcSurchargeUI, setSCTenure: setSCTenure, setCloudData: setCloudData, saveUserData: saveUserData,
         getState: function () { return { cards: cards, spaces: spaces }; }, openAddCard: openModal, goDetail: goDetail,
         quickLog: quickLog, openLogSheet: openLogSheet, closeSpendSheet: closeSpendSheet, runRecurring: runRecurring, ledgerCsv: function (id) { var c = findCard(id); return c ? ledgerCsv(c) : ''; },
-        setCloudReady: function (v) { cloudReady = !!v; if (cloudReady) runRecurring(); }, isCloudReady: function () { return cloudReady; } };
+        setCloudReady: function (v) { cloudReady = !!v; if (cloudReady) runRecurring(); }, isCloudReady: function () { return cloudReady; },
+        isOwnWrite: function (stamp) { return ownWrites.indexOf(stamp) !== -1; } };
     })();
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -9234,6 +9349,7 @@ renderSpaces();
           </div>
           <!-- Modal Title -->
           <h3 class="text-lg font-bold text-slate-900 mb-2">Delete this card?</h3>
+          <div id="delete-card-chip" class="mb-3 max-w-full"></div>
           <!-- Modal Description -->
           <p class="text-sm text-slate-500 mb-6 leading-relaxed">
 This action cannot be undone. The spending history, recurring payments, budgets and payoff plan for <span class="font-medium text-slate-700" id="delete-modal-card-name">the selected card</span> will be permanently erased.
@@ -9259,6 +9375,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           </div>
           <!-- Modal Title -->
           <h3 class="text-lg font-bold text-slate-900 mb-2">Settle this card?</h3>
+          <div id="settle-card-chip" class="mb-3 max-w-full"></div>
           <!-- Modal Description -->
           <p class="text-sm text-slate-500 mb-6 leading-relaxed">
               This will update the outstanding balance of <span class="font-medium text-slate-700" id="modal-settle-card-name">the selected card</span> to zero.
@@ -9284,6 +9401,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
         </button>
       </div>
+      <div id="billing-card-chip" class="-mt-3 mb-5"></div>
       <div class="flex flex-col gap-5">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">STATEMENT GENERATION (DAY OF MONTH)</label>
@@ -9317,6 +9435,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
                   <span class="material-symbols-outlined text-xl leading-none">close</span>
               </button>
           </div>
+          <div id="edit-card-chip" class="-mt-3 mb-5" aria-live="polite"></div>
           
           <div class="space-y-4 mb-6">
               <div>
@@ -9349,47 +9468,47 @@ This action cannot be undone. The spending history, recurring payments, budgets 
                       </svg>
                     </button>
                     <div id="edit-color-dropdown-menu" class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden">
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('teal', 'Teal (default)', 'bg-teal-500')">
+                      <div data-color="teal" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('teal', 'Teal (default)', 'bg-teal-500')">
                         <div class="w-4 h-4 rounded-full bg-teal-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Teal (default)</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('rose', 'Rose', 'bg-rose-500')">
+                      <div data-color="rose" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('rose', 'Rose', 'bg-rose-500')">
                         <div class="w-4 h-4 rounded-full bg-rose-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Rose</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('amber', 'Amber / Gold', 'bg-amber-500')">
+                      <div data-color="amber" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('amber', 'Amber / Gold', 'bg-amber-500')">
                         <div class="w-4 h-4 rounded-full bg-amber-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Amber / Gold</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('emerald', 'Emerald', 'bg-emerald-500')">
+                      <div data-color="emerald" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('emerald', 'Emerald', 'bg-emerald-500')">
                         <div class="w-4 h-4 rounded-full bg-emerald-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Emerald</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('violet', 'Violet', 'bg-violet-500')">
+                      <div data-color="violet" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('violet', 'Violet', 'bg-violet-500')">
                         <div class="w-4 h-4 rounded-full bg-violet-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Violet</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('sky', 'Sky Blue', 'bg-sky-500')">
+                      <div data-color="sky" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('sky', 'Sky Blue', 'bg-sky-500')">
                         <div class="w-4 h-4 rounded-full bg-sky-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Sky Blue</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('slate', 'Slate / Titanium', 'bg-slate-600')">
+                      <div data-color="slate" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('slate', 'Slate / Titanium', 'bg-slate-600')">
                         <div class="w-4 h-4 rounded-full bg-slate-600 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Slate / Titanium</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('indigo', 'Indigo / Navy', 'bg-indigo-600')">
+                      <div data-color="indigo" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('indigo', 'Indigo / Navy', 'bg-indigo-600')">
                         <div class="w-4 h-4 rounded-full bg-indigo-600 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Indigo / Navy</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('red', 'Crimson / Ruby', 'bg-red-600')">
+                      <div data-color="red" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('red', 'Crimson / Ruby', 'bg-red-600')">
                         <div class="w-4 h-4 rounded-full bg-red-600 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Crimson / Ruby</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('fuchsia', 'Fuchsia / Magenta', 'bg-fuchsia-500')">
+                      <div data-color="fuchsia" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('fuchsia', 'Fuchsia / Magenta', 'bg-fuchsia-500')">
                         <div class="w-4 h-4 rounded-full bg-fuchsia-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Fuchsia / Magenta</span>
                       </div>
-                      <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('cyan', 'Cyan / Ocean', 'bg-cyan-500')">
+                      <div data-color="cyan" role="option" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer" onclick="selectEditColor('cyan', 'Cyan / Ocean', 'bg-cyan-500')">
                         <div class="w-4 h-4 rounded-full bg-cyan-500 shadow-sm"></div>
                         <span class="text-sm text-slate-700 font-medium">Cyan / Ocean</span>
                       </div>
@@ -9818,13 +9937,15 @@ This action cannot be undone. The spending history, recurring payments, budgets 
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0" />
               </svg>
           </div>
+          <span id="toast-card-dot" class="hidden w-2.5 h-2.5 rounded-full shrink-0" aria-hidden="true"></span>
           <span id="toast-message" class="text-sm font-bold text-slate-800"></span>
           <button type="button" id="toast-action" class="hidden pointer-events-auto shrink-0 -my-1 h-9 px-3 rounded-full text-[13px] font-bold text-emerald-700 hover:bg-emerald-50 active:scale-95 transition-all"></button>
       </div>
   </div>
 
   <script>
-    // opts: { actionLabel, onAction, duration } adds a button such as Undo and keeps the toast up longer
+    // opts: { actionLabel, onAction, duration } adds a button such as Undo and keeps the toast up longer;
+    // opts.card shows that card's colour dot beside the message
     window.showToast = function(message, type, opts) {
         const toast = document.getElementById('toast-notification');
         const toastMsg = document.getElementById('toast-message');
@@ -9833,6 +9954,11 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         if (!toast || !toastMsg || !iconContainer) return;
         opts = opts || {};
         toastMsg.innerText = message;
+        const cardDotEl = document.getElementById('toast-card-dot');
+        if (cardDotEl) {
+            cardDotEl.classList.toggle('hidden', !opts.card);
+            cardDotEl.style.background = opts.card && typeof cardTheme === 'function' ? cardTheme(opts.card).hex : '';
+        }
         function hide() {
             toast.classList.remove('opacity-100', 'translate-y-6', 'scale-100');
             toast.classList.add('opacity-0', '-translate-y-full', 'scale-95');
@@ -9921,11 +10047,27 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     window.selectEditColor = function(value, text, bgClass) {
         document.getElementById('edit-input-color').value = value;
         document.getElementById('edit-selected-color-text').innerText = text;
-        
+
         const swatch = document.getElementById('edit-selected-color-swatch');
         swatch.className = 'w-4 h-4 rounded-full shadow-sm ' + bgClass;
-        
-        document.getElementById('edit-color-dropdown-menu').classList.add('hidden');
+
+        const menu = document.getElementById('edit-color-dropdown-menu');
+        menu.classList.add('hidden');
+        // Mark the chosen row and preview the colour on the card chip before saving
+        menu.querySelectorAll('[data-color]').forEach(function (row) {
+            const on = row.getAttribute('data-color') === value;
+            row.setAttribute('aria-selected', on ? 'true' : 'false');
+            row.classList.toggle('bg-emerald-50', on);
+            let tick = row.querySelector('.color-tick');
+            if (on && !tick) row.insertAdjacentHTML('beforeend', '<span class="color-tick material-symbols-outlined text-[18px] text-emerald-600 ml-auto" aria-hidden="true">check</span>');
+            if (!on && tick) tick.remove();
+        });
+        const chip = document.getElementById('edit-card-chip');
+        if (chip) {
+            const bank = document.getElementById('edit-input-bank').value.trim() || 'Card';
+            const nick = document.getElementById('edit-input-tier').value.trim();
+            chip.innerHTML = cardChip({ bank: bank, nick: nick, color: value });
+        }
     };
     
     window.toggleCreateSpaceColorDropdown = function(e) {
@@ -10126,9 +10268,10 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         ],
         'screen-detail': [
           { id: 'card-menu-container', title: 'Card actions', body: 'Edit the card, mark its balance as settled, set its billing cycle or delete it.' },
-          { id: 'btn-log-spend', title: 'Log what you spend', body: 'Log purchases and payments, or paste a bank SMS. The balance and your plan update as you go, and recurring payments add themselves each month.' },
+
           { id: 'tab-payoff', parent: true, title: 'Card calculators', body: 'Payoff timeline, cash-advance cost and the real cost of 0% plans, all worked out for this card.' },
-          { id: 'btn-save-target', title: 'Commit a monthly payment', body: 'Save an amount for this card and your plan will always give it at least that much.' }
+          { id: 'btn-save-target', title: 'Commit a monthly payment', body: 'Save an amount for this card and your plan will always give it at least that much.' },
+          { id: 'btn-log-spend', title: 'Log what you spend', body: 'Log purchases and payments, or paste a bank SMS. The balance and your plan update as you go, and recurring payments add themselves each month.' }
         ],
         'screen-simulators': [
           { id: 'tab-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves.' },
@@ -11144,6 +11287,42 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       App.setCloudReady(true);
       // Creates the document for new accounts and pushes newer edits made on this device
       await App.saveUserData();
+      startLiveSync(user);
+    }
+
+    /* ── Live sync: edits made on another device arrive while this one is open ──
+       The server copy is the truth: any snapshot that isn't this device's own write replaces
+       local data. Device clocks are never compared, so a phone with a wrong time can't lose edits. */
+    var _liveUnsub = null, _liveUid = null;
+    function stopLiveSync() {
+      if (_liveUnsub) { try { _liveUnsub(); } catch (e) {} }
+      _liveUnsub = null;
+      _liveUid = null;
+    }
+    function startLiveSync(user) {
+      if (_liveUid === user.uid && _liveUnsub) return;
+      stopLiveSync();
+      var ref = db.collection('users').doc(user.uid);
+      if (typeof ref.onSnapshot !== 'function') return;
+      _liveUid = user.uid;
+      _liveUnsub = ref.onSnapshot(function (snap) {
+        if (!snap.exists || (snap.metadata && snap.metadata.hasPendingWrites)) return;
+        if (!auth.currentUser || auth.currentUser.uid !== user.uid || !App.isCloudReady()) return;
+        var remote = snap.data() || {};
+        if (App.isOwnWrite(remote.lastUpdated)) return;
+        var local = window.currentUserData || {};
+        if (remote.lastUpdated === local.lastUpdated) return;
+        remote.email = (user.email || '').toLowerCase().trim();
+        remote.uid = user.uid;
+        App.setCloudData(remote);
+        try { localStorage.setItem('stitch_user_uid_' + user.uid, JSON.stringify(remote)); } catch (e) {}
+        if (typeof window.renderDashboard === 'function') window.renderDashboard();
+        window.renderAuthStatus();
+      }, function (err) {
+        console.warn('Live sync stopped:', err && err.message);
+        _liveUnsub = null;
+        _liveUid = null;
+      });
     }
 
     function stopCloudRetry() {
@@ -11223,6 +11402,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         var uid = user.uid;
         var email = (user.email || '').toLowerCase().trim();
         stopCloudRetry();
+        stopLiveSync();
         App.setCloudReady(false);
 
         // 1. Instant start from this account's own cache on this device
@@ -11257,6 +11437,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         _onboardingStartedFor = null;
         _offlineToastShown = false;
         stopCloudRetry();
+        stopLiveSync();
         if (typeof App !== 'undefined' && App.setCloudReady) App.setCloudReady(false);
         hideSplash();
         window.renderAuthStatus();
