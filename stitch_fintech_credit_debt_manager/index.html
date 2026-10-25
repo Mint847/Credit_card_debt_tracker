@@ -1673,8 +1673,10 @@
       position: fixed;
       border-radius: 16px;
       box-shadow: 0 0 0 9999px rgba(15, 23, 42, .55);
-      transition: top .25s cubic-bezier(.4,0,.2,1), left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1), height .25s cubic-bezier(.4,0,.2,1);
       pointer-events: none;
+    }
+    .ob-spot.ob-spot-move {
+      transition: top .25s cubic-bezier(.4,0,.2,1), left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1), height .25s cubic-bezier(.4,0,.2,1);
     }
     .ob-spot::after {
       content: "";
@@ -2498,7 +2500,7 @@
           <div class="bg-surface-container-low rounded-xl p-3.5 flex items-center justify-between">
             <div class="flex-1 pr-3">
               <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-secondary">Mandated Minimum (4%)</span>
+                <span class="text-secondary">Bank Minimum (4%)</span>
                 <span id="home-strategy-min-val" class="text-on-surface font-bold">LKR 16,400</span>
               </div>
               <div class="flex justify-between text-xs font-semibold mb-2">
@@ -3122,8 +3124,8 @@
                   <span class="material-symbols-outlined text-[18px]">payments</span>
                 </div>
                 <div>
-                  <span class="text-[12px] font-semibold text-on-surface block">Mandated Minimum Payment</span>
-                  <span class="text-[11px] text-secondary">Minimum monthly principal + interest</span>
+                  <span class="text-[12px] font-semibold text-on-surface block">Usual Minimum Payment</span>
+                  <span class="text-[11px] text-secondary">What most banks ask for each month</span>
                 </div>
               </div>
               <div class="flex items-center space-x-1.5">
@@ -3234,7 +3236,7 @@
                 <span class="text-[11px] text-emerald-700 block mt-0.5">Serendib never asks for card numbers or passwords. Your data is saved to your own account only.</span>
               </div>
             </div>
-            <div class="pt-1 space-y-1">
+            <div id="profile-backup-actions" class="pt-1 space-y-1">
               <button id="btn-export-data"
                 class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-surface-container active:scale-[0.99] transition-all">
                 <div class="flex items-center space-x-3">
@@ -4046,7 +4048,7 @@
           <span class="material-symbols-outlined text-[22px]" aria-hidden="true">menu</span>
         </button>
       </div>
-      <p class="sidebar-hint">Press <kbd>?</kbd> for keyboard shortcuts</p>
+      <p id="sidebar-shortcuts-hint" class="sidebar-hint">Press <kbd>?</kbd> for keyboard shortcuts</p>
       <div class="home-bar"></div>
     </div>
   </nav>
@@ -12546,29 +12548,37 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     ══════════════════════════════════════════════════════════════ */
     window.Onboarding = (function () {
       var TIPS = {
+        // id: element to highlight (parent: its parent; alt: fallback when the first is hidden in this layout).
+        // Tips whose target isn't visible in the current layout are skipped, so desktop-only ones never show on a phone.
         'screen-home': [
           { id: 'ob-checklist', title: 'Your setup checklist', body: 'Finish these steps to build your repayment plan. Each one ticks itself off as you go.' },
           { id: 'home-snapshot-card', title: 'Your debt at a glance', body: 'Total debt and limit across every card, and how much of your limit you are using. Under 30% is healthy.' },
-          { id: 'home-strategy-section', title: 'Your payoff plan', body: 'Your monthly budget, debt-free date and the interest your strategy saves compared with paying minimums.' }
+          { id: 'home-quick-log', title: 'Log in one tap', body: 'Record a purchase or a payment from here. Pick the card and the amount, and every total updates straight away.' },
+          { id: 'home-alerts-section', title: 'What needs you', body: 'Due dates, overdue payments, budgets you have gone over and charges due tomorrow show up here, each with a label saying what it is.' },
+          { id: 'home-strategy-section', title: 'Your payoff plan', body: 'Your monthly budget, debt-free date and the interest your strategy saves compared with paying minimums.' },
+          { id: 'sidebar-shortcuts-hint', title: 'Keyboard shortcuts', body: 'Press ? at any time to see them: 1 to 5 switch tabs, L logs spending, P logs a payment and / searches a card\u2019s history.' }
         ],
         'screen-list': [
           { id: 'tab-btn-overview', alt: 'overview-strategy', title: "This month's plan", body: 'See which card to pay first this month and exactly how much each card gets.' },
+          { id: 'btn-overview-log-payment', title: "Log this month's payment", body: 'Paid what the plan suggests? Record it on the pay-first card in one step.' },
           { id: 'btn-add-card', title: 'Link a card', body: 'Add each credit card with its limit and current balance. Everything else updates from here.' }
         ],
         'screen-detail': [
           { id: 'card-menu-container', title: 'Card actions', body: 'Edit the card, mark its balance as settled, set its billing cycle or delete it.' },
-
-          { id: 'tab-payoff', parent: true, title: 'Card calculators', body: 'Payoff timeline, cash-advance cost and the real cost of 0% plans, all worked out for this card.' },
+          { id: 'btn-share-card', title: 'Share your progress', body: 'Share how far you have come with this card. No balances, limits or bank details are included.' },
+          { id: 'tab-payoff', parent: true, title: 'Card calculators',
+            body: 'Payoff timeline, cash-advance cost and the real cost of 0% plans, all worked out for this card.',
+            touchBody: 'Payoff timeline, cash-advance cost and the real cost of 0% plans, all worked out for this card. Swipe left or right on a calculator to move between them.' },
           { id: 'btn-save-target', title: 'Commit a monthly payment', body: 'Save an amount for this card and your plan will always give it at least that much.' },
-          { id: 'btn-log-spend', title: 'Log what you spend', body: 'Log purchases and payments, or paste a bank SMS. The balance and your plan update as you go, and recurring payments add themselves each month.' }
+          { id: 'btn-log-spend', title: 'Log what you spend', body: 'Log purchases and payments, or paste a bank SMS. Below, set budgets, add recurring payments and search everything you have logged.' }
         ],
         'screen-simulators': [
-          { id: 'tab-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves.' },
-          { id: 'tab-cash-advance', title: 'Cash advance trap', body: 'The true cost of withdrawing cash on a card, with fees and daily interest included.' },
-          { id: 'tab-surcharge', title: '0% surcharge exposer', body: 'Reveal the effective interest rate hidden inside "0%" instalment plans.' }
+          { id: 'tab-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves. Load one of your cards or try your own numbers.' },
+          { id: 'tab-cash-advance', title: 'Cash advance trap', body: 'The true cost of withdrawing cash on a card, with the upfront fee and daily interest included.' },
+          { id: 'tab-surcharge', title: '0% surcharge exposer', body: 'Reveal the interest rate hidden inside the fee on a "0%" instalment plan.' }
         ],
         'screen-spaces': [
-          { id: 'btn-create-space-top', title: 'Build a buffer', body: 'Create a savings space for emergencies, so a surprise bill does not land on a credit card.' }
+          { id: 'btn-create-space-top', title: 'Build a buffer', body: 'Create a savings space for emergencies, so a surprise bill does not land on a credit card. Add money, use it when you need it and see each space\u2019s history.' }
         ],
         'view-offers': [
           { id: 'offers-feed', title: 'Card offers', body: 'Promotions matched to your cards. Tap any offer to read its terms.' }
@@ -12577,6 +12587,8 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           { id: 'profile-income-input', title: 'Your income', body: 'Your monthly take-home pay. A quarter of it becomes your default repayment budget.' },
           { id: 'section-payoff-method', title: 'Payoff strategy', body: 'Switch between Avalanche and Snowball any time. Your plan updates straight away.' },
           { id: 'profile-dti-container', title: 'Debt-to-income health', body: 'Your minimum payments as a share of your income. Lenders use this to judge new credit.' },
+          { id: 'section-appearance', title: 'Light or dark', body: 'Choose Light, Dark or Auto, which follows your device. It is saved on this device.' },
+          { id: 'profile-backup-actions', title: 'Back up your data', body: 'Download a copy of your cards, spending and spaces, and restore it if you ever need to.' },
           { id: 'btn-replay-guide', title: 'Need a refresher?', body: 'Replay the welcome and these tips from here whenever you like.' }
         ]
       };
@@ -12604,7 +12616,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       var _tipsOpen = false;
       var _suppressTipsOnce = false;
       var _tipQueue = [], _tipIdx = 0, _tipScreen = null, _tipTarget = null;
-      var _tipTimer = 0, _raf = 0, _ro = null;
+      var _tipTimer = 0, _raf = 0, _ro = null, _trackRaf = 0, _lastRect = '', _moveTimer = 0;
       var _lastFocus = null;
       var _prevDone = null;
       var _showCompleteUntil = 0;
@@ -12932,6 +12944,42 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         window.addEventListener('scroll', schedulePosition, { capture: true, passive: true });
         window.addEventListener('resize', schedulePosition, { passive: true });
         showTip(0);
+        track();
+      }
+
+      // Follow the target every frame: content that loads or re-renders after the tip opens (cloud data, the
+      // checklist ticking, toasts, smooth scrolling, rotating the iPad) moves the spotlight with it
+      function track() {
+        if (!_tipsOpen) { _trackRaf = 0; return; }
+        if (!_tipTarget || !document.contains(_tipTarget) || !isVisible(_tipTarget)) {
+          var again = resolveTarget(_tipQueue[_tipIdx]);
+          if (again && isVisible(again)) {
+            _tipTarget = again;
+            if (_ro) { _ro.disconnect(); _ro.observe(again); }
+          }
+        }
+        if (_tipTarget) {
+          var b = _tipTarget.getBoundingClientRect();
+          var key = Math.round(b.top) + ',' + Math.round(b.left) + ',' + Math.round(b.width) + ',' + Math.round(b.height) + ',' + window.innerWidth + 'x' + window.innerHeight;
+          if (key !== _lastRect) { _lastRect = key; position(); }
+        }
+        _trackRaf = requestAnimationFrame(track);
+      }
+      // Run fn once the target has stopped moving (smooth scroll finished), or after 1.2 s at most
+      function whenSettled(fn) {
+        var last = '', still = 0, started = Date.now();
+        (function check() {
+          if (!_tipsOpen) return;
+          var b = _tipTarget ? _tipTarget.getBoundingClientRect() : null;
+          var key = b ? Math.round(b.top) + ',' + Math.round(b.left) : '';
+          still = key === last ? still + 1 : 0;
+          last = key;
+          if (still >= 4 || Date.now() - started > 1200) fn(); else requestAnimationFrame(check);
+        })();
+      }
+      function tipBody(t) {
+        var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        return touch && t.touchBody ? t.touchBody : t.body;
       }
 
       function showTip(i) {
@@ -12944,43 +12992,58 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         var multi = _tipQueue.length > 1;
         el('ob-tip-count').textContent = multi ? (i + 1) + ' of ' + _tipQueue.length : 'Tip';
         el('ob-tip-title').textContent = t.title;
-        el('ob-tip-body').textContent = t.body;
+        el('ob-tip-body').textContent = tipBody(t);
         el('ob-tip-next').textContent = i === _tipQueue.length - 1 ? 'Got it' : 'Next';
         el('ob-tip-skip').classList.toggle('hidden', !multi);
 
         if (_ro) _ro.disconnect();
         if (window.ResizeObserver) { _ro = new ResizeObserver(schedulePosition); _ro.observe(_tipTarget); }
 
-        var card = el('ob-tip-card');
+        var card = el('ob-tip-card'), spot = el('ob-tip-spot');
         card.classList.add('opacity-0');
-        try { _tipTarget.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }); } catch (e) {}
+        // Glide to the new target, then follow it without lag
+        spot.classList.toggle('ob-spot-move', i > 0 && !reducedMotion());
+        clearTimeout(_moveTimer);
+        // Tall targets scroll their top into view (centring would push the top off screen)
+        var tall = _tipTarget.getBoundingClientRect().height > window.innerHeight * 0.5;
+        var scrolled = _tipTarget, prevMargin = scrolled.style.scrollMarginTop;
+        if (tall) scrolled.style.scrollMarginTop = '84px'; // clear of a sticky screen header
+        try { _tipTarget.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: tall ? 'start' : 'center' }); } catch (e) {}
+        if (tall) setTimeout(function () { scrolled.style.scrollMarginTop = prevMargin; }, 1300);
+        _lastRect = '';
         position();
-        setTimeout(function () {
-          if (!_tipsOpen) return;
+        whenSettled(function () {
           position();
+          _moveTimer = setTimeout(function () { spot.classList.remove('ob-spot-move'); }, 260);
           card.classList.remove('opacity-0');
           el('ob-tip-next').focus({ preventScroll: true });
-        }, reducedMotion() ? 0 : 320);
+        });
       }
 
       function position() {
         _raf = 0;
         if (!_tipsOpen || !_tipTarget) return;
         var r = _tipTarget.getBoundingClientRect();
-        var pad = 6;
-        var spot = el('ob-tip-spot');
-        spot.style.top = (r.top - pad) + 'px';
-        spot.style.left = (r.left - pad) + 'px';
-        spot.style.width = (r.width + pad * 2) + 'px';
-        spot.style.height = (r.height + pad * 2) + 'px';
-
-        var card = el('ob-tip-card'), arrow = el('ob-tip-arrow');
+        var pad = 6, edge = 3;
         var vw = window.innerWidth, vh = window.innerHeight;
+        var sTop = Math.max(edge, r.top - pad), sLeft = Math.max(edge, r.left - pad);
+        var sBottom = Math.max(sTop + 12, Math.min(vh - edge, r.bottom + pad)), sRight = Math.max(sLeft + 12, Math.min(vw - edge, r.right + pad));
+        var card = el('ob-tip-card'), arrow = el('ob-tip-arrow');
         var cw = card.offsetWidth, ch = card.offsetHeight;
         var gap = 14;
-        var spaceBelow = vh - (r.bottom + pad), spaceAbove = r.top - pad;
+        // No room for the card above or below (a tall target, a small phone): light the target from its top
+        // down and keep the card underneath
+        var need = ch + gap + 8;
+        if (vh - sBottom < need && sTop < need) sBottom = Math.max(sTop + 48, vh - need);
+        var spot = el('ob-tip-spot');
+        spot.style.top = sTop + 'px';
+        spot.style.left = sLeft + 'px';
+        spot.style.width = (sRight - sLeft) + 'px';
+        spot.style.height = (sBottom - sTop) + 'px';
+
+        var spaceBelow = vh - sBottom, spaceAbove = sTop;
         var below = spaceBelow >= ch + gap + 8 || spaceBelow >= spaceAbove;
-        var top = below ? r.bottom + pad + gap : r.top - pad - gap - ch;
+        var top = below ? sBottom + gap : sTop - gap - ch;
         top = Math.max(8, Math.min(vh - ch - 8, top));
         var left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
         card.style.top = top + 'px';
@@ -13006,6 +13069,8 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         window.removeEventListener('resize', schedulePosition);
         if (_ro) { _ro.disconnect(); _ro = null; }
         if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
+        if (_trackRaf) { cancelAnimationFrame(_trackRaf); _trackRaf = 0; }
+        clearTimeout(_moveTimer);
         var wrap = el('ob-tips');
         if (wrap) wrap.classList.add('hidden');
         var card = el('ob-tip-card');
