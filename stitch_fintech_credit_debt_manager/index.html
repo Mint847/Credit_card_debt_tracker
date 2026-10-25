@@ -2244,141 +2244,56 @@
 
       <!-- SUB-VIEW: OVERVIEW -->
       <div id="sub-view-overview" class="hidden px-4 pt-3 pb-28 space-y-4 overflow-y-auto">
-        <!-- TOTAL AGGREGATE DEBT -->
-        <section class="px-1 pt-1 pb-1">
-          <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">TOTAL AGGREGATE DEBT</span>
-          <div id="overview-total-debt" class="text-[36px] leading-tight font-extrabold text-slate-900 tracking-tight mb-1.5">LKR 532,000</div>
-          <p class="text-[12px] text-slate-500 font-medium">
-            Total Available Credit Limit: <span id="overview-total-limit" class="font-semibold text-slate-500">LKR 1,050,000</span>
+        <!-- TOTAL AGGREGATE DEBT (same card style as Home's snapshot) -->
+        <section id="overview-summary" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] p-5">
+          <span class="text-[11px] text-secondary font-bold tracking-wider uppercase">Total Aggregate Debt</span>
+          <div id="overview-total-debt" class="text-[32px] font-bold text-on-surface tracking-tight mt-1.5 num">LKR 0</div>
+          <p class="text-[11px] text-secondary mt-0.5 font-semibold">
+            Total Available Credit Limit: <span id="overview-total-limit" class="font-bold text-on-surface-variant">LKR 0</span>
           </p>
         </section>
 
-        <!-- MASTER REPAYMENT DIRECTOR -->
-        <section id="overview-strategy"
-          class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 relative overflow-hidden">
-          <div class="flex items-start justify-between gap-2 mb-3 pt-0.5">
-            <div>
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="material-symbols-outlined text-teal-700 text-[18px]">bolt</span>
-                <span class="text-[11px] text-teal-700 font-bold uppercase tracking-wide">OPTIMIZED ALLOCATION</span>
-              </div>
-              <h2 class="text-[18px] text-slate-900 font-bold">This Month's Repayment Strategy</h2>
+        <!-- THIS MONTH'S REPAYMENT STRATEGY: one list, the pay-first card highlighted -->
+        <section id="overview-strategy" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <span class="text-[11px] text-secondary font-bold tracking-wider uppercase flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary" aria-hidden="true">bolt</span>Optimized Allocation</span>
+              <h2 class="text-[18px] font-semibold text-on-surface mt-1 leading-snug">This Month's Repayment Strategy</h2>
             </div>
             <span id="badge-strategy-overview"
-              class="shrink-0 inline-flex items-center px-3 py-1 rounded-full text-[11px] bg-teal-50 text-teal-700 font-bold border border-teal-100">
-              Debt Avalanche
-            </span>
+              class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-primary bg-primary-container/15 border border-primary/20">Debt Avalanche</span>
           </div>
-          <p id="overview-strategy-desc" class="text-[12px] text-slate-500 mb-3.5">
-            Priority allocation structured to crush CBSL 28% APR compounding bleed before billing cycle close.
+          <p id="overview-strategy-desc" class="text-[12px] text-secondary mt-2 leading-relaxed">
+            Priority allocation structured to crush highest APR compounding bleed before billing cycle close.
           </p>
-
-          <!-- Card Priority List -->
-          <div id="strategy-card-list" class="space-y-2 mb-4">
-            <!-- 1st Focus: HNB Platinum -->
-            <div data-card-nick="Platinum"
-              class="p-3.5 bg-surface-container-low rounded-xl border-2 border-primary-container relative cursor-pointer active:scale-[0.98] transition-all">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2.5">
-                  <div
-                    class="w-8 h-8 rounded-lg bg-primary-container text-white flex items-center justify-center font-bold">
-                    <span class="material-symbols-outlined text-[18px]">priority_high</span>
-                  </div>
-                  <div>
-                    <p class="text-[14px] text-on-surface font-bold">HNB Platinum</p>
-                    <p class="text-[18px] text-primary font-bold tracking-tight">Target Payment: LKR 34,880</p>
-                  </div>
-                </div>
-                <span class="material-symbols-outlined text-primary text-[22px]">arrow_forward</span>
-              </div>
-              <div
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest border border-primary-container text-primary text-[11px] font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-                Direct all surplus here • Highest 28.0% APR
-              </div>
-            </div>
-
-            <!-- 2nd: Commercial Bank Gold -->
-            <div data-card-nick="Visa Gold"
-              class="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-outline-variant cursor-pointer active:scale-[0.98] transition-all">
-              <div class="flex items-center gap-2.5">
-                <div
-                  class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary border border-outline-variant">
-                  <span class="material-symbols-outlined text-[18px]">credit_card</span>
-                </div>
-                <div>
-                  <p class="text-[12px] text-on-surface font-semibold">Commercial Bank Gold</p>
-                  <p class="text-[12px] text-secondary font-medium">Pay Minimum: LKR 7,000</p>
-                </div>
-              </div>
-              <span class="text-[11px] text-secondary px-2.5 py-1 bg-surface-container rounded-md font-semibold">Min
-                Paid</span>
-            </div>
-
-            <!-- 3rd: Sampath Ultramiles -->
-            <div data-card-nick="Ultramiles"
-              class="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-outline-variant cursor-pointer active:scale-[0.98] transition-all">
-              <div class="flex items-center gap-2.5">
-                <div
-                  class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary border border-outline-variant">
-                  <span class="material-symbols-outlined text-[18px]">credit_card</span>
-                </div>
-                <div>
-                  <p class="text-[12px] text-on-surface font-semibold">Sampath Ultramiles</p>
-                  <p class="text-[12px] text-secondary font-medium">Pay Minimum: LKR 3,120</p>
-                </div>
-              </div>
-              <span class="text-[11px] text-secondary px-2.5 py-1 bg-surface-container rounded-md font-semibold">Min
-                Paid</span>
-            </div>
-          </div>
-
-          <!-- Monthly Commitment Summary -->
-          <div
-            class="flex items-center justify-between px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-100">
-            <span class="text-[12px] text-slate-500 font-medium">Total monthly commitment:</span>
-            <span id="overview-total-commitment" class="text-[14px] text-slate-900 font-extrabold">--</span>
+          <div id="strategy-card-list" class="mt-4 space-y-1.5"></div>
+          <div class="mt-3 pt-3 border-t border-outline-variant/30 flex items-center justify-between gap-3">
+            <span class="text-[12px] text-secondary font-semibold">Total monthly commitment</span>
+            <span id="overview-total-commitment" class="text-[16px] font-bold text-on-surface num">--</span>
           </div>
         </section>
 
-        <!-- FINANCIAL IMPACT GRID -->
+        <!-- IMPACT (same tile style as Home's calculators) -->
         <section class="grid grid-cols-2 gap-3">
-          <!-- Left: Total Interest Bleed -->
-          <div
-            class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-[11px] text-rose-700 font-bold uppercase tracking-wider">Total Interest Bleed</span>
-                <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center">
-                  <span class="material-symbols-outlined text-[16px]">trending_down</span>
-                </div>
-              </div>
-              <p id="overview-interest-bleed" class="text-[18px] font-extrabold text-rose-700 tracking-tight">--</p>
-            </div>
-            <p class="text-[12px] text-rose-700/80 mt-2 leading-tight">Vaporizing to 28% APR this month</p>
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] p-4 flex flex-col">
+            <span class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><span class="material-symbols-outlined text-[22px]" aria-hidden="true">trending_down</span></span>
+            <span class="text-[11px] text-secondary font-bold tracking-wider uppercase mt-3">Total Interest Bleed</span>
+            <p id="overview-interest-bleed" class="text-[20px] font-bold text-error tracking-tight mt-0.5 num">--</p>
+            <p class="text-[11px] text-secondary mt-1 leading-snug">Estimated interest this month at your cards' rates</p>
           </div>
-
-          <!-- Right: Debt-Free Target -->
-          <div
-            class="bg-teal-50/50 p-4 rounded-2xl border border-teal-100 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-[11px] text-teal-700 font-bold uppercase tracking-wider">Debt-Free Target</span>
-                <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center">
-                  <span class="material-symbols-outlined text-[16px]">trending_up</span>
-                </div>
-              </div>
-              <p id="overview-debt-free-target" class="text-[18px] font-extrabold text-teal-800 tracking-tight">--</p>
-            </div>
-            <p class="text-[12px] text-teal-700/80 mt-2 leading-tight">Zero debt at current payment plan</p>
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] p-4 flex flex-col">
+            <span class="w-10 h-10 rounded-xl bg-primary-container/15 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-[22px]" aria-hidden="true">trending_up</span></span>
+            <span class="text-[11px] text-secondary font-bold tracking-wider uppercase mt-3">Debt-Free Target</span>
+            <p id="overview-debt-free-target" class="text-[20px] font-bold text-on-surface tracking-tight mt-0.5">--</p>
+            <p class="text-[11px] text-secondary mt-1 leading-snug">At your current monthly plan</p>
           </div>
         </section>
 
-        <!-- Execute Allocations CTA -->
-        <button
+        <!-- Turn the plan into a recorded payment -->
+        <button type="button" id="btn-overview-log-payment" onclick="App.logPlanPayment()"
           class="w-full h-12 bg-primary-container text-white rounded-full text-[14px] font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform">
-          <span class="material-symbols-outlined text-[20px]">payments</span>
-          Execute Monthly Allocations
+          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">payments</span>
+          Log this month's payment
         </button>
       </div>
 
@@ -3029,6 +2944,19 @@
                 <span class="material-symbols-outlined text-secondary text-[18px]">chevron_right</span>
               </button>
               <input type="file" id="input-restore-file" accept="application/json,.json" class="hidden" aria-hidden="true" tabindex="-1">
+              <button id="btn-safety-copies" type="button" onclick="App.openSafetyCopies()"
+                class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-surface-container active:scale-[0.99] transition-all">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface">
+                    <span class="material-symbols-outlined text-[18px]">history</span>
+                  </div>
+                  <div class="text-left">
+                    <span class="text-[12px] font-semibold text-on-surface block">Earlier copies on this device</span>
+                    <span class="text-[11px] text-secondary mt-0.5 block">Recover cards from a recent copy kept on this device</span>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-secondary text-[18px]">chevron_right</span>
+              </button>
               <button id="btn-reset-data"
                 class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-error-container/20 active:scale-[0.99] transition-all text-error">
                 <div class="flex items-center space-x-3">
@@ -5165,6 +5093,119 @@
       return { ok: true, data: data, entries: entries };
     }
 
+    /* ── Account sync: merge two copies of an account so no device can wipe another's data ──
+       Cards and spaces merge by id. When both copies have an item, the one edited most recently
+       (updatedAt) wins. An item is only removed when a device deleted it on purpose (a tombstone in
+       deletedCards / deletedSpaces), so a new or empty device can never remove anything.
+       Name, income and strategy carry their own edit times (fieldTimes); values filled in by default
+       (defaults: { field: true }) never override a value the user actually set. */
+    var SYNC_FIELDS = ['firstName', 'lastName', 'income', 'strategy'];
+    var TOMBSTONE_DAYS = 180;
+    function syncFilled(v) { return v !== undefined && v !== null && v !== ''; }
+    // Signature of an item's content, ignoring its edit time
+    function syncSig(item) {
+      var had = Object.prototype.hasOwnProperty.call(item, 'updatedAt'), u = item.updatedAt;
+      delete item.updatedAt;
+      var s = JSON.stringify(item);
+      if (had) item.updatedAt = u;
+      return s;
+    }
+    function mergeTombstones(a, b, now) {
+      var out = {}, cutoff = (now || Date.now()) - TOMBSTONE_DAYS * 86400000;
+      [a, b].forEach(function (t) {
+        if (!t || typeof t !== 'object') return;
+        Object.keys(t).forEach(function (id) {
+          var ts = Number(t[id]) || 0;
+          if (ts > cutoff && ts > (out[id] || 0)) out[id] = ts;
+        });
+      });
+      return out;
+    }
+    // primary's order first; on equal edit times the primary copy is kept
+    function mergeItems(primary, secondary, tombs) {
+      var byId = {}, order = [];
+      function add(item) {
+        if (!item || typeof item !== 'object' || item.id === undefined || item.id === null) return;
+        var id = String(item.id), cur = byId[id];
+        if (!cur) { byId[id] = item; order.push(id); return; }
+        if ((Number(item.updatedAt) || 0) > (Number(cur.updatedAt) || 0)) byId[id] = item;
+      }
+      (primary || []).forEach(add);
+      (secondary || []).forEach(add);
+      return order.map(function (id) { return byId[id]; }).filter(function (item) {
+        var ts = tombs[String(item.id)] || 0;
+        return !(ts > 0 && ts >= (Number(item.updatedAt) || 0));
+      });
+    }
+    function mergeOnboarding(a, b) {
+      if (!a || typeof a !== 'object') return b || {};
+      if (!b || typeof b !== 'object') return a;
+      var out = Object.assign({}, a, b);
+      ['welcomeDone', 'checklistDismissed', 'checklistCompleted', 'simulatorTried'].forEach(function (k) { if (a[k] || b[k]) out[k] = true; });
+      out.version = Math.max(Number(a.version) || 0, Number(b.version) || 0) || undefined;
+      if (out.version === undefined) delete out.version;
+      out.tipsSeen = Object.assign({}, a.tipsSeen || {}, b.tipsSeen || {});
+      Object.keys(out.tipsSeen).forEach(function (k) { out.tipsSeen[k] = !!((a.tipsSeen || {})[k] || (b.tipsSeen || {})[k]); });
+      return out;
+    }
+    function mergeAccount(a, b, now) {
+      if (!a && !b) return null;
+      if (!a) return Object.assign({}, b);
+      if (!b) return Object.assign({}, a);
+      now = now || Date.now();
+      var la = Number(a.lastUpdated) || 0, lb = Number(b.lastUpdated) || 0;
+      var aNewer = la >= lb, newer = aNewer ? a : b, older = aNewer ? b : a;
+      var out = Object.assign({}, older, newer);
+      var dc = mergeTombstones(a.deletedCards, b.deletedCards, now), ds = mergeTombstones(a.deletedSpaces, b.deletedSpaces, now);
+      out.cards = mergeItems(newer.cards, older.cards, dc);
+      out.spaces = mergeItems(newer.spaces, older.spaces, ds);
+      out.deletedCards = dc;
+      out.deletedSpaces = ds;
+      var fa = a.fieldTimes || {}, fb = b.fieldTimes || {}, ft = {};
+      var weight = function (d) { return (d.cards || []).length + (d.spaces || []).length; };
+      var real = function (d, k) { return syncFilled(d[k]) && !(d.defaults && d.defaults[k]); };
+      var dflt = {};
+      SYNC_FIELDS.forEach(function (k) {
+        var ta = Number(fa[k]) || 0, tb = Number(fb[k]) || 0, pickA;
+        if (ta !== tb) pickA = ta > tb;
+        else if (real(a, k) !== real(b, k)) pickA = real(a, k); // a default never beats a value the user set
+        else if (!syncFilled(a[k]) || !syncFilled(b[k])) pickA = syncFilled(a[k]);
+        else if (weight(a) !== weight(b)) pickA = weight(a) > weight(b); // neither edited: trust the copy holding real data
+        else pickA = aNewer;
+        var v = pickA ? a[k] : b[k];
+        if (v === undefined) delete out[k]; else out[k] = v;
+        if (Math.max(ta, tb)) ft[k] = Math.max(ta, tb);
+        var src = pickA ? a : b;
+        if (src.defaults && src.defaults[k]) dflt[k] = true;
+      });
+      out.fieldTimes = ft;
+      if (Object.keys(dflt).length) out.defaults = dflt; else delete out.defaults;
+      out.onboarding = mergeOnboarding(a.onboarding, b.onboarding);
+      out.hasCompletedTour = !!(a.hasCompletedTour || b.hasCompletedTour);
+      out.lastUpdated = Math.max(la, lb);
+      return out;
+    }
+
+    // Safety net: each device keeps its last few copies of the account's cards and spaces
+    var SAFETY_MAX = 5;
+    function readSafetyCopies(uid) {
+      try { var l = JSON.parse(localStorage.getItem('serendib_safety_' + uid) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+    }
+    function saveSafetyCopy(uid, doc, reason) {
+      if (!uid || !doc || !((doc.cards || []).length || (doc.spaces || []).length)) return;
+      var list = readSafetyCopies(uid);
+      var sig = JSON.stringify([(doc.cards || []).map(function (c) { return c.id + ':' + c.balance + ':' + ((c.ledger || []).length); }),
+        (doc.spaces || []).map(function (s) { return s.id + ':' + s.currentLKR; })]);
+      if (list.length && list[0].sig === sig) return;
+      list.unshift({ at: Date.now(), sig: sig, reason: reason || '',
+        data: { firstName: doc.firstName || '', lastName: doc.lastName || '', income: doc.income || '', strategy: doc.strategy || '',
+          cards: JSON.parse(JSON.stringify(doc.cards || [])), spaces: JSON.parse(JSON.stringify(doc.spaces || [])) } });
+      // Keep as many recent copies as storage allows
+      for (var keep = SAFETY_MAX; keep >= 1; keep--) {
+        try { localStorage.setItem('serendib_safety_' + uid, JSON.stringify(list.slice(0, keep))); return; } catch (e) {}
+      }
+    }
+
     /* DEFAULT SEED DATA */
     var DEFAULT_CARDS = [
       { bank: "Commercial Bank of Ceylon", nick: "Visa Gold", limit: 300000, balance: 125000, color: "teal" },
@@ -5205,52 +5246,142 @@
       // lastUpdated stamps of this device's recent cloud writes (their echo is not a remote change)
       var ownWrites = [];
 
-      function saveUserData() {
-        var user = window.currentUser;
-        if (!user) return Promise.resolve();
-        var storedIncome = (window.currentUserData && window.currentUserData.income) || "175000";
+      // What each card, space and setting looked like when last loaded or saved, so a save can tell
+      // what this device actually changed (edit times) and deleted (tombstones)
+      var syncKnown = { cards: {}, spaces: {}, fields: {} };
+      function currentFields() {
+        var u = window.currentUserData || {};
+        var storedIncome = u.income || "175000";
         var incomeVal = storedIncome;
         var elProfileIncome = document.getElementById("profile-income-input");
         if (elProfileIncome && (document.activeElement === elProfileIncome || elProfileIncome.value !== "")) {
             incomeVal = elProfileIncome.value !== "" ? elProfileIncome.value : storedIncome;
         }
-        if (window.currentUserData) {
-            window.currentUserData.income = incomeVal;
-        }
-
-        var email = (user.email || '').toLowerCase().trim();
-        var uid = user.uid;
-
-        var userData = {
-            email: email,
-            uid: uid,
-            firstName: (window.currentUserData && window.currentUserData.firstName) || '',
-            lastName: (window.currentUserData && window.currentUserData.lastName) || '',
+        return { firstName: u.firstName || '', lastName: u.lastName || '', income: incomeVal, strategy: window.currentStrategy || "avalanche" };
+      }
+      function rememberSyncState() {
+        syncKnown = { cards: {}, spaces: {}, fields: currentFields() };
+        cards.forEach(function (c) { if (c && c.id !== undefined && c.id !== null) syncKnown.cards[String(c.id)] = syncSig(c); });
+        spaces.forEach(function (s) { if (s && s.id !== undefined && s.id !== null) syncKnown.spaces[String(s.id)] = syncSig(s); });
+      }
+      function stampItems(list, known, tombs, now) {
+        var present = {};
+        list.forEach(function (item) {
+          if (!item || item.id === undefined || item.id === null) return;
+          var id = String(item.id), sig = syncSig(item);
+          present[id] = true;
+          if (known[id] !== sig) { item.updatedAt = now; known[id] = sig; }
+        });
+        Object.keys(known).forEach(function (id) {
+          if (!present[id]) { tombs[id] = now; delete known[id]; }
+        });
+      }
+      // This device's copy of the account, with its own edits and deletions stamped
+      function buildUserDoc() {
+        var user = window.currentUser;
+        var u = window.currentUserData || (window.currentUserData = {});
+        var now = Date.now();
+        if (!u.deletedCards || typeof u.deletedCards !== 'object') u.deletedCards = {};
+        if (!u.deletedSpaces || typeof u.deletedSpaces !== 'object') u.deletedSpaces = {};
+        if (!u.fieldTimes || typeof u.fieldTimes !== 'object') u.fieldTimes = {};
+        stampItems(cards, syncKnown.cards, u.deletedCards, now);
+        stampItems(spaces, syncKnown.spaces, u.deletedSpaces, now);
+        var f = currentFields();
+        SYNC_FIELDS.forEach(function (k) {
+          if (syncKnown.fields[k] !== f[k]) {
+            u.fieldTimes[k] = now;
+            syncKnown.fields[k] = f[k];
+            if (u.defaults) delete u.defaults[k];
+          }
+        });
+        if (u.defaults && !Object.keys(u.defaults).length) delete u.defaults;
+        u.income = f.income;
+        u.deletedCards = mergeTombstones(u.deletedCards, null, now);
+        u.deletedSpaces = mergeTombstones(u.deletedSpaces, null, now);
+        var doc = {
+            email: ((user && user.email) || '').toLowerCase().trim(),
+            uid: user ? user.uid : '',
+            firstName: f.firstName,
+            lastName: f.lastName,
             cards: cards || [],
             spaces: spaces || [],
-            income: incomeVal,
-            strategy: window.currentStrategy || "avalanche",
-            onboarding: (window.currentUserData && window.currentUserData.onboarding) || {},
-            hasCompletedTour: !!(window.currentUserData && (window.currentUserData.hasCompletedTour ||
-                (window.currentUserData.onboarding && window.currentUserData.onboarding.welcomeDone))),
-            lastUpdated: Date.now()
+            income: f.income,
+            strategy: f.strategy,
+            onboarding: u.onboarding || {},
+            hasCompletedTour: !!(u.hasCompletedTour || (u.onboarding && u.onboarding.welcomeDone)),
+            deletedCards: Object.assign({}, u.deletedCards),
+            deletedSpaces: Object.assign({}, u.deletedSpaces),
+            fieldTimes: Object.assign({}, u.fieldTimes),
+            lastUpdated: now
         };
+        if (u.defaults) doc.defaults = Object.assign({}, u.defaults);
+        return doc;
+      }
+      function syncContentKey(d) {
+        return JSON.stringify([d.cards || [], d.spaces || [], SYNC_FIELDS.map(function (k) { return d[k] === undefined ? '' : d[k]; })]);
+      }
+      function writeLocalCache(uid, doc) {
+        try { localStorage.setItem('stitch_user_uid_' + uid, JSON.stringify(doc)); } catch (e) { console.warn("Local cache write failed:", e); }
+      }
+      // Bring another copy of the account (the cloud's, or another device's live change) into this
+      // device by merging it with what is here; anything this device has that the other lacks is saved back.
+      function mergeIntoApp(other) {
+        var user = window.currentUser;
+        if (!user || !other) return null;
+        var lastSaved = Number((window.currentUserData || {}).lastUpdated) || 0;
+        var mine = buildUserDoc();
+        // Judge this copy by when it was last saved (not now), so a newer copy from elsewhere wins ties
+        mine.lastUpdated = lastSaved;
+        var merged = mergeAccount(mine, other) || mine;
+        merged.email = mine.email;
+        merged.uid = mine.uid;
+        var lostItems = (mine.cards || []).some(function (c) { return !merged.cards.some(function (m) { return String(m.id) === String(c.id); }); }) ||
+          (mine.spaces || []).some(function (s) { return !merged.spaces.some(function (m) { return String(m.id) === String(s.id); }); });
+        if (lostItems) saveSafetyCopy(user.uid, mine, 'Before a deletion from another device');
+        if (syncContentKey(merged) !== syncContentKey(mine)) {
+          setCloudData(merged);
+          writeLocalCache(user.uid, merged);
+        }
+        if (syncContentKey(merged) !== syncContentKey(other) && cloudReady) saveUserData();
+        return merged;
+      }
 
+      function saveUserData() {
+        var user = window.currentUser;
+        if (!user) return Promise.resolve();
+        var userData = buildUserDoc();
         if (window.currentUserData) window.currentUserData.lastUpdated = userData.lastUpdated;
 
         // 1. This account's own cache on this device (fast start, and offline edits)
-        try {
-            localStorage.setItem('stitch_user_uid_' + uid, JSON.stringify(userData));
-        } catch(e) {
-            console.warn("Local cache write failed:", e);
-        }
+        writeLocalCache(user.uid, userData);
 
-        // 2. Cloud Firestore, only once this account's cloud copy has been loaded
+        // 2. Cloud Firestore, only once this account's cloud copy has been loaded. The write merges
+        //    with whatever the cloud holds right now, so another device's cards are never overwritten.
         if (!cloudReady || typeof db === 'undefined') return Promise.resolve();
-        ownWrites.push(userData.lastUpdated);
-        if (ownWrites.length > 50) ownWrites.shift();
-        return db.collection("users").doc(uid).set(userData, { merge: true }).catch(function(err) {
-            console.warn("Cloud save failed (kept on this device):", err.message);
+        var ref = db.collection("users").doc(user.uid);
+        var noteOwn = function (stamp) { ownWrites.push(stamp); if (ownWrites.length > 50) ownWrites.shift(); };
+        var write = typeof db.runTransaction === 'function'
+          ? db.runTransaction(function (t) {
+              return t.get(ref).then(function (snap) {
+                var merged = mergeAccount(userData, snap.exists ? (snap.data() || {}) : null) || userData;
+                merged.lastUpdated = Math.max(userData.lastUpdated, Number(merged.lastUpdated) || 0);
+                merged.email = userData.email;
+                merged.uid = userData.uid;
+                noteOwn(merged.lastUpdated);
+                t.set(ref, merged);
+                return merged;
+              });
+            })
+          : (noteOwn(userData.lastUpdated), ref.set(userData, { merge: true }).then(function () { return userData; }));
+        return write.then(function (merged) {
+          if (!window.currentUser || window.currentUser.uid !== user.uid) return;
+          // The cloud held something this device didn't (e.g. cards added on another device): show it here
+          if (merged && syncContentKey(merged) !== syncContentKey(userData)) {
+            mergeIntoApp(merged);
+            if (typeof window.renderDashboard === 'function') window.renderDashboard();
+          }
+        }).catch(function(err) {
+            console.warn("Cloud save failed (kept on this device):", err && err.message);
         });
       }
 
@@ -5258,6 +5389,7 @@
       // email, income and strategy. Shared by the Profile and drawer buttons.
       async function resetMyCardData() {
         if (!window.confirm("Reset your card data? All cards, spaces and saved payment targets will be removed. Your name, email and income are kept.")) return;
+        if (window.currentUser) saveSafetyCopy(window.currentUser.uid, { cards: cards, spaces: spaces }, 'Before resetting card data');
         cards = [];
         spaces = [];
         activeId = null;
@@ -5274,8 +5406,15 @@
       }
       window.resetMyCardData = resetMyCardData;
 
-      function setCloudData(data) {
+      // keepSync: the new data is a local change (restore / undo) to be stamped on the next save
+      function setCloudData(data, keepSync) {
         window.currentUserData = data || {};
+        // Fields this copy didn't have, so they're filled by defaults below (name from the email, default income)
+        var cud = window.currentUserData, dflt = Object.assign({}, cud.defaults || {});
+        if (!cud.firstName) dflt.firstName = true;
+        if (!cud.income) dflt.income = true;
+        if (!cud.strategy) dflt.strategy = true;
+        if (Object.keys(dflt).length) cud.defaults = dflt; else delete cud.defaults;
         let fname = window.currentUserData.firstName;
         let lname = window.currentUserData.lastName;
 
@@ -5331,6 +5470,7 @@
 
 var checkSnowball = document.getElementById('check-snowball');
         if (checkSnowball) checkSnowball.checked = (strat === 'snowball');
+        if (!keepSync) rememberSyncState();
       }
 
       // Array of all top-level screen container IDs
@@ -6272,6 +6412,9 @@ var checkSnowball = document.getElementById('check-snowball');
         navigateTo("screen-home", "btn-nav-home");
       }
 
+      // The pay-first card and its amount, for "Log this month's payment"
+      var overviewPlanTarget = null;
+
       function renderCardsOverview() {
         var container = document.getElementById("strategy-card-list");
         if (!container) return;
@@ -6353,62 +6496,48 @@ var checkSnowball = document.getElementById('check-snowball');
             }
         }
         
+        var logBtn = document.getElementById("btn-overview-log-payment");
+        if (logBtn) logBtn.classList.toggle("hidden", activeCards.length === 0);
+        overviewPlanTarget = null;
+
         sortedCards.forEach(function(card, index) {
           var isTarget = index === 0 && card.balance > 0;
           var isSettled = card.balance === 0;
           var theme = cardTheme(card);
-          
-          var div = document.createElement("div");
+          var name = escapeHtml(card.bank + ' ' + card.nick);
+          var tile = '<span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + theme.bg + ' ' + theme.icon + '">' +
+            '<span class="material-symbols-outlined text-[18px]" aria-hidden="true">credit_card</span></span>';
+          var chevron = '<span class="material-symbols-outlined text-[18px] text-secondary shrink-0" aria-hidden="true">chevron_right</span>';
+
+          var div = document.createElement("button");
+          div.type = "button";
           div.setAttribute("data-card-nick", card.nick);
-          
+
           if (isTarget) {
-            div.className = "border border-teal-200 bg-teal-50/40 rounded-2xl p-4 relative cursor-pointer active:scale-[0.98] transition-all";
-          } else {
-            div.className = "flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl p-4 cursor-pointer active:scale-[0.98] transition-all";
-            if (isSettled) div.className += " opacity-60";
-          }
-            
-          if (isTarget) {
-            div.innerHTML = 
-              '<div class="flex items-center justify-between mb-2">' +
-                '<div class="flex items-center gap-2.5">' +
-                  '<div class="w-8 h-8 rounded-xl flex items-center justify-center font-bold ' + theme.bg + ' ' + theme.icon + '">' +
-                    '<span class="material-symbols-outlined text-[18px]">priority_high</span>' +
-                  '</div>' +
-                  '<div>' +
-                    '<p class="text-[14px] text-slate-900 font-bold">' + escapeHtml(card.bank + ' ' + card.nick) + '</p>' +
-                    '<p class="text-[18px] text-teal-800 font-bold tracking-tight">Target Payment: ' + fmtLKR(allocation.alloc[card.id]) + '</p>' +
-                  '</div>' +
-                '</div>' +
-                '<span class="material-symbols-outlined text-teal-700 text-[22px]">arrow_forward</span>' +
-              '</div>' +
-              '<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-teal-200 text-teal-700 text-[11px] font-bold">' +
-                '<span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>' +
-                'Direct all surplus here • ' + (cardApr(card) + '%') + ' APR' +
-              '</div>';
+            overviewPlanTarget = { id: card.id, amount: allocation.alloc[card.id] };
+            div.className = "w-full text-left rounded-xl p-3 bg-primary-container/10 border border-primary/15 flex items-center gap-3 active:scale-[0.99] transition-all";
+            div.style.boxShadow = "inset 3px 0 0 " + theme.hex;
+            div.innerHTML = tile +
+              '<span class="flex-1 min-w-0">' +
+                '<span class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-white text-[10px] font-bold mb-1">Pay first</span>' +
+                '<span class="block text-[13px] font-semibold text-on-surface leading-snug break-words">' + name + '</span>' +
+                '<span class="block text-[11px] text-secondary mt-0.5">Direct all surplus here \u00b7 ' + (cardApr(card) + '%') + ' APR</span>' +
+              '</span>' +
+              '<span class="text-right shrink-0"><span class="block text-[15px] font-bold text-primary num whitespace-nowrap">' + fmtLKR(allocation.alloc[card.id]) + '</span>' +
+              '<span class="block text-[10px] font-semibold text-secondary uppercase tracking-wide">Target</span></span>' + chevron;
           } else {
             var cardMin = isSettled ? 0 : minPaymentFor(card);
             var cardAlloc = isSettled ? 0 : allocation.alloc[card.id];
             var getsSurplus = cardAlloc > cardMin + 0.5;
-            var badgeHtml = isSettled
-                ? '<span class="text-[11px] px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-lg font-semibold shrink-0">Settled</span>'
-                : (getsSurplus
-                    ? '<span class="text-[11px] text-teal-700 px-2.5 py-1 bg-teal-50 rounded-lg font-semibold shrink-0">+ Surplus</span>'
-                    : '<span class="text-[11px] text-slate-500 px-2.5 py-1 bg-slate-200/70 rounded-lg font-semibold shrink-0">Min Paid</span>');
-            var pmtText = isSettled ? "Settled" : (getsSurplus ? 'Pay: ' + fmtLKR(cardAlloc) : 'Pay Minimum: ' + fmtLKR(cardMin));
-            div.innerHTML =
-              '<div class="flex items-center gap-2.5">' +
-                '<div class="w-8 h-8 rounded-xl flex items-center justify-center ' + theme.bg + ' ' + theme.icon + '">' +
-                  '<span class="material-symbols-outlined text-[18px]">credit_card</span>' +
-                '</div>' +
-                '<div>' +
-                  '<p class="text-[12px] text-slate-900 font-semibold">' + escapeHtml(card.bank + ' ' + card.nick) + '</p>' +
-                  '<p class="text-[12px] text-slate-500 font-medium">' + pmtText + '</p>' +
-                '</div>' +
-              '</div>' +
-              badgeHtml;
+            div.className = "w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-3 hover:bg-surface-container-low active:scale-[0.99] transition-all" + (isSettled ? " opacity-60" : "");
+            div.innerHTML = tile +
+              '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface leading-snug break-words">' + name + '</span>' +
+              '<span class="block text-[11px] text-secondary mt-0.5">' + (isSettled ? 'No payment due' : (getsSurplus ? 'Minimum + surplus' : 'Minimum payment')) + '</span></span>' +
+              (isSettled
+                ? '<span class="shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold">Settled</span>'
+                : '<span class="shrink-0 text-[14px] font-bold text-on-surface num whitespace-nowrap">' + fmtLKR(getsSurplus ? cardAlloc : cardMin) + '</span>') + chevron;
           }
-          
+
           div.addEventListener("click", function() { goDetail(card.id); });
           container.appendChild(div);
         });
@@ -8134,6 +8263,31 @@ var checkSnowball = document.getElementById('check-snowball');
           });
         });
       }
+      function openSafetyCopies() {
+        var user = window.currentUser;
+        var list = user ? readSafetyCopies(user.uid) : [];
+        var html = list.length ? '<p class="text-[12px] text-secondary -mt-1 mb-3 leading-relaxed">This device keeps its last few copies of your cards and spaces. Pick one to see what\u2019s in it before anything changes.</p>' +
+          list.map(function (c, i) {
+            var when = new Date(c.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return '<button type="button" data-copy="' + i + '" class="w-full text-left rounded-xl border border-outline-variant/40 p-3 mb-2 hover:bg-surface-container-low active:scale-[0.99] transition-all">' +
+              '<span class="block text-[13px] font-semibold text-on-surface">' + escapeHtml(when) + '</span>' +
+              '<span class="block text-[12px] text-secondary mt-0.5">' + escapeHtml(countsText(c.data.cards || [], c.data.spaces || [])) + (c.reason ? ' \u00b7 ' + escapeHtml(c.reason) : '') + '</span></button>';
+          }).join('')
+          : '<p class="text-[13px] text-secondary text-center py-6">No earlier copies on this device yet.</p>';
+        openSpendSheet('Earlier copies', html, function (body) {
+          body.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-copy]');
+            if (!b) return;
+            var c = list[parseInt(b.getAttribute('data-copy'), 10)];
+            var res = readBackup({ app: 'serendib', version: BACKUP_VERSION, exportedAt: new Date(c.at).toISOString(),
+              profile: { firstName: c.data.firstName, lastName: c.data.lastName, income: c.data.income, strategy: c.data.strategy },
+              cards: c.data.cards, spaces: c.data.spaces });
+            if (!res.ok) { showRestoreError(res.error); return; }
+            openRestoreSheet(res.data);
+          });
+        });
+      }
+
       function applyRestore(data, mode, newCards, newSpaces) {
         var before = JSON.parse(JSON.stringify(Object.assign({}, window.currentUserData || {}, { cards: cards, spaces: spaces, strategy: window.currentStrategy })));
         var next = Object.assign({}, window.currentUserData || {});
@@ -8146,14 +8300,15 @@ var checkSnowball = document.getElementById('check-snowball');
           Object.keys(data.profile).forEach(function (k) { if (data.profile[k] !== '') next[k] = data.profile[k]; });
         }
         activeId = null;
-        setCloudData(next);
+        if (window.currentUser) saveSafetyCopy(window.currentUser.uid, before, 'Before restoring a backup');
+        setCloudData(next, true);
         saveUserData();
         window.renderDashboard();
         closeSpendSheet();
         navigateTo('screen-home', 'btn-nav-home');
         window.showToast(mode === 'merge' ? 'Added ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') : 'Backup restored', 'percent',
           { actionLabel: 'Undo', onAction: function () {
-            setCloudData(before);
+            setCloudData(before, true);
             saveUserData();
             window.renderDashboard();
             window.showToast('Restore undone', 'info');
@@ -9659,6 +9814,7 @@ renderSpaces();
       window.confirmDeleteCard = function() {
           if (activeId !== null && cards) {
               const deletedId = activeId;
+              if (window.currentUser) saveSafetyCopy(window.currentUser.uid, { cards: cards, spaces: spaces }, 'Before deleting a card');
               cards = cards.filter(c => String(c.id) !== String(deletedId));
               activeId = null;
               saveCards();
@@ -10374,10 +10530,12 @@ renderSpaces();
         getState: function () { return { cards: cards, spaces: spaces }; }, openAddCard: openModal, goDetail: goDetail,
         quickLog: quickLog, openLogSheet: openLogSheet,
         openRemedial: function () { if (activeId !== null) openRemedialSheet(activeId); },
+        logPlanPayment: function () { if (overviewPlanTarget) openLogSheet({ cardId: overviewPlanTarget.id, type: 'payment', prefill: overviewPlanTarget.amount }); },
         openShare: function () { if (activeId !== null) openShareSheet(activeId); },
         openSpace: openSpaceSheet, openSpacesSummary: openSpacesSummary, openSpaceWithdraw: openSpaceWithdraw, openSpacePay: openSpacePay,
         buildBackup: buildBackup, restoreFile: openRestoreFile,
         logDuePayment: function () { var c = findCard(activeId); if (c) openLogSheet({ cardId: c.id, type: 'payment', prefill: amountDueNow(c) }); }, closeSpendSheet: closeSpendSheet, runRecurring: runRecurring, ledgerCsv: function (id) { var c = findCard(id); return c ? ledgerCsv(c) : ''; },
+        mergeRemote: function (doc) { return mergeIntoApp(doc); }, openSafetyCopies: function () { openSafetyCopies(); },
         setCloudReady: function (v) { cloudReady = !!v; if (cloudReady) runRecurring(); }, isCloudReady: function () { return cloudReady; },
         isOwnWrite: function (stamp) { return ownWrites.indexOf(stamp) !== -1; } };
     })();
@@ -12906,19 +13064,15 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     async function syncAccountFromCloud(user, localData, trustLocal) {
       var doc = await withTimeout(db.collection('users').doc(user.uid).get(), 8000);
       var cloud = doc.exists ? (doc.data() || {}) : null;
-      var data;
-      if (!cloud) {
-        data = localData ? Object.assign({}, localData) : {};
-      } else if (trustLocal && localData && (localData.lastUpdated || 0) > (cloud.lastUpdated || 0)) {
-        data = Object.assign({}, cloud, localData);
-      } else {
-        data = Object.assign({}, cloud);
-        if (!data.onboarding && localData && localData.onboarding) data.onboarding = localData.onboarding;
-      }
+      // Never pick one copy over the other: cards and spaces from both are kept (merged by id), and
+      // only deliberate deletions remove anything. A safety copy of this device's data is kept first.
+      if (localData) saveSafetyCopy(user.uid, localData, 'Before signing in');
+      var data = mergeAccount(localData, cloud) || {};
       var pending = window._pendingSignupName;
       if (pending) {
-        if (!data.firstName) data.firstName = pending.firstName;
+        if (!data.firstName || (data.defaults && data.defaults.firstName)) data.firstName = pending.firstName;
         if (!data.lastName) data.lastName = pending.lastName;
+        if (data.defaults) { delete data.defaults.firstName; if (!Object.keys(data.defaults).length) delete data.defaults; }
       }
       window._pendingSignupName = null;
       data.email = (user.email || '').toLowerCase().trim();
@@ -12952,10 +13106,8 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         if (App.isOwnWrite(remote.lastUpdated)) return;
         var local = window.currentUserData || {};
         if (remote.lastUpdated === local.lastUpdated) return;
-        remote.email = (user.email || '').toLowerCase().trim();
-        remote.uid = user.uid;
-        App.setCloudData(remote);
-        try { localStorage.setItem('stitch_user_uid_' + user.uid, JSON.stringify(remote)); } catch (e) {}
+        // Merge the other device's change with this one's (never a straight replace)
+        App.mergeRemote(remote);
         if (typeof window.renderDashboard === 'function') window.renderDashboard();
         window.renderAuthStatus();
       }, function (err) {
