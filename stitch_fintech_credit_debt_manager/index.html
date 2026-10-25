@@ -1485,6 +1485,482 @@
       }
     }
 
+    /* ══ Desktop compact dashboard (>= 1280 px). Phone and iPad never see any of this. ══ */
+    .desk-only,
+    .avatar-menu {
+      display: none
+    }
+
+    @media (min-width: 1280px) {
+      :root {
+        --rail: 200px;
+        --tab-max: 1600px
+      }
+
+      /* Sidebar: slimmer, tighter rows; the avatar menu replaces the side drawer button */
+      #global-nav > div {
+        padding: 14px 10px 12px !important
+      }
+
+      .rail-head {
+        margin-bottom: 16px;
+        padding: 0 6px
+      }
+
+      .rail-head .rail-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px
+      }
+
+      .rail-head .rail-logo .material-symbols-outlined {
+        font-size: 20px
+      }
+
+      .sidebar-brand {
+        font-size: 16px
+      }
+
+      #global-nav a.nav-link {
+        min-height: 40px;
+        padding: 0 12px;
+        gap: 10px;
+        border-radius: 10px;
+        font-size: 13px
+      }
+
+      #global-nav a.nav-link .nav-icon {
+        font-size: 20px
+      }
+
+      .sidebar-menu-btn {
+        display: none !important
+      }
+
+      .sidebar-profile {
+        padding: 6px
+      }
+
+      .sidebar-avatar {
+        width: 32px;
+        height: 32px
+      }
+
+      .desk-only {
+        display: flex
+      }
+
+      /* Screen headers: one compact bar, title left, actions + avatar right */
+      #screen-home > section:first-child,
+      #screen-list > div:first-child,
+      #screen-simulators > section:first-child,
+      #screen-spaces > section:first-child,
+      #view-offers > section:first-child {
+        height: 60px !important;
+        padding: 0 24px !important;
+        width: 100%;
+        max-width: calc(var(--tab-max) + 48px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important
+      }
+
+      #screen-home > section:first-child p,
+      #screen-list > div:first-child > div:first-child > span {
+        display: none
+      }
+
+      #screen-home > section:first-child h1,
+      #screen-list > div:first-child h1,
+      #screen-simulators > section:first-child h1,
+      #screen-spaces > section:first-child h1,
+      #view-offers > section:first-child h1 {
+        font-size: 20px !important;
+        line-height: 28px !important;
+        letter-spacing: -.01em
+      }
+
+      #btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers {
+        display: block !important
+      }
+
+      #btn-profile-home > div, #btn-profile-cards > div, #btn-profile-simulators > div,
+      #btn-profile-spaces > div, #btn-profile-offers > div, #btn-profile-detail > div {
+        width: 36px;
+        height: 36px
+      }
+
+      #btn-profile-home > span, #btn-profile-cards > span, #btn-profile-simulators > span,
+      #btn-profile-spaces > span, #btn-profile-offers > span {
+        display: none
+      }
+
+      #screen-detail header {
+        height: 60px;
+        padding: 0 20px
+      }
+
+      /* Density: desktop-sized type and spacing inside the app (dialogs keep their own sizes) */
+      #app-shell .text-\[32px\], #app-shell .text-3xl { font-size: 24px !important; line-height: 30px !important }
+      #app-shell .text-\[40px\] { font-size: 32px !important; line-height: 38px !important }
+      #app-shell .text-\[36px\] { font-size: 30px !important; line-height: 36px !important }
+      #app-shell .text-\[28px\] { font-size: 24px !important; line-height: 30px !important }
+      #app-shell .text-2xl { font-size: 21px !important; line-height: 28px !important }
+      #app-shell .text-\[22px\] { font-size: 19px !important }
+      #app-shell .text-\[18px\] { font-size: 16px !important }
+      #app-shell .p-6 { padding: 18px }
+      #app-shell .p-5 { padding: 16px }
+      #app-shell .px-5 { padding-left: 16px; padding-right: 16px }
+      #app-shell .py-5 { padding-top: 14px; padding-bottom: 14px }
+      #app-shell .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 16px }
+      #app-shell .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 14px }
+      #app-shell .gap-6 { gap: 16px }
+      #app-shell .gap-5 { gap: 14px }
+      #app-shell .mb-6 { margin-bottom: 16px }
+      #app-shell button.h-14, #app-shell input.h-14 { height: 48px }
+      #app-shell button.h-12, #app-shell a.h-12 { height: 42px }
+      #app-shell .py-4 { padding-top: 12px; padding-bottom: 12px }
+      #app-shell .rounded-2xl { border-radius: 14px }
+
+      /* Content fills the width beside the sidebar */
+      #screen-home > *:not(section:first-child),
+      #screen-profile > *,
+      #screen-spaces > main,
+      #view-offers > main {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        max-width: calc(var(--tab-max) + 48px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        width: 100%
+      }
+
+      /* A hidden first block (checklist, email banner) must not push its column down */
+      #home-content > .tab-col > .hidden:first-child + *,
+      #home-content .tab-col-a1 > .hidden:first-child + * {
+        margin-top: 0 !important
+      }
+
+      #home-content .tab-col-a1 > .hidden + .hidden + * {
+        margin-top: 0 !important
+      }
+
+      /* Home: three columns from 1280 px */
+      #home-content {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        column-gap: 16px !important;
+        margin-top: 0 !important
+      }
+
+      #home-content > .tab-col-a {
+        display: contents
+      }
+
+      #home-content .tab-col-a1,
+      #home-content .tab-col-a2,
+      #home-content > .tab-col-b {
+        margin-top: 0 !important
+      }
+
+      /* Cards screen */
+      #screen-list:not(.hidden) {
+        column-gap: 16px;
+        padding: 0 max(24px, calc((100% - var(--tab-max)) / 2))
+      }
+
+      #screen-list > div:first-child {
+        padding: 0 !important
+      }
+
+      #card-feed {
+        gap: 12px
+      }
+
+      /* Card page: three panes from 1280 px, narrower card list */
+      .detail-pane {
+        width: 260px
+      }
+
+      #detail-main > * {
+        max-width: none
+      }
+
+      #detail-main > main {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto auto 1fr;
+        column-gap: 16px;
+        row-gap: 14px;
+        align-items: start;
+        padding: 4px 20px 0 !important
+      }
+
+      #detail-main > main > * {
+        grid-column: 1;
+        margin: 0 !important
+      }
+
+      #detail-main > main > #card-spending {
+        grid-column: 2;
+        grid-row: 1 / 4;
+        position: sticky;
+        top: 68px;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        margin-bottom: 24px !important
+      }
+
+      /* Simulators: all three side by side, no tabs needed */
+      #screen-simulators:not(.hidden) {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        column-gap: 16px;
+        align-content: start;
+        padding: 0 max(24px, calc((100% - var(--tab-max)) / 2)) 32px !important
+      }
+
+      #screen-simulators > section:first-child {
+        grid-column: 1 / -1;
+        padding: 0 !important
+      }
+
+      #screen-simulators > nav {
+        display: none !important
+      }
+
+      #screen-simulators > [id^="section-"],
+      #screen-simulators > [id^="section-"].hidden {
+        display: flex !important;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important
+      }
+
+      #screen-simulators > [id^="section-"] > * {
+        grid-column: auto !important;
+        grid-row: auto !important;
+        margin: 0 !important
+      }
+
+      /* Spaces: one grid, summary across the top, "create" as a tile */
+      #screen-spaces > main {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 14px;
+        align-content: start;
+        padding-top: 4px !important
+      }
+
+      #screen-spaces > main > :not(#spaces-feed):not(#btn-create-space-bottom) {
+        grid-column: 1 / -1;
+        margin: 0 !important
+      }
+
+      #spaces-feed {
+        display: contents !important
+      }
+
+      #spaces-feed > div:not(.bg-white) {
+        grid-column: 1 / -1
+      }
+
+      #btn-create-space-bottom {
+        min-height: 160px;
+        height: 100%;
+        flex-direction: column;
+        border-style: dashed !important;
+        border-width: 2px !important;
+        margin: 0 !important
+      }
+
+      #btn-create-space-bottom > span:last-child {
+        font-size: 14px !important
+      }
+
+      /* Offers: a compact My cards / Explore all switch instead of a full-width bar */
+      #view-offers > main > div:first-child {
+        max-width: 420px
+      }
+
+      #offers-feed {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+        gap: 14px
+      }
+
+      /* Profile */
+      #profile-content {
+        column-gap: 16px !important;
+        max-width: none !important
+      }
+
+      #screen-profile > section:first-child {
+        height: 60px;
+        padding: 0 24px
+      }
+
+      /* Avatar menu */
+      .avatar-menu {
+        position: fixed;
+        z-index: 120;
+        width: 300px;
+        display: block;
+        padding: 8px;
+        border-radius: 16px;
+        background: rgb(var(--c-white));
+        border: 1px solid rgb(var(--b-tk-outline-variant, var(--c-tk-outline-variant)) / .6);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, .16), 0 2px 6px rgba(15, 23, 42, .06);
+        opacity: 0;
+        transform: translateY(-4px) scale(.98);
+        transform-origin: top right;
+        pointer-events: none;
+        transition: opacity .14s ease, transform .14s ease
+      }
+
+      .avatar-menu.open {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto
+      }
+
+      .am-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 10px 12px
+      }
+
+      .am-avatar {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 9999px;
+        border: 2px solid rgb(var(--c-tk-primary-container));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        color: rgb(var(--t-tk-primary, var(--c-tk-primary)))
+      }
+
+      .am-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+      }
+
+      .am-email {
+        font-size: 12px;
+        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+      }
+
+      .am-badge {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 1px 8px;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        background: rgb(var(--c-tk-primary-container) / .12);
+        color: rgb(var(--t-emerald-700, var(--c-emerald-700)))
+      }
+
+      .am-sep {
+        height: 1px;
+        margin: 6px 4px;
+        background: rgb(var(--c-tk-outline-variant) / .5)
+      }
+
+      .am-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 40px;
+        padding: 0 10px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+        color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)))
+      }
+
+      .am-item .material-symbols-outlined {
+        font-size: 20px;
+        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
+      }
+
+      .am-item:hover,
+      .am-item:focus-visible {
+        background: rgb(var(--c-tk-surface-container-low));
+        outline: none
+      }
+
+      .am-item.am-danger,
+      .am-item.am-danger .material-symbols-outlined {
+        color: rgb(var(--t-tk-error, var(--c-tk-error)))
+      }
+
+      .am-kbd {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
+      }
+
+      .am-theme {
+        display: flex;
+        gap: 4px;
+        margin: 4px 6px 6px;
+        padding: 4px;
+        border-radius: 10px;
+        background: rgb(var(--c-tk-surface-container-low))
+      }
+
+      .am-theme .theme-opt {
+        height: 32px
+      }
+    }
+
+    /* Very wide monitors: let the dashboard use more of the screen */
+    @media (min-width: 2200px) {
+      :root {
+        --tab-max: 2000px
+      }
+    }
+
+    /* ── Profile photo in avatar circles (Google accounts); initials stay underneath until it loads ── */
+    .avatar-host {
+      position: relative;
+      overflow: hidden
+    }
+
+    .avatar-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity .2s ease
+    }
+
+    .avatar-photo.loaded {
+      opacity: 1
+    }
+
+    .avatar-initials-off {
+      visibility: hidden
+    }
+
     /* ── Calculator tabs ── */
     .calc-tab {
       transition: background .15s, color .15s, box-shadow .15s
@@ -2661,6 +3137,11 @@
           </div>
         </div>
         <div class="flex items-center gap-1">
+          <button type="button" id="btn-profile-detail" class="desk-only ml-1 order-last items-center justify-center rounded-full" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">
+            <span class="w-9 h-9 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center">
+              <span class="text-[13px] text-primary font-bold profile-initials-text">SM</span>
+            </span>
+          </button>
           <button type="button" id="btn-share-card" aria-label="Share progress" onclick="App.openShare()"
             class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all"><span
               class="material-symbols-outlined text-[20px]">ios_share</span></button>
@@ -4040,7 +4521,7 @@
         </a>
       </div>
       <div class="sidebar-user">
-        <button type="button" class="sidebar-profile" onclick="document.getElementById('btn-profile-home').click()" aria-label="Profile and settings">
+        <button type="button" class="sidebar-profile" onclick="window.AvatarMenu.toggle(this)" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">
           <span class="sidebar-avatar"><span class="profile-initials-text">SM</span></span>
           <span class="sidebar-who"><span id="sidebar-user-name" class="sidebar-name">Account</span><span id="sidebar-user-email" class="sidebar-email"></span></span>
         </button>
@@ -4048,7 +4529,7 @@
           <span class="material-symbols-outlined text-[22px]" aria-hidden="true">menu</span>
         </button>
       </div>
-      <p id="sidebar-shortcuts-hint" class="sidebar-hint">Press <kbd>?</kbd> for keyboard shortcuts</p>
+      <p id="sidebar-shortcuts-hint" class="sidebar-hint">Press <kbd>?</kbd> for shortcuts</p>
       <div class="home-bar"></div>
     </div>
   </nav>
@@ -5812,6 +6293,7 @@
         initialsEls.forEach(el => el.innerText = initial);
         const initialsLgEls = document.querySelectorAll('.profile-initials-text-lg');
         initialsLgEls.forEach(el => el.innerText = initial);
+        if (typeof window.paintAvatars === 'function') window.paintAvatars();
 
         const profileName = document.getElementById('profile-user-name');
         if (profileName) profileName.innerText = fname + (lname ? " " + lname : "");
@@ -11423,6 +11905,31 @@ renderSpaces();
 
   <!-- GLOBAL MENU DRAWER -->
   <div id="menu-backdrop" class="fixed inset-0 bg-slate-900/50 hidden z-40 cursor-pointer"></div>
+  <!-- Account menu (desktop): opens from the avatar -->
+  <div id="avatar-menu" class="avatar-menu" role="menu" aria-label="Account" aria-hidden="true">
+    <div class="am-head">
+      <span class="am-avatar"><span class="profile-initials-text-lg">SM</span></span>
+      <span class="min-w-0 flex flex-col">
+        <span id="am-name" class="am-name">Account</span>
+        <span id="am-email" class="am-email"></span>
+        <span><span id="am-provider" class="am-badge"></span></span>
+      </span>
+    </div>
+    <div class="am-sep"></div>
+    <button type="button" role="menuitem" class="am-item" data-am="profile"><span class="material-symbols-outlined" aria-hidden="true">person</span>Profile &amp; settings</button>
+    <button type="button" role="menuitem" class="am-item" data-am="strategy"><span class="material-symbols-outlined" aria-hidden="true">route</span>Payoff strategy</button>
+    <div class="am-theme" role="radiogroup" aria-label="Appearance">
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="light" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">light_mode</span>Light</button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">dark_mode</span>Dark</button>
+      <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">brightness_auto</span>Auto</button>
+    </div>
+    <button type="button" role="menuitem" class="am-item" data-am="backup"><span class="material-symbols-outlined" aria-hidden="true">download</span>Download a backup</button>
+    <button type="button" role="menuitem" class="am-item" data-am="shortcuts"><span class="material-symbols-outlined" aria-hidden="true">keyboard</span>Keyboard shortcuts<span class="am-kbd">?</span></button>
+    <button type="button" role="menuitem" class="am-item" data-am="guide"><span class="material-symbols-outlined" aria-hidden="true">explore</span>Replay app guide</button>
+    <div class="am-sep"></div>
+    <button type="button" role="menuitem" class="am-item am-danger" data-am="signout"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Sign out</button>
+  </div>
+
   <div id="global-menu-drawer" class="fixed inset-y-0 right-0 w-80 bg-[#f8fafc] shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col justify-between overflow-hidden border-l border-outline-variant/30 rounded-l-[32px]">
     <!-- DRAWER HEADER (Pinned Top) -->
     <header class="bg-surface-container-lowest border-b border-surface-container px-6 pt-12 pb-4 flex items-center justify-between shrink-0">
@@ -12573,9 +13080,9 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           { id: 'btn-log-spend', title: 'Log what you spend', body: 'Log purchases and payments, or paste a bank SMS. Below, set budgets, add recurring payments and search everything you have logged.' }
         ],
         'screen-simulators': [
-          { id: 'tab-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves. Load one of your cards or try your own numbers.' },
-          { id: 'tab-cash-advance', title: 'Cash advance trap', body: 'The true cost of withdrawing cash on a card, with the upfront fee and daily interest included.' },
-          { id: 'tab-surcharge', title: '0% surcharge exposer', body: 'Reveal the interest rate hidden inside the fee on a "0%" instalment plan.' }
+          { id: 'tab-min-payment', alt: 'section-min-payment', title: 'Minimum payment sandbox', body: 'See how long a balance takes to clear on minimum payments, and how much a fixed payment saves. Load one of your cards or try your own numbers.' },
+          { id: 'tab-cash-advance', alt: 'section-cash-advance', title: 'Cash advance trap', body: 'The true cost of withdrawing cash on a card, with the upfront fee and daily interest included.' },
+          { id: 'tab-surcharge', alt: 'section-surcharge', title: '0% surcharge exposer', body: 'Reveal the interest rate hidden inside the fee on a "0%" instalment plan.' }
         ],
         'screen-spaces': [
           { id: 'btn-create-space-top', title: 'Build a buffer', body: 'Create a savings space for emergencies, so a surprise bill does not land on a credit card. Add money, use it when you need it and see each space\u2019s history.' }
@@ -13430,6 +13937,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       if (em) em.textContent = u ? (u.email || '') : '';
       var sbEmail = document.getElementById('sidebar-user-email');
       if (sbEmail) sbEmail.textContent = u ? (u.email || '') : '';
+      if (typeof window.paintAvatars === 'function') window.paintAvatars();
       var pv = document.getElementById('profile-account-provider');
       if (pv) pv.textContent = u ? (PROVIDER_LABELS[primaryProvider(u)] || 'Email & password') : '';
       var st = document.getElementById('profile-account-verified');
@@ -13846,6 +14354,177 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         if (forgotCard) forgotCard.classList.add('hidden');
       }
     });
+  </script>
+
+  <script>
+    /* ── Profile photo: a Google account's picture in every avatar circle; initials until it loads ── */
+    (function () {
+      function photoURL() {
+        var u = window.currentUser;
+        if (!u) return '';
+        var url = u.photoURL || '';
+        if (!url && u.providerData) u.providerData.forEach(function (p) { if (!url && p && p.photoURL && p.providerId === 'google.com') url = p.photoURL; });
+        // Google serves 96 px by default; ask for a sharper copy
+        return url ? url.replace(/=s\d+(-c)?$/, '=s192-c') : '';
+      }
+      window.paintAvatars = function () {
+        var url = photoURL();
+        document.querySelectorAll('.profile-initials-text, .profile-initials-text-lg').forEach(function (initials) {
+          var host = initials.parentElement;
+          var img = host.querySelector(':scope > img.avatar-photo');
+          if (!url) {
+            if (img) img.remove();
+            initials.classList.remove('avatar-initials-off');
+            host.classList.remove('avatar-host');
+            return;
+          }
+          if (img && img.getAttribute('data-src') === url) return;
+          if (!img) {
+            img = document.createElement('img');
+            img.className = 'avatar-photo';
+            img.alt = '';
+            img.setAttribute('aria-hidden', 'true');
+            img.referrerPolicy = 'no-referrer';
+            img.decoding = 'async';
+            host.appendChild(img);
+          }
+          host.classList.add('avatar-host');
+          img.classList.remove('loaded');
+          img.setAttribute('data-src', url);
+          img.onload = function () { img.classList.add('loaded'); initials.classList.add('avatar-initials-off'); };
+          img.onerror = function () { img.remove(); initials.classList.remove('avatar-initials-off'); };
+          img.src = url;
+        });
+      };
+    })();
+
+    /* ── Desktop Home: balance the three columns. The payoff pace joins the debt snapshot (column 1) and the
+       setup checklist tops column 3; both go back to their usual places below 1280 px, so phone and iPad
+       never change. ── */
+    (function () {
+      var mq = window.matchMedia('(min-width: 1280px)');
+      var MOVES = [
+        { id: 'home-strategy-section', to: '.tab-col-a1', first: false },
+        { id: 'ob-checklist', to: '#home-content > .tab-col-b', first: true }
+      ];
+      var marks = {};
+      function arrange() {
+        MOVES.forEach(function (m) {
+          var el = document.getElementById(m.id);
+          if (!el) return;
+          if (!marks[m.id]) { marks[m.id] = document.createComment(' ' + m.id + ' '); el.parentNode.insertBefore(marks[m.id], el); }
+          if (mq.matches) {
+            var dest = document.querySelector(m.to);
+            if (dest && el.parentNode !== dest) { if (m.first) dest.insertBefore(el, dest.firstChild); else dest.appendChild(el); }
+          } else if (el.previousSibling !== marks[m.id]) {
+            marks[m.id].parentNode.insertBefore(el, marks[m.id].nextSibling);
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', arrange);
+      if (mq.addEventListener) mq.addEventListener('change', arrange); else mq.addListener(arrange);
+    })();
+
+    /* ── Account menu (desktop): opens from any avatar; Profile, strategy, appearance, backup, shortcuts, guide, sign out ── */
+    window.AvatarMenu = (function () {
+      var menu, anchor = null;
+      function isDesktop() { return window.matchMedia('(min-width: 1280px)').matches; }
+      function items() { return Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"], [role="radio"]')); }
+      function fill() {
+        var pick = function (id) { var e = document.getElementById(id); return e ? e.textContent.trim() : ''; };
+        document.getElementById('am-name').textContent = pick('sidebar-user-name') || 'Account';
+        document.getElementById('am-email').textContent = pick('sidebar-user-email');
+        var prov = pick('profile-account-provider');
+        var badge = document.getElementById('am-provider');
+        badge.textContent = /google/i.test(prov) ? 'Google' : (prov ? 'Email' : '');
+        badge.classList.toggle('hidden', !prov);
+        if (window.paintAvatars) window.paintAvatars();
+      }
+      function place() {
+        var r = anchor.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var left = r.left + r.width / 2 > vw / 2 ? r.right - w : r.left;
+        left = Math.max(8, Math.min(vw - w - 8, left));
+        var top = r.bottom + 8;
+        if (top + h > vh - 8) top = Math.max(8, r.top - h - 8);
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.style.transformOrigin = (top < r.top ? 'bottom ' : 'top ') + (left + w / 2 < r.left + r.width / 2 ? 'right' : 'left');
+      }
+      function open(el) {
+        anchor = el;
+        fill();
+        menu.classList.add('open');
+        menu.setAttribute('aria-hidden', 'false');
+        el.setAttribute('aria-expanded', 'true');
+        place();
+        var first = items()[0];
+        if (first) first.focus({ preventScroll: true });
+      }
+      function close(refocus) {
+        if (!menu || !menu.classList.contains('open')) return;
+        menu.classList.remove('open');
+        menu.setAttribute('aria-hidden', 'true');
+        if (anchor) {
+          anchor.setAttribute('aria-expanded', 'false');
+          if (refocus && typeof anchor.focus === 'function') anchor.focus({ preventScroll: true });
+        }
+        anchor = null;
+      }
+      function toggle(el) {
+        if (menu.classList.contains('open') && anchor === el) close(true); else { close(false); open(el); }
+      }
+      function run(act) {
+        close(false);
+        if (act === 'profile') window.navigateTo('screen-profile');
+        else if (act === 'strategy') {
+          window.navigateTo('screen-profile');
+          setTimeout(function () { var t = document.getElementById('section-payoff-method'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120);
+        } else if (act === 'backup') { var b = document.getElementById('btn-export-data'); if (b) b.click(); }
+        else if (act === 'shortcuts') document.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+        else if (act === 'guide') { if (window.Onboarding) window.Onboarding.replay(); }
+        else if (act === 'signout') { if (typeof window.signOutUser === 'function') window.signOutUser(); }
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        menu = document.getElementById('avatar-menu');
+        if (!menu) return;
+        menu.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-am]');
+          if (b) run(b.getAttribute('data-am'));
+        });
+        // The header avatars are plain divs: make them reachable and operable from the keyboard
+        var AVATARS = '#btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers';
+        Array.prototype.forEach.call(document.querySelectorAll(AVATARS), function (av) {
+          av.setAttribute('role', 'button');
+          av.setAttribute('tabindex', '0');
+          av.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault();
+            if (isDesktop()) toggle(av); else av.click();
+          });
+        });
+        // Header avatars open the menu on desktop (tapping one on a phone or iPad still opens Profile)
+        document.addEventListener('click', function (e) {
+          var av = e.target.closest && e.target.closest('#btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers, #btn-profile-detail');
+          if (av && e.isTrusted && isDesktop()) { e.preventDefault(); e.stopImmediatePropagation(); toggle(av); return; }
+          if (menu.classList.contains('open') && !menu.contains(e.target) && !(anchor && anchor.contains(e.target))) close(false);
+        }, true);
+        document.addEventListener('keydown', function (e) {
+          if (!menu.classList.contains('open')) return;
+          var list = items(), i = list.indexOf(document.activeElement);
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+          else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault(); e.stopPropagation();
+            var n = e.key === 'ArrowDown' ? (i + 1) % list.length : (i <= 0 ? list.length - 1 : i - 1);
+            list[n].focus();
+          } else if (e.key === 'Tab') close(false);
+          else e.stopPropagation(); // keep the app's single-key shortcuts quiet while the menu is open
+        }, true);
+        window.addEventListener('resize', function () { if (menu.classList.contains('open')) { if (isDesktop()) place(); else close(false); } });
+        window.addEventListener('scroll', function () { close(false); }, { passive: true });
+      });
+      return { toggle: toggle, close: close, isOpen: function () { return !!menu && menu.classList.contains('open'); } };
+    })();
   </script>
 </body>
 
