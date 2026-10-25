@@ -204,7 +204,8 @@ Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, 
 
 | Path | What it is |
 |---|---|
-| `stitch_fintech_credit_debt_manager/index.html` | The whole app: one HTML file with all screens, styles and logic |
+| `stitch_fintech_credit_debt_manager/index.html` | The app: one HTML file with all screens and styles, plus the built shared core inlined between `CORE:START` and `CORE:END` |
+| `packages/core/` | The shared core: calculations, data rules, actions, saving, sync and sign-in start-up, with Vitest tests. Built into the app by `npm run build:core` |
 | `stitch_fintech_credit_debt_manager/firestore.rules` | Firestore security rules (own data only; offers public to read, admin to write) |
 | `stitch_fintech_credit_debt_manager/firebase.json`, `.firebaserc` | Firebase Hosting and project settings |
 | `stitch_fintech_credit_debt_manager/serve.py` | Local development server with no-cache headers (port 8080) |
@@ -214,7 +215,8 @@ Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, 
 | `Sri Lanka Credit Card App.pdf` / `.txt`, `sri_lanka_credit_card_cash_advance_fees.xlsx`, `Web design/` | Reference material |
 
 ## Technical architecture
-- **Front end:** a single-page app in one HTML file, with no build step.
+- **Front end:** a single-page app in one HTML file.
+- **Shared core:** the logic lives in `packages/core` (plain JavaScript modules, built with Vite). The build writes it into `index.html`, so the deployed app is still one file. Edit the core in `packages/core/src`, never between the `CORE` markers.
 - **Styling:**
   - Tailwind CSS via the Play CDN (forms and container-queries plugins)
   - every colour is a CSS variable, so dark mode swaps values without touching the markup
@@ -239,7 +241,15 @@ Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, 
 
 Sign-in and sync use the live Firebase project, so you'll need an internet connection.
 
+## Core tests and build
+```bash
+npm install            # once, from the repository root
+npm run test:core      # unit tests for the shared core
+npm run build:core     # rebuild the core and write it into index.html
+```
+
 ## Deployment
+Run `npm run build:core` first if anything in `packages/core` changed.
 ```bash
 npm install -g firebase-tools
 cd stitch_fintech_credit_debt_manager
@@ -254,6 +264,7 @@ firebase deploy --only firestore:rules   # security rules, when they change
 
 | Date | Change |
 |---|---|
+| 25 Oct 2026 | **Shared core:** the app's logic moved into `packages/core` with unit tests, ready for the new desktop app. No visible change |
 | 25 Oct 2026 | **Account menu everywhere:** tapping your profile picture opens the account menu on phone and iPad too. It replaces the hamburger side menu, and all of that menu's options moved into it |
 | 25 Oct 2026 | **Desktop panels:** upcoming payments, spending by category, utilisation by card and recent activity. One sidebar avatar on desktop |
 | 25 Oct 2026 | **Desktop redesign:** a compact dashboard, an account menu from the avatar, and Google profile photos everywhere |

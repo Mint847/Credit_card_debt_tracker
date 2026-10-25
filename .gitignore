@@ -28,3 +28,7 @@ __pycache__/
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+# Node / build output
+node_modules/
+packages/*/dist/

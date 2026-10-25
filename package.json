@@ -1,0 +1,11 @@
+{
+  "name": "serendib",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:core": "npm --workspace @serendib/core run build",
+    "test:core": "npm --workspace @serendib/core test"
+  }
+}
