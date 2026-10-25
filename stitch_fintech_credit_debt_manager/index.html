@@ -10066,6 +10066,68 @@ renderSpaces();
         document.getElementById("tab-payoff").addEventListener("click", function () { switchTab("payoff"); });
         document.getElementById("tab-cash").addEventListener("click", function () { switchTab("cash"); });
         document.getElementById("tab-detail-surcharge").addEventListener("click", function () { switchTab("detail-surcharge"); });
+
+        // Swipe across the open calculator to move to the next or previous one (touch screens; the tabs still work).
+        // Each panel only listens to gestures that start inside it, and never on the slider, a field or a sideways scroller.
+        var CALC_TABS = ["payoff", "cash", "detail-surcharge"];
+        var calcReduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function calcSwipeBlocked(target, panel) {
+          if (target.closest('input, textarea, select, [contenteditable="true"], [data-no-swipe]')) return true;
+          for (var el = target; el && el !== panel; el = el.parentElement) {
+            var ox = getComputedStyle(el).overflowX;
+            if ((ox === "auto" || ox === "scroll") && el.scrollWidth > el.clientWidth + 1) return true;
+          }
+          return false;
+        }
+        function showCalcPanel(index, dir) {
+          switchTab(CALC_TABS[index]);
+          var panel = document.getElementById("panel-" + CALC_TABS[index]);
+          if (panel && panel.animate && !calcReduceMotion) {
+            panel.animate([{ transform: "translateX(" + (dir * 36) + "px)", opacity: 0.35 }, { transform: "none", opacity: 1 }],
+              { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
+          }
+          // Keep the tab bar in view when the new calculator is shorter than the one left behind
+          var bar = document.getElementById("tab-payoff").parentElement, r = bar.getBoundingClientRect();
+          if (r.top < 0 || r.bottom > window.innerHeight) bar.scrollIntoView({ block: "nearest", behavior: calcReduceMotion ? "auto" : "smooth" });
+        }
+        CALC_TABS.forEach(function (name, i) {
+          var panel = document.getElementById("panel-" + name);
+          if (!panel) return;
+          var x0 = 0, y0 = 0, t0 = 0, dx = 0, mode = "off"; // off: ignore | wait: direction unknown | h: swiping | v: scrolling
+          function settle() {
+            panel.style.transition = calcReduceMotion ? "" : "transform .2s ease";
+            panel.style.transform = "";
+            setTimeout(function () { panel.style.transition = ""; }, 220);
+          }
+          panel.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1 || calcSwipeBlocked(e.target, panel)) { mode = "off"; return; }
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); dx = 0; mode = "wait";
+          }, { passive: true });
+          panel.addEventListener("touchmove", function (e) {
+            if ((mode !== "wait" && mode !== "h") || e.touches.length !== 1) return;
+            var mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+            if (mode === "wait") {
+              if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+              mode = Math.abs(mx) > Math.abs(my) * 1.3 ? "h" : "v";
+              if (mode !== "h") return;
+              panel.style.transition = "none";
+            }
+            dx = mx;
+            // Follow the finger; resist at the first and last calculator
+            var edge = (dx > 0 && i === 0) || (dx < 0 && i === CALC_TABS.length - 1);
+            if (!calcReduceMotion) panel.style.transform = "translateX(" + Math.round(dx * (edge ? 0.12 : 0.35)) + "px)";
+          }, { passive: true });
+          panel.addEventListener("touchend", function () {
+            if (mode !== "h") { mode = "off"; return; }
+            mode = "off";
+            var next = dx < 0 ? i + 1 : i - 1;
+            var flick = Math.abs(dx) > 30 && Date.now() - t0 < 300;
+            var far = Math.abs(dx) > Math.min(80, panel.clientWidth * 0.22);
+            settle();
+            if ((far || flick) && next >= 0 && next < CALC_TABS.length) showCalcPanel(next, dx < 0 ? 1 : -1);
+          });
+          panel.addEventListener("touchcancel", function () { if (mode === "h") settle(); mode = "off"; });
+        });
         var sl = document.getElementById("ps-slider");
         function updateSliderFill(el) {
           var pct = ((el.value - el.min) / (el.max - el.min)) * 100;
