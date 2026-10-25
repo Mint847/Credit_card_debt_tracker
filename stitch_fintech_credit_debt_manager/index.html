@@ -759,6 +759,448 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, .4)
     }
 
+    /* ══ iPad and large screens. Everything below is additive: phones (< 768 px) use the rules above unchanged. ══ */
+    .detail-pane,
+    .rail-logo {
+      display: none
+    }
+
+    /* Card page wrapper: no box of its own, so the phone layout is unchanged */
+    #detail-main {
+      display: contents
+    }
+
+    @media (min-width: 768px) {
+      :root {
+        --rail: 88px;
+        --tab-max: 720px
+      }
+
+      /* Shell: full width beside a left navigation rail */
+      #app-shell {
+        max-width: none !important;
+        margin: 0 0 0 var(--rail) !important;
+        width: calc(100% - var(--rail));
+        border: 0 !important;
+        box-shadow: none !important
+      }
+
+      #global-nav {
+        top: 0 !important;
+        bottom: 0 !important;
+        right: auto !important;
+        width: var(--rail);
+        border-top: 0 !important;
+        border-right: 1px solid rgb(var(--c-tk-outline-variant) / .4);
+        box-shadow: none !important
+      }
+
+      #global-nav > div {
+        max-width: none !important;
+        height: 100%;
+        padding: 20px 0 16px !important;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch
+      }
+
+      #global-nav > div > div:not(.rail-logo):not(.home-bar) {
+        display: flex !important;
+        flex-direction: column;
+        gap: 6px;
+        padding-top: 0 !important
+      }
+
+      #global-nav .nav-link {
+        flex: none;
+        min-height: 64px;
+        justify-content: center;
+        margin: 0 10px;
+        border-radius: 16px;
+        font-size: 11px
+      }
+
+      #global-nav .nav-link.text-emerald-600 {
+        background: rgb(var(--c-tk-primary-container) / .12);
+        /* one shade deeper on the tinted pill so the label stays readable (light text in dark mode) */
+        color: rgb(var(--t-emerald-700, var(--c-emerald-700)))
+      }
+
+      #global-nav .home-bar {
+        display: none
+      }
+
+      .rail-logo {
+        display: flex;
+        width: 44px;
+        height: 44px;
+        margin: 0 auto 22px;
+        border-radius: 14px;
+        align-items: center;
+        justify-content: center;
+        background: rgb(var(--c-tk-primary-container));
+        color: #fff
+      }
+
+      .rail-logo .material-symbols-outlined {
+        font-size: 24px
+      }
+
+      /* The closed side menu no longer casts its shadow along the right edge */
+      #global-menu-drawer.translate-x-full {
+        box-shadow: none
+      }
+
+      /* Content columns: centred and width-limited */
+      #screen-home > *,
+      #screen-profile > *,
+      #screen-simulators > *,
+      #screen-spaces > *,
+      #view-offers > *,
+      #screen-admin-offers > *,
+      #detail-main > * {
+        width: 100%;
+        max-width: var(--tab-max);
+        margin-left: auto;
+        margin-right: auto
+      }
+
+      #screen-simulators > section,
+      #screen-simulators > nav {
+        max-width: var(--tab-max)
+      }
+
+      #screen-spaces > main {
+        max-width: var(--tab-max) !important
+      }
+
+      #screen-home,
+      #screen-profile,
+      #screen-simulators,
+      #screen-spaces,
+      #view-offers,
+      #screen-admin-offers {
+        padding-bottom: 40px !important
+      }
+
+      #profile-content {
+        padding-bottom: 24px !important
+      }
+
+      #detail-main > main > #card-spending {
+        margin-bottom: 40px !important
+      }
+
+      /* Cards screen */
+      #screen-list > * {
+        width: 100%;
+        max-width: var(--tab-max);
+        margin-left: auto;
+        margin-right: auto
+      }
+
+      #sub-view-overview,
+      #sub-view-list {
+        padding-bottom: 40px !important
+      }
+
+      #card-feed {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px
+      }
+
+      #card-feed > * {
+        margin: 0 !important
+      }
+
+      #card-feed > :only-child:not(article),
+      #spaces-feed > div:not(.bg-white),
+      #offers-feed > :not(article) {
+        grid-column: 1 / -1
+      }
+
+      /* Spaces and Offers grids */
+      #spaces-feed,
+      #offers-feed {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start
+      }
+
+      /* Pop-ups become centred dialogs */
+      #add-card-modal {
+        align-items: center;
+        padding: 24px
+      }
+
+      #modal-sheet {
+        border-radius: 24px;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto
+      }
+
+      #info-sheet-panel,
+      #spend-sheet-panel {
+        top: 50%;
+        bottom: auto;
+        max-width: 560px;
+        max-height: min(86vh, 900px);
+        border-radius: 24px;
+        padding-bottom: 20px;
+        opacity: 0;
+        transform: translate(-50%, -46%) scale(.97);
+        transition: transform .25s cubic-bezier(.4, 0, .2, 1), opacity .2s ease
+      }
+
+      #info-sheet-overlay.open #info-sheet-panel,
+      #spend-sheet.open #spend-sheet-panel {
+        opacity: 1;
+        transform: translate(-50%, -50%)
+      }
+
+      #modal-edit-card,
+      #modal-edit-space,
+      #modal-billing-cycle,
+      #modal-dti-info,
+      #modal-surcharge-info,
+      #modal-velocity-info,
+      #modal-effective-apr,
+      #modal-create-space,
+      #modal-add-funds {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 24px
+      }
+
+      #modal-edit-sheet,
+      #modal-edit-space-sheet,
+      #modal-billing-cycle > div,
+      #modal-dti-sheet,
+      #modal-surcharge-sheet,
+      #modal-velocity-info-sheet,
+      #modal-effective-apr-sheet,
+      #modal-create-space-sheet,
+      #modal-add-funds-sheet {
+        max-width: 560px !important;
+        width: 100%;
+        margin: auto !important;
+        border-radius: 24px !important;
+        max-height: 88vh;
+        overflow-y: auto;
+        transition: transform .25s cubic-bezier(.4, 0, .2, 1), opacity .2s ease !important
+      }
+
+      #modal-edit-sheet.translate-y-full,
+      #modal-edit-space-sheet.translate-y-full,
+      #modal-billing-cycle > div.translate-y-full,
+      #modal-dti-sheet.translate-y-full,
+      #modal-surcharge-sheet.translate-y-full,
+      #modal-velocity-info-sheet.translate-y-full,
+      #modal-effective-apr-sheet.translate-y-full,
+      #modal-create-space-sheet.translate-y-full,
+      #modal-add-funds-sheet.translate-y-full {
+        transform: translateY(16px) scale(.97) !important;
+        opacity: 0
+      }
+
+      #modal-delete-card > div,
+      #modal-settle-card > div,
+      #modal-delete-account > div,
+      #modal-delete-space > div,
+      #modal-offer-terms > div {
+        max-width: 420px !important
+      }
+
+      /* Sign-in, sign-up, forgot password: a centred form over the illustration */
+      #screen-login main > .relative.z-10,
+      #view-signup main > .relative.z-10,
+      #view-forgot main > .relative.z-10 {
+        width: 100%;
+        max-width: 460px;
+        margin: 0 auto;
+        padding-top: 4vh
+      }
+
+      #screen-login main > .absolute.bottom-0,
+      #view-signup main > .absolute.bottom-0,
+      #view-forgot main > .absolute.bottom-0 {
+        height: 320px
+      }
+    }
+
+    @media (min-width: 1024px) {
+      :root {
+        --tab-max: 1120px
+      }
+
+      /* Home and Profile: two columns */
+      #home-content,
+      #profile-content {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 24px;
+        align-items: start
+      }
+
+      #home-content > .tab-col,
+      #profile-content > .tab-col {
+        margin-top: 0 !important
+      }
+
+      /* Cards: overview and the card list side by side (the sub-tabs are not needed) */
+      #screen-list:not(.hidden) {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 24px;
+        align-content: start;
+        padding: 0 max(24px, calc((100% - var(--tab-max)) / 2))
+      }
+
+      #screen-list > * {
+        max-width: none;
+        margin: 0
+      }
+
+      #screen-list > :first-child {
+        grid-column: 1 / -1
+      }
+
+      #screen-list > nav {
+        display: none
+      }
+
+      #sub-view-overview,
+      #sub-view-list {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important
+      }
+
+      #sub-view-overview {
+        grid-column: 1;
+        padding-top: 12px !important
+      }
+
+      #sub-view-list {
+        grid-column: 2
+      }
+
+      #sub-view-list > main {
+        padding-top: 12px
+      }
+
+      #card-feed {
+        grid-template-columns: minmax(0, 1fr)
+      }
+
+      /* Card page with every card listed beside it */
+      #screen-detail:not(.hidden) {
+        flex-direction: row
+      }
+
+      .detail-pane {
+        display: block;
+        width: 300px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        border-right: 1px solid rgb(var(--c-tk-outline-variant) / .4);
+        background: rgb(var(--c-tk-surface-container-low))
+      }
+
+      #detail-main {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0
+      }
+
+      #detail-main > * {
+        max-width: 760px
+      }
+
+      /* Simulators: inputs on the left, results and insights on the right */
+      #section-min-payment.flex,
+      #section-cash-advance.flex,
+      #section-surcharge.flex {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+        column-gap: 20px;
+        row-gap: 16px;
+        align-items: start;
+        padding: 0 16px
+      }
+
+      #section-min-payment.flex > *,
+      #section-cash-advance.flex > *,
+      #section-surcharge.flex > * {
+        margin: 0 !important;
+        grid-column: 2
+      }
+
+      #section-min-payment.flex > :first-child,
+      #section-cash-advance.flex > :first-child,
+      #section-surcharge.flex > :first-child {
+        grid-column: 1;
+        grid-row: 1 / span 8
+      }
+
+      #screen-simulators > [id^="section-"] {
+        max-width: var(--tab-max)
+      }
+
+      /* Three across */
+      #spaces-feed,
+      #offers-feed {
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+      }
+
+      #screen-spaces > main {
+        max-width: var(--tab-max) !important
+      }
+
+      /* Sign-in: illustration on the left, form on the right */
+      #screen-login main,
+      #view-signup main,
+      #view-forgot main {
+        flex-direction: row
+      }
+
+      #screen-login main > .absolute.bottom-0,
+      #view-signup main > .absolute.bottom-0,
+      #view-forgot main > .absolute.bottom-0 {
+        top: 0;
+        right: 50%;
+        width: 50%;
+        height: auto
+      }
+
+      #screen-login main > .absolute.bottom-0 > .absolute.top-0,
+      #view-signup main > .absolute.bottom-0 > .absolute.top-0,
+      #view-forgot main > .absolute.bottom-0 > .absolute.top-0 {
+        display: none
+      }
+
+      #screen-login main > .relative.z-10,
+      #view-signup main > .relative.z-10,
+      #view-forgot main > .relative.z-10 {
+        margin: 0 0 0 50%;
+        width: 50%;
+        max-width: none;
+        padding: 0 max(32px, calc((50% - 460px) / 2));
+        justify-content: center;
+        min-height: 100dvh
+      }
+    }
+
     /* ── Calculator tabs ── */
     .calc-tab {
       transition: background .15s, color .15s, box-shadow .15s
@@ -1393,7 +1835,8 @@
         </div>
       </section>
       
-      <div class="px-5 flex flex-col space-y-5 mt-2">
+      <div id="home-content" class="px-5 flex flex-col space-y-5 mt-2">
+        <div class="tab-col tab-col-a flex flex-col space-y-5">
         <!-- Email verification reminder (password accounts until verified) -->
         <section id="verify-email-banner" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4" role="status">
           <div class="flex items-start gap-3">
@@ -1655,7 +2098,8 @@
             </div>
           </article>
         </section>
-
+        </div>
+        <div class="tab-col tab-col-b flex flex-col space-y-5">
         <!-- 5. Quick Action Navigation Hub (2x2 Grid) -->
         <section class="flex flex-col space-y-3">
           <div class="flex justify-between items-center">
@@ -1762,6 +2206,7 @@
             </p>
           </div>
         </section>
+        </div>
       </div>
     </div>
 
@@ -1809,7 +2254,7 @@
         </section>
 
         <!-- MASTER REPAYMENT DIRECTOR -->
-        <section
+        <section id="overview-strategy"
           class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 relative overflow-hidden">
           <div class="flex items-start justify-between gap-2 mb-3 pt-0.5">
             <div>
@@ -1836,7 +2281,7 @@
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2.5">
                   <div
-                    class="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                    class="w-8 h-8 rounded-lg bg-primary-container text-white flex items-center justify-center font-bold">
                     <span class="material-symbols-outlined text-[18px]">priority_high</span>
                   </div>
                   <div>
@@ -1931,7 +2376,7 @@
 
         <!-- Execute Allocations CTA -->
         <button
-          class="w-full h-12 bg-primary-container text-on-primary-container rounded-full text-[14px] font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform">
+          class="w-full h-12 bg-primary-container text-white rounded-full text-[14px] font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform">
           <span class="material-symbols-outlined text-[20px]">payments</span>
           Execute Monthly Allocations
         </button>
@@ -1966,6 +2411,8 @@
 
     <!-- SCREEN 2: Card Detail -->
     <div id="screen-detail" class="hidden-screen bg-surface flex flex-col min-h-screen">
+      <aside id="detail-cards-pane" class="detail-pane" aria-label="Your cards"></aside>
+      <div id="detail-main">
       <header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md px-4 h-14 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <button id="btn-back" aria-label="Back"
@@ -2329,6 +2776,7 @@
         <section id="card-spending" aria-labelledby="spend-title"
           class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/40 shadow-sm mb-28"></section>
       </main>
+      </div>
     </div><!-- /screen-detail -->
 
     <!-- SCREEN 3: Profile & Settings -->
@@ -2351,7 +2799,8 @@
       </section>
 
       <!-- Scrollable Content Canvas -->
-      <div class="flex-1 overflow-y-auto no-scrollbar px-4 pt-2 pb-24 space-y-4">
+      <div id="profile-content" class="flex-1 overflow-y-auto no-scrollbar px-4 pt-2 pb-24 space-y-4">
+        <div class="tab-col tab-col-a space-y-4">
         <!-- Section 1: User Identity & Income Card -->
         <article class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-4 app-card-shadow">
           <div class="flex items-center space-x-3.5 mb-4">
@@ -2534,7 +2983,8 @@
             </button>
           </div>
         </section>
-
+        </div>
+        <div class="tab-col tab-col-b space-y-4">
         <!-- Section 4: Privacy & Data Management -->
         <section class="space-y-2">
           <div class="flex items-center space-x-2 px-1">
@@ -2669,6 +3119,7 @@
           <p class="text-[10px] text-secondary/60 mt-0.5">Compliant with Central Bank of Sri Lanka Consumer Protection
             Directives</p>
         </footer>
+        </div>
       </div>
     </div>
 
@@ -2801,7 +3252,7 @@
           </div>
         </div>
         <!-- CTA Inside Sandbox -->
-        <button class="w-full bg-primary-container text-on-primary-container font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+        <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
           <span>Adopt Fixed Repayment Plan</span>
           <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
@@ -2963,7 +3414,7 @@
             </div>
           </div>
           <!-- CTA Inside Sandbox -->
-          <button class="w-full bg-primary-container text-on-primary-container font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+          <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
             <span>Compare Alternatives</span>
             <span class="material-symbols-outlined text-base">arrow_forward</span>
           </button>
@@ -3102,7 +3553,7 @@
             </div>
           </div>
           <!-- CTA Inside Sandbox -->
-          <button class="w-full bg-primary-container text-on-primary-container font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+          <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
             <span>Negotiate Cash Discount</span>
             <span class="material-symbols-outlined text-base">arrow_forward</span>
           </button>
@@ -3317,6 +3768,7 @@
     class="hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-outline-variant/40"
     style="box-shadow:0 -2px 12px rgba(0,0,0,.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
     <div style="max-width:440px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,8px)">
+      <div class="rail-logo" aria-hidden="true"><span class="material-symbols-outlined">eco</span></div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);padding-top:6px">
         <a id="btn-nav-home" href="#" class="nav-link text-slate-400" data-tab="home">
           <span class="material-symbols-outlined nav-icon">home</span>
@@ -6124,6 +6576,7 @@ var checkSnowball = document.getElementById('check-snowball');
         if (App._updateSliderFill) App._updateSliderFill(sl);
         runPayoffSim(c, parseFloat(sl.value));
         renderCycleRow(c);
+        renderDetailPane();
         renderSpending(c);
         
         var btnSettle = document.getElementById("btn-menu-settle");
@@ -7752,6 +8205,34 @@ var checkSnowball = document.getElementById('check-snowball');
         var quick = document.getElementById('home-quick-log');
         if (quick) quick.classList.toggle('hidden', !cards.length);
         return count;
+      }
+
+      // Landscape iPad: every card listed beside the open card (hidden on smaller screens by CSS)
+      function renderDetailPane() {
+        var el = document.getElementById('detail-cards-pane');
+        if (!el) return;
+        if (!el._bound) {
+          el._bound = true;
+          el.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-pane-card]');
+            if (!b) return;
+            var c = findCard(b.getAttribute('data-pane-card'));
+            if (c && String(c.id) !== String(activeId)) goDetail(c.id);
+          });
+        }
+        el.innerHTML = '<div class="flex items-center justify-between px-4 pt-5 pb-3">' +
+          '<h2 class="text-[16px] font-bold text-on-surface">Your cards</h2>' +
+          '<button type="button" onclick="App.openAddCard()" class="h-9 px-3 rounded-full bg-primary-container text-white text-[12px] font-bold flex items-center gap-1 active:scale-95 transition-all"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>Add</button></div>' +
+          '<div class="px-3 pb-6 space-y-1.5">' + cards.map(function (c) {
+            var t = cardTheme(c), on = String(c.id) === String(activeId);
+            var util = c.limit > 0 ? Math.min(100, c.balance / c.limit * 100) : 0;
+            return '<button type="button" data-pane-card="' + escapeHtml(c.id) + '" aria-current="' + (on ? 'page' : 'false') + '" class="w-full text-left rounded-xl p-3 transition-colors ' +
+              (on ? 'bg-surface-container-lowest shadow-sm' : 'hover:bg-surface-container-low') + '"' + (on ? ' style="box-shadow: inset 3px 0 0 ' + t.hex + ', 0 1px 3px rgba(15,23,42,.08)"' : '') + '>' +
+              '<span class="flex items-center gap-3"><span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + t.bg + ' ' + t.icon + '"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">credit_card</span></span>' +
+              '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + escapeHtml(c.bank + ' ' + c.nick) + '</span>' +
+              '<span class="block text-[12px] text-secondary num">' + fmtLKR(c.balance) + ' of ' + fmtLKR(c.limit) + '</span></span></span>' +
+              '<span class="block w-full h-1.5 bg-surface-container rounded-full overflow-hidden mt-2"><span class="block h-full rounded-full ' + t.bar + '" style="width:' + util.toFixed(1) + '%"></span></span></button>';
+          }).join('') + '</div>';
       }
 
       function switchTab(name) {
@@ -11419,7 +11900,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           { id: 'home-strategy-section', title: 'Your payoff plan', body: 'Your monthly budget, debt-free date and the interest your strategy saves compared with paying minimums.' }
         ],
         'screen-list': [
-          { id: 'tab-btn-overview', title: "This month's plan", body: 'See which card to pay first this month and exactly how much each card gets.' },
+          { id: 'tab-btn-overview', alt: 'overview-strategy', title: "This month's plan", body: 'See which card to pay first this month and exactly how much each card gets.' },
           { id: 'btn-add-card', title: 'Link a card', body: 'Add each credit card with its limit and current balance. Everything else updates from here.' }
         ],
         'screen-detail': [
@@ -11757,9 +12238,12 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         if (drawer && !drawer.classList.contains('hidden')) return true;
         return MODAL_IDS.some(function (id) { var m = el(id); return m && !m.classList.contains('hidden'); });
       }
+      // alt: a second target for layouts where the first is hidden (e.g. the Cards sub-tabs on a landscape iPad)
       function resolveTarget(t) {
         var n = el(t.id);
-        return n && t.parent ? n.parentElement : n;
+        n = n && t.parent ? n.parentElement : n;
+        if (t.alt && !isVisible(n)) n = el(t.alt);
+        return n;
       }
       function isVisible(n) {
         if (!n || !n.getClientRects().length) return false;
