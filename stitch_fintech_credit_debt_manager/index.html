@@ -530,12 +530,16 @@
       background: var(--card-accent)
     }
 
-    #screen-detail .calc-tab.active {
-      box-shadow: 0 1px 4px rgba(0, 0, 0, .08), inset 0 -2px 0 var(--card-accent)
-    }
-
-    #spend-sheet .spend-seg.is-on {
-      box-shadow: 0 1px 3px rgba(15, 23, 42, .12), inset 0 -2px 0 var(--card-accent)
+    #screen-detail .calc-tab.active::before,
+    #spend-sheet .spend-seg.is-on::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      margin-right: 6px;
+      vertical-align: 1px;
+      background: var(--card-accent)
     }
 
     #spend-sheet-handle {
@@ -620,10 +624,6 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, .4)
     }
 
-    html.dark #screen-detail .calc-tab.active {
-      box-shadow: 0 1px 4px rgba(0, 0, 0, .4), inset 0 -2px 0 var(--card-accent)
-    }
-
     html.dark .spend-chip {
       background: #191f21;
       border-color: #3f4946;
@@ -651,10 +651,6 @@
       background: #273032;
       color: #e0e3e3;
       box-shadow: 0 1px 3px rgba(0, 0, 0, .4)
-    }
-
-    html.dark #spend-sheet .spend-seg.is-on {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .4), inset 0 -2px 0 var(--card-accent)
     }
 
     html.dark .tenure-btn.active {
@@ -2268,7 +2264,7 @@
           </div>
           <!-- Card A (Payment Deadline) -->
           <article id="home-alert-payment"
-            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-emerald-500 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] flex flex-col justify-between">
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/40 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] flex flex-col justify-between">
             <div class="flex items-start justify-between">
               <div class="flex space-x-3 items-start">
                 <div
@@ -2276,6 +2272,7 @@
                   <span class="material-symbols-outlined text-primary text-[22px]">event_upcoming</span>
                 </div>
                 <div>
+                  <p id="home-alert-payment-eyebrow" class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span><span data-eyebrow>Payment due</span></p>
                   <div class="flex items-center space-x-2">
                     <h3 id="home-alert-payment-countdown" class="text-[14px] text-on-surface font-bold">--</h3>
                     <span id="home-alert-payment-date"
@@ -2296,12 +2293,13 @@
           </article>
           <!-- Did you pay? (the day after a due date with the minimum unpaid) -->
           <article id="home-alert-ask"
-            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-amber-500 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/40 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
             <div class="flex space-x-3 items-start">
               <span class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 mt-0.5 text-amber-600">
                 <span class="material-symbols-outlined text-[22px]" aria-hidden="true">help</span>
               </span>
               <div class="flex-1 min-w-0">
+                <p class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span><span data-eyebrow>Check-in</span></p>
                 <h3 class="text-[14px] text-on-surface font-bold">Payment check</h3>
                 <p id="home-alert-ask-text" class="text-[12px] text-secondary mt-1">--</p>
                 <div id="home-alert-ask-card" class="mt-2"></div>
@@ -2314,12 +2312,13 @@
           </article>
           <!-- Overdue under 60 days -->
           <article id="home-alert-overdue"
-            class="hidden bg-amber-50/60 rounded-2xl p-4 border-y border-r border-amber-200 border-l-[6px] border-l-amber-500 overflow-hidden">
+            class="hidden bg-amber-50/60 rounded-2xl p-4 border border-amber-200 overflow-hidden">
             <div class="flex space-x-3 items-start">
               <span class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 text-amber-700">
                 <span class="material-symbols-outlined text-[22px]" aria-hidden="true">schedule</span>
               </span>
               <div class="flex-1 min-w-0">
+                <p class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span><span data-eyebrow>Overdue</span></p>
                 <h3 id="home-alert-overdue-title" class="text-[14px] text-amber-900 font-bold">--</h3>
                 <p id="home-alert-overdue-text" class="text-[12px] text-amber-900/80 mt-1 leading-snug">--</p>
                 <div id="home-alert-overdue-card" class="mt-2"></div>
@@ -2329,13 +2328,14 @@
           </article>
           <!-- Card B (CRIB Danger Zone) -->
           <article id="home-alert-crib"
-            class="hidden bg-[#FEF2F2] rounded-2xl p-4 border-y border-r border-[#FCA5A5] border-l-[6px] border-l-rose-500 overflow-hidden shadow-[0_1px_3px_0_rgba(186,26,26,0.05)]">
+            class="hidden bg-[#FEF2F2] rounded-2xl p-4 border border-[#FCA5A5] overflow-hidden shadow-[0_1px_3px_0_rgba(186,26,26,0.05)]">
             <div class="flex items-start space-x-3">
               <div
                 class="w-10 h-10 rounded-xl bg-[#FEE2E2] flex items-center justify-center shrink-0 mt-0.5 text-error">
                 <span class="material-symbols-outlined text-error text-[22px] icon-filled">warning</span>
               </div>
               <div class="flex-1">
+                <p class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-red-500" aria-hidden="true"></span><span data-eyebrow>Critical</span></p>
                 <div class="flex items-center justify-between">
                   <h3 class="text-[14px] text-[#991B1B] font-bold">CRIB Default Warning</h3>
                   <button data-sheet="crib"
@@ -2348,10 +2348,6 @@
                   --
                 </p>
                 <div class="mt-2.5 flex items-center space-x-2">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/80 text-error border border-error/20">
-                    Critical Impact
-                  </span>
                   <button type="button" id="home-alert-crib-btn" class="text-[11px] text-[#991B1B] font-semibold underline">View Remedial Plan</button>
                 </div>
               </div>
@@ -2359,12 +2355,13 @@
           </article>
           <!-- Card D (Category over budget) -->
           <article id="home-alert-budget"
-            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-rose-400 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/40 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
             <button type="button" id="home-alert-budget-btn" class="w-full flex space-x-3 items-start text-left">
               <span class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 mt-0.5 text-rose-600">
                 <span class="material-symbols-outlined text-[22px]" aria-hidden="true">savings</span>
               </span>
               <span class="flex-1 min-w-0">
+                <span class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500" aria-hidden="true"></span><span data-eyebrow>Over budget</span></span>
                 <span id="home-alert-budget-title" class="block text-[14px] text-on-surface font-bold">--</span>
                 <span id="home-alert-budget-text" class="block text-[12px] text-secondary mt-1">--</span>
                 <span id="home-alert-budget-card" class="block mt-2"></span>
@@ -2374,12 +2371,13 @@
           </article>
           <!-- Card E (Recurring charge due tomorrow) -->
           <article id="home-alert-recurring"
-            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-indigo-400 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/40 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
             <button type="button" id="home-alert-recurring-btn" class="w-full flex space-x-3 items-start text-left">
               <span class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5 text-indigo-600">
                 <span class="material-symbols-outlined text-[22px]" aria-hidden="true">event_repeat</span>
               </span>
               <span class="flex-1 min-w-0">
+                <span class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500" aria-hidden="true"></span><span data-eyebrow>Tomorrow</span></span>
                 <span id="home-alert-recurring-title" class="block text-[14px] text-on-surface font-bold">--</span>
                 <span id="home-alert-recurring-text" class="block text-[12px] text-secondary mt-1">--</span>
                 <span id="home-alert-recurring-card" class="block mt-2"></span>
@@ -2389,7 +2387,7 @@
           </article>
           <!-- Card C (Interest Bleed - CBSL 28% APR) -->
           <article id="home-alert-bleed"
-            class="hidden bg-surface-container-lowest rounded-2xl p-4 border-y border-r border-outline-variant/30 border-l-[6px] border-l-amber-500 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
+            class="hidden bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/40 overflow-hidden shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
             <div class="flex items-start justify-between">
               <div class="flex space-x-3 items-start">
                 <div
@@ -2397,6 +2395,7 @@
                   <span class="material-symbols-outlined text-[22px]">trending_up</span>
                 </div>
                 <div class="flex-1">
+                  <p class="alert-eyebrow flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span><span data-eyebrow>Interest</span></p>
                   <div class="flex items-center space-x-2">
                     <h3 class="text-[14px] text-on-surface font-bold">Monthly Compounding Bleed</h3>
                   </div>
@@ -2702,7 +2701,6 @@
         <!-- Card Spotlight -->
         <section id="detail-spotlight"
           class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/40 shadow-sm relative overflow-hidden">
-          <div class="absolute inset-x-0 top-0 h-1" style="background:var(--card-accent)" aria-hidden="true"></div>
           <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-2">
               <div id="detail-bank-icon" class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-primary"><span
@@ -6898,7 +6896,6 @@ var checkSnowball = document.getElementById('check-snowball');
           if (isTarget) {
             overviewPlanTarget = { id: card.id, amount: allocation.alloc[card.id] };
             div.className = "w-full text-left rounded-xl p-3 bg-primary-container/10 border border-primary/15 flex items-center gap-3 active:scale-[0.99] transition-all";
-            div.style.boxShadow = "inset 3px 0 0 " + theme.hex;
             div.innerHTML = tile +
               '<span class="flex-1 min-w-0">' +
                 '<span class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-white text-[10px] font-bold mb-1">Pay first</span>' +
@@ -7268,7 +7265,7 @@ var checkSnowball = document.getElementById('check-snowball');
           change = '<p class="text-[11px] font-semibold ' + (pct > 0 ? 'text-error' : 'text-emerald-700') + '">' + (pct > 0 ? '▲ ' : pct < 0 ? '▼ ' : '') + Math.abs(pct) + '% vs last period</p>';
         }
         var html = '<div class="flex justify-between items-start gap-3">' +
-          '<div class="min-w-0"><h3 id="spend-title" class="text-[18px] font-semibold text-on-surface flex items-center gap-2"><span class="w-1 h-5 rounded-full" style="background:var(--card-accent)" aria-hidden="true"></span>Spending</h3>' +
+          '<div class="min-w-0"><h3 id="spend-title" class="text-[18px] font-semibold text-on-surface flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:var(--card-accent)" aria-hidden="true"></span>Spending</h3>' +
           '<p class="text-[11px] font-semibold text-secondary mt-0.5">' + shortDate(period.start) + ' – ' + shortDate(period.end) + ' · ' + when + '</p>' +
           (period.hasCycle ? '' : '<button type="button" data-act="billing" class="text-[11px] font-bold text-primary mt-0.5">Set billing cycle</button>') + '</div>' +
           '<div class="text-right shrink-0"><p id="spend-total" class="text-[20px] font-bold text-on-surface num leading-tight">' + fmtAmt(cur.spent) + '</p>' + change +
@@ -8250,6 +8247,7 @@ var checkSnowball = document.getElementById('check-snowball');
 
         // Next payment due (skips cycles already paid)
         var elPay = document.getElementById('home-alert-payment');
+        function setAlertEyebrow(id, text) { var e = document.querySelector('#' + id + ' [data-eyebrow]'); if (e) e.textContent = text; }
         if (elPay) {
           upcoming.sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
           var u = upcoming[0];
@@ -8261,6 +8259,7 @@ var checkSnowball = document.getElementById('check-snowball');
           if (u) {
             var days = daysBetween(today, u.due);
             countdown.textContent = days === 0 ? 'Payment Due Today' : days === 1 ? 'Payment Due Tomorrow' : 'Next Payment Due in ' + days + ' Days';
+            setAlertEyebrow('home-alert-payment-eyebrow', 'Payment due');
             dateEl.textContent = shortDate(u.due);
             dateEl.classList.remove('hidden');
             textEl.innerHTML = u.left < u.min - 0.5
@@ -8273,6 +8272,7 @@ var checkSnowball = document.getElementById('check-snowball');
             count++;
           } else if (tracked && !overdue.length) {
             countdown.textContent = 'All minimums paid this cycle';
+            setAlertEyebrow('home-alert-payment-eyebrow', 'On track');
             dateEl.classList.add('hidden');
             textEl.textContent = 'Nice work. We\u2019ll remind you when the next statements arrive.';
             cardEl.innerHTML = '';
@@ -8819,7 +8819,7 @@ var checkSnowball = document.getElementById('check-snowball');
             var t = cardTheme(c), on = String(c.id) === String(activeId);
             var util = c.limit > 0 ? Math.min(100, c.balance / c.limit * 100) : 0;
             return '<button type="button" data-pane-card="' + escapeHtml(c.id) + '" aria-current="' + (on ? 'page' : 'false') + '" class="w-full text-left rounded-xl p-3 transition-colors ' +
-              (on ? 'bg-surface-container-lowest shadow-sm' : 'hover:bg-surface-container-low') + '"' + (on ? ' style="box-shadow: inset 3px 0 0 ' + t.hex + ', 0 1px 3px rgba(15,23,42,.08)"' : '') + '>' +
+              (on ? 'bg-surface-container-lowest shadow-sm ring-1 ring-outline-variant/50' : 'hover:bg-surface-container-low') + '">' +
               '<span class="flex items-center gap-3"><span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + t.bg + ' ' + t.icon + '"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">credit_card</span></span>' +
               '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + escapeHtml(c.bank + ' ' + c.nick) + '</span>' +
               '<span class="block text-[12px] text-secondary num">' + fmtLKR(c.balance) + ' of ' + fmtLKR(c.limit) + '</span></span></span>' +
