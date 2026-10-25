@@ -1551,6 +1551,28 @@
       box-shadow: 0 0 0 2px rgba(0, 191, 165, .18)
     }
 
+    /* The forms plugin (loaded after this sheet) resets text inputs to square, grey and a blue ring;
+       restate the shape and colours one element more specific. Its 16px text stays, which also stops
+       iPhone Safari zooming in on focus. */
+    input.stitch-input {
+      border-radius: 12px;
+      border-color: #bbcac4
+    }
+
+    input.stitch-input:focus {
+      outline: none;
+      border-color: #00bfa5;
+      box-shadow: 0 0 0 2px rgba(0, 191, 165, .18)
+    }
+
+    html.dark input.stitch-input {
+      border-color: #3f4946
+    }
+
+    html.dark input.stitch-input:focus {
+      border-color: #00bfa5
+    }
+
     .stitch-select {
       height: 48px;
       width: 100%;
@@ -1568,6 +1590,12 @@
 
     .stitch-select:focus {
       border-color: #00bfa5
+    }
+
+    /* ── Type-ahead suggestion panel ── */
+    .sugg-list.sugg-more {
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent)
     }
 
     /* ── Utility ── */
@@ -4160,7 +4188,7 @@
     <div id="modal-sheet">
       <div class="w-10 h-1 bg-outline-variant rounded-full mx-auto mb-5"></div>
       <h2 class="text-[22px] font-bold text-on-surface mb-1">Link a credit card</h2>
-      <p class="text-[12px] text-secondary mb-5">Your data is stored locally on this device only.</p>
+      <p class="text-[12px] text-secondary mb-5">Saved to your account and synced to your devices.</p>
       <form id="add-card-form" class="space-y-4" onsubmit="return false;">
         <div class="space-y-1.5">
           <label class="text-[12px] font-semibold text-secondary" for="f-bank">Bank name</label>
@@ -4571,20 +4599,27 @@
       return suggestEscape(label.slice(0, i)) + '<strong class="font-semibold">' + suggestEscape(label.slice(i, i + q.length)) + '</strong>' + suggestEscape(label.slice(i + q.length));
     }
 
-    // Attach a suggestion list under an input. opts.source() returns { header?, items: [{ label, hint?, terms? }] };
+    // Attach a suggestion panel that floats under an input. opts.source() returns { header?, items: [{ label, hint?, terms? }] };
     // opts.next() returns the field to focus after a suggestion is chosen; opts.onChoose(item) runs after a pick.
+    // opts.layout: 'chips' shows the options as wrapping pills; opts.icon adds a leading icon to each row.
     function attachSuggest(input, opts) {
       if (!input || input._suggest) return;
       var id = 'suggest-' + (++_suggestSeq);
+      var chips = opts.layout === 'chips';
+      // Same look as the Icon colour menu; floats over the fields below instead of pushing them down
+      var panel = document.createElement('div');
+      panel.className = 'sugg-panel hidden absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden';
       var list = document.createElement('ul');
       list.id = id;
       list.setAttribute('role', 'listbox');
-      list.className = 'hidden mt-1.5 max-h-[280px] overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100';
+      list.className = 'sugg-list overflow-y-auto overscroll-contain ' + (chips ? 'flex flex-wrap gap-2 p-3' : 'p-1.5');
+      panel.appendChild(list);
       var live = document.createElement('span');
       live.className = 'sr-only';
       live.setAttribute('aria-live', 'polite');
-      input.insertAdjacentElement('afterend', list);
-      list.insertAdjacentElement('afterend', live);
+      input.parentElement.classList.add('relative');
+      input.insertAdjacentElement('afterend', panel);
+      panel.insertAdjacentElement('afterend', live);
       input.setAttribute('role', 'combobox');
       input.setAttribute('aria-autocomplete', 'list');
       input.setAttribute('aria-expanded', 'false');
@@ -4600,14 +4635,34 @@
           var on = i === active;
           li.setAttribute('aria-selected', on ? 'true' : 'false');
           li.classList.toggle('bg-emerald-50', on);
+          if (chips) li.classList.toggle('ring-2', on);
           if (on) li.scrollIntoView({ block: 'nearest' });
         });
         if (active >= 0) input.setAttribute('aria-activedescendant', id + '-' + active);
         else input.removeAttribute('aria-activedescendant');
       }
+      // Keep the panel inside what's visible: above the phone keyboard and inside a scrolling dialog
+      function fit() {
+        if (!open) return;
+        var r = input.getBoundingClientRect(), vv = window.visualViewport;
+        var bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+        for (var el = panel.parentElement; el && el !== document.body; el = el.parentElement) {
+          var oy = getComputedStyle(el).overflowY;
+          if (oy === 'auto' || oy === 'scroll') { bottom = Math.min(bottom, el.getBoundingClientRect().bottom); break; }
+        }
+        list.style.maxHeight = Math.round(Math.max(168, Math.min(320, bottom - r.bottom - 18))) + 'px';
+        fade();
+      }
+      function fade() { list.classList.toggle('sugg-more', list.scrollTop + list.clientHeight < list.scrollHeight - 4); }
+      list.addEventListener('scroll', fade);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', fit);
+        window.visualViewport.addEventListener('scroll', fit);
+      }
       function close() {
-        list.classList.add('hidden');
+        panel.classList.add('hidden');
         list.innerHTML = '';
+        list.classList.remove('sugg-more');
         open = false;
         active = -1;
         input.setAttribute('aria-expanded', 'false');
@@ -4621,17 +4676,26 @@
         if (q && shown.length === 1 && suggestNorm(shown[0].label) === suggestNorm(q)) shown = [];
         if (!shown.length) { close(); return; }
         if (active >= shown.length) active = shown.length - 1;
-        list.innerHTML = (src.header ? '<li role="presentation" class="px-3 py-2 text-[11px] font-semibold text-slate-500 bg-slate-50">' + suggestEscape(src.header) + '</li>' : '') +
-          shown.map(function (it, i) {
-            return '<li role="option" id="' + id + '-' + i + '" data-i="' + i + '" aria-selected="false" class="px-3 py-2.5 min-h-[44px] flex flex-col justify-center cursor-pointer hover:bg-emerald-50/60 transition-colors">' +
-              '<span class="text-[14px] text-slate-900">' + highlightMatch(it.label, q) + '</span>' +
-              (it.hint ? '<span class="text-[11px] text-slate-500 mt-0.5">' + suggestEscape(it.hint) + '</span>' : '') +
-              '</li>';
-          }).join('');
-        list.classList.remove('hidden');
+        var head = src.header ? '<li role="presentation" class="sugg-header ' + (chips ? 'basis-full -mb-0.5' : 'px-2.5 pt-1.5 pb-1') +
+          ' text-[11px] font-semibold uppercase tracking-wider text-secondary">' + suggestEscape(src.header) + '</li>' : '';
+        list.innerHTML = head + shown.map(function (it, i) {
+          var attrs = 'role="option" id="' + id + '-' + i + '" data-i="' + i + '" aria-selected="false" title="' + suggestEscape(it.label) + '"';
+          if (chips) {
+            return '<li ' + attrs + ' class="h-9 px-4 rounded-full border border-outline-variant ring-emerald-500 text-[13px] font-semibold text-on-surface flex items-center cursor-pointer hover:bg-emerald-50/60 active:scale-95 transition-all">' +
+              '<span class="sugg-label whitespace-nowrap">' + highlightMatch(it.label, q) + '</span></li>';
+          }
+          return '<li ' + attrs + ' class="flex items-center gap-3 px-2.5 py-2 min-h-[48px] rounded-lg cursor-pointer hover:bg-emerald-50/60 transition-colors">' +
+            (opts.icon ? '<span class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 overflow-hidden" aria-hidden="true"><span class="material-symbols-outlined text-[18px]">' + opts.icon + '</span></span>' : '') +
+            '<span class="min-w-0 flex-1 flex flex-col">' +
+            '<span class="sugg-label block truncate text-[14px] font-medium text-on-surface">' + highlightMatch(it.label, q) + '</span>' +
+            (it.hint ? '<span class="sugg-hint block truncate text-[11px] text-secondary mt-0.5">' + suggestEscape(it.hint) + '</span>' : '') +
+            '</span></li>';
+        }).join('');
+        panel.classList.remove('hidden');
         open = true;
         input.setAttribute('aria-expanded', 'true');
         live.textContent = shown.length + (shown.length === 1 ? ' suggestion' : ' suggestions');
+        fit();
         paintActive();
       }
       function choose(i) {
@@ -4644,7 +4708,15 @@
         if (next && typeof next.focus === 'function') next.focus();
       }
 
-      input.addEventListener('focus', function () { active = -1; typed = false; render(); });
+      input.addEventListener('focus', function () {
+        active = -1; typed = false; render();
+        // Phones: once the keyboard is up, bring the field to the top if the panel would run under it
+        if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) setTimeout(function () {
+          if (!open || document.activeElement !== input) return;
+          var vv = window.visualViewport, bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+          if (panel.getBoundingClientRect().bottom > bottom) { (input.previousElementSibling || input).scrollIntoView({ block: 'start', behavior: 'smooth' }); setTimeout(fit, 350); }
+        }, 350);
+      });
       input.addEventListener('input', function () { active = -1; typed = true; render(); });
       input.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== input) close(); }, 120); });
       input.addEventListener('keydown', function (e) {
@@ -4653,6 +4725,11 @@
           if (!shown.length) return;
           e.preventDefault();
           active = e.key === 'ArrowDown' ? (active + 1) % shown.length : (active <= 0 ? shown.length - 1 : active - 1);
+          paintActive();
+        } else if (chips && open && active >= 0 && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+          // Chips sit side by side; only while one is highlighted, so the text cursor still moves normally
+          e.preventDefault();
+          active = e.key === 'ArrowRight' ? (active + 1) % shown.length : (active <= 0 ? shown.length - 1 : active - 1);
           paintActive();
         } else if (e.key === 'Enter' && open && active >= 0) {
           e.preventDefault();
@@ -4666,7 +4743,7 @@
         }
       });
       // Keep focus in the field while tapping a suggestion; choose on click so a scroll gesture doesn't pick one
-      list.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      panel.addEventListener('mousedown', function (e) { e.preventDefault(); });
       list.addEventListener('click', function (e) {
         var li = e.target.closest('[role="option"]');
         if (li) choose(parseInt(li.getAttribute('data-i'), 10));
@@ -4705,8 +4782,9 @@
       [['f-bank', 'f-nick', 'f-limit'], ['edit-input-bank', 'edit-input-tier', 'edit-input-limit']].forEach(function (ids) {
         var bank = document.getElementById(ids[0]);
         var tier = document.getElementById(ids[1]);
-        attachSuggest(bank, { source: bankSuggestions, next: function () { return tier; } });
+        attachSuggest(bank, { source: bankSuggestions, icon: 'account_balance', next: function () { return tier; } });
         attachSuggest(tier, {
+          layout: 'chips',
           source: function () { return tierSuggestions(bank ? bank.value : ''); },
           next: function () { return document.getElementById(ids[2]); }
         });
