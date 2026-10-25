@@ -116,6 +116,18 @@ Three sandboxes. Load one of your cards, or try your own numbers:
 ### Accounts, sync and your data
 - **Sign in:** with **Google** or **email and password**, including email verification, password rules, *Keep me signed in* and password reset. X and Apple sign-in buttons are in place but not configured yet.
 - **Google profile photo:** shown in every avatar on all screen sizes, with your initials as the fallback.
+- **Account menu:** tap your profile picture on any screen (in the sidebar on desktop) to open it. It has:
+  - your photo, name, email and sign-in method
+  - Profile & settings
+  - Payoff strategy and CBSL rules, each opening Profile at that section
+  - Light / Dark / Auto
+  - Download a backup
+  - Replay app guide
+  - Keyboard shortcuts (desktop only)
+  - Reset my card data, which asks before doing anything
+  - Sign out
+
+  A tap outside the menu only closes it.
 - **Live sync across devices:** changes on one device appear on the others without reloading.
 - **Safe merging, so nothing is lost:**
   - cards and spaces are merged item by item, and the newest edit wins
@@ -145,14 +157,7 @@ Three sandboxes. Load one of your cards, or try your own numbers:
   - **Spending by category:** this period's spending across all cards, with budgets marked
   - **Utilisation by card:** each card's balance against its limit, with the 30% line
   - **Recent activity:** the latest entries across all cards; click any row to open that card
-- **Account menu:** opens from your avatar in the sidebar, with:
-  - Profile
-  - Payoff strategy
-  - Appearance
-  - Backup
-  - Keyboard shortcuts
-  - App guide
-  - Sign out
+- **Account menu:** opens from the profile row at the bottom of the sidebar.
 - **Keyboard shortcuts:**
 
   | Key | Action |
@@ -249,6 +254,8 @@ firebase deploy --only firestore:rules   # security rules, when they change
 
 | Date | Change |
 |---|---|
+| 25 Oct 2026 | **Account menu everywhere:** tapping your profile picture opens the account menu on phone and iPad too. It replaces the hamburger side menu, and all of that menu's options moved into it |
+| 25 Oct 2026 | **Desktop panels:** upcoming payments, spending by category, utilisation by card and recent activity. One sidebar avatar on desktop |
 | 25 Oct 2026 | **Desktop redesign:** a compact dashboard, an account menu from the avatar, and Google profile photos everywhere |
 | 25 Oct 2026 | **Tutorial update:** the spotlight follows its element reliably on every device. New tips for quick log, alerts, shortcuts, sharing, appearance and backup |
 | 25 Oct 2026 | **Simulator math fixes:** one payoff method everywhere, both surcharge calculators agree, labels show the rate actually used, and the Cash Advance inputs recalculate |

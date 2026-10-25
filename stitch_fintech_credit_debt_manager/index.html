@@ -846,10 +846,6 @@
         font-size: 24px
       }
 
-      /* The closed side menu no longer casts its shadow along the right edge */
-      #global-menu-drawer.translate-x-full {
-        box-shadow: none
-      }
 
       /* Content columns: centred and width-limited */
       #screen-home > *,
@@ -1487,9 +1483,178 @@
 
     /* ══ Desktop compact dashboard (>= 1280 px). Phone and iPad never see any of this. ══ */
     .desk-only,
-    .avatar-menu,
     .desk-panel {
       display: none
+    }
+
+    /* Account menu: opens from the profile picture on every size */
+    .avatar-menu {
+      position: fixed;
+      z-index: 120;
+      width: 300px;
+      display: block;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgb(var(--c-white));
+      border: 1px solid rgb(var(--b-tk-outline-variant, var(--c-tk-outline-variant)) / .6);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, .16), 0 2px 6px rgba(15, 23, 42, .06);
+      opacity: 0;
+      transform: translateY(-4px) scale(.98);
+      transform-origin: top right;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity .14s ease, transform .14s ease, visibility 0s linear .14s
+    }
+
+    .avatar-menu.open {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      visibility: visible;
+      transition: opacity .14s ease, transform .14s ease, visibility 0s
+    }
+
+    .am-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 10px 12px
+    }
+
+    .am-avatar {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border-radius: 9999px;
+      border: 2px solid rgb(var(--c-tk-primary-container));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: rgb(var(--t-tk-primary, var(--c-tk-primary)))
+    }
+
+    .am-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .am-email {
+      font-size: 12px;
+      color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .am-badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 1px 8px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 700;
+      background: rgb(var(--c-tk-primary-container) / .12);
+      color: rgb(var(--t-emerald-700, var(--c-emerald-700)))
+    }
+
+    .am-sep {
+      height: 1px;
+      margin: 6px 4px;
+      background: rgb(var(--c-tk-outline-variant) / .5)
+    }
+
+    .am-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 40px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)))
+    }
+
+    .am-item .material-symbols-outlined {
+      font-size: 20px;
+      color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
+    }
+
+    .am-item:hover,
+    .am-item:focus-visible {
+      background: rgb(var(--c-tk-surface-container-low));
+      outline: none
+    }
+
+    .am-item.am-danger,
+    .am-item.am-danger .material-symbols-outlined {
+      color: rgb(var(--t-tk-error, var(--c-tk-error)))
+    }
+
+    .am-kbd {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
+    }
+
+    .am-theme {
+      display: flex;
+      gap: 4px;
+      margin: 4px 6px 6px;
+      padding: 4px;
+      border-radius: 10px;
+      background: rgb(var(--c-tk-surface-container-low))
+    }
+
+    .am-theme .theme-opt {
+      height: 32px
+    }
+
+    .avatar-menu {
+      width: min(300px, calc(100vw - 24px));
+      max-height: calc(100dvh - 16px);
+      overflow-y: auto;
+      overscroll-behavior: contain
+    }
+
+    .am-item.desk-only {
+      display: none
+    }
+
+    .am-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 4px 10px 4px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
+    }
+
+    /* Comfortable tap targets on touch screens */
+    @media (pointer: coarse) {
+      .am-item {
+        height: 44px
+      }
+
+      .am-theme .theme-opt {
+        height: 36px
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .am-item.desk-only {
+        display: flex
+      }
     }
 
     @media (min-width: 1280px) {
@@ -1794,134 +1959,7 @@
         padding: 0 24px
       }
 
-      /* Avatar menu */
-      .avatar-menu {
-        position: fixed;
-        z-index: 120;
-        width: 300px;
-        display: block;
-        padding: 8px;
-        border-radius: 16px;
-        background: rgb(var(--c-white));
-        border: 1px solid rgb(var(--b-tk-outline-variant, var(--c-tk-outline-variant)) / .6);
-        box-shadow: 0 16px 40px rgba(15, 23, 42, .16), 0 2px 6px rgba(15, 23, 42, .06);
-        opacity: 0;
-        transform: translateY(-4px) scale(.98);
-        transform-origin: top right;
-        pointer-events: none;
-        transition: opacity .14s ease, transform .14s ease
-      }
 
-      .avatar-menu.open {
-        opacity: 1;
-        transform: none;
-        pointer-events: auto
-      }
-
-      .am-head {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 10px 12px
-      }
-
-      .am-avatar {
-        width: 48px;
-        height: 48px;
-        flex-shrink: 0;
-        border-radius: 9999px;
-        border: 2px solid rgb(var(--c-tk-primary-container));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 16px;
-        color: rgb(var(--t-tk-primary, var(--c-tk-primary)))
-      }
-
-      .am-name {
-        font-size: 14px;
-        font-weight: 700;
-        color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)));
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis
-      }
-
-      .am-email {
-        font-size: 12px;
-        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)));
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis
-      }
-
-      .am-badge {
-        display: inline-block;
-        margin-top: 4px;
-        padding: 1px 8px;
-        border-radius: 9999px;
-        font-size: 10px;
-        font-weight: 700;
-        background: rgb(var(--c-tk-primary-container) / .12);
-        color: rgb(var(--t-emerald-700, var(--c-emerald-700)))
-      }
-
-      .am-sep {
-        height: 1px;
-        margin: 6px 4px;
-        background: rgb(var(--c-tk-outline-variant) / .5)
-      }
-
-      .am-item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        height: 40px;
-        padding: 0 10px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: left;
-        color: rgb(var(--t-tk-on-surface, var(--c-tk-on-surface)))
-      }
-
-      .am-item .material-symbols-outlined {
-        font-size: 20px;
-        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
-      }
-
-      .am-item:hover,
-      .am-item:focus-visible {
-        background: rgb(var(--c-tk-surface-container-low));
-        outline: none
-      }
-
-      .am-item.am-danger,
-      .am-item.am-danger .material-symbols-outlined {
-        color: rgb(var(--t-tk-error, var(--c-tk-error)))
-      }
-
-      .am-kbd {
-        margin-left: auto;
-        font-size: 11px;
-        font-weight: 600;
-        color: rgb(var(--t-tk-secondary, var(--c-tk-secondary)))
-      }
-
-      .am-theme {
-        display: flex;
-        gap: 4px;
-        margin: 4px 6px 6px;
-        padding: 4px;
-        border-radius: 10px;
-        background: rgb(var(--c-tk-surface-container-low))
-      }
-
-      .am-theme .theme-opt {
-        height: 32px
-      }
     }
 
     /* Very wide monitors: let the dashboard use more of the screen */
@@ -2604,7 +2642,7 @@
           <h1 id="home-greeting-text" class="text-[22px] font-bold text-on-surface tracking-tight">Good morning, Seniru</h1>
         </div>
         <div class="flex items-center gap-4">
-          <div id="btn-profile-home" aria-label="User profile photo and settings"
+          <div id="btn-profile-home" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"
             class="relative cursor-pointer active:scale-95 transition-transform duration-150">
             <div
               class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
@@ -2613,10 +2651,6 @@
             <span
               class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
           </div>
-          <button id="btn-menu-home" aria-label="Menu"
-            class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[22px]">menu</span>
-          </button>
         </div>
       </section>
       
@@ -3010,7 +3044,7 @@
           <h1 class="text-[32px] font-bold tracking-tight text-on-surface leading-10">Credit Cards</h1>
         </div>
         <div class="flex items-center gap-4">
-          <div id="btn-profile-cards" aria-label="User profile photo and settings"
+          <div id="btn-profile-cards" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"
             class="relative cursor-pointer active:scale-95 transition-transform duration-150">
             <div
               class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
@@ -3019,10 +3053,6 @@
             <span
               class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
           </div>
-          <button id="btn-menu-cards" aria-label="Menu"
-            class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[22px]">menu</span>
-          </button>
         </div>
       </div>
       <nav aria-label="View tabs" class="px-4 mt-1 border-b border-surface-container-highest flex space-x-6">
@@ -3851,7 +3881,7 @@
         </div>
         <div class="flex items-center gap-4">
           <!-- Profile Avatar -->
-          <div id="btn-profile-simulators" aria-label="User profile photo and settings"
+          <div id="btn-profile-simulators" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"
             class="relative cursor-pointer active:scale-95 transition-transform duration-150">
             <div
               class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
@@ -3861,10 +3891,6 @@
               class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
           </div>
           <!-- Menu Icon -->
-          <button id="btn-menu-simulators" aria-label="Menu"
-            class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[22px]">menu</span>
-          </button>
         </div>
       </section>
       <!-- Simulator Navigation Tabs -->
@@ -4302,7 +4328,7 @@
         </div>
         <div class="flex items-center gap-4">
           <!-- Profile Avatar -->
-          <div id="btn-profile-spaces" aria-label="User profile photo and settings"
+          <div id="btn-profile-spaces" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"
             class="relative cursor-pointer active:scale-95 transition-transform duration-150">
             <div
               class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
@@ -4312,10 +4338,6 @@
               class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
           </div>
           <!-- Menu Icon -->
-          <button id="btn-menu-spaces" aria-label="Menu"
-            class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[22px]">menu</span>
-          </button>
         </div>
       </section>
       
@@ -4392,7 +4414,7 @@
         </div>
         <div class="flex items-center gap-4">
           <!-- Profile Avatar -->
-          <div id="btn-profile-offers" aria-label="User profile photo and settings"
+          <div id="btn-profile-offers" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false"
             class="relative cursor-pointer active:scale-95 transition-transform duration-150">
             <div class="w-11 h-11 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]">
               <span class="text-[14px] text-primary font-bold profile-initials-text">SM</span>
@@ -4400,10 +4422,6 @@
             <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full"></span>
           </div>
           <!-- Menu Icon -->
-          <button id="btn-menu-offers" aria-label="Menu"
-            class="w-9 h-9 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-[22px]">menu</span>
-          </button>
         </div>
       </section>
 
@@ -4514,9 +4532,6 @@
         <button type="button" class="sidebar-profile" onclick="window.AvatarMenu.toggle(this)" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">
           <span class="sidebar-avatar"><span class="profile-initials-text">SM</span></span>
           <span class="sidebar-who"><span id="sidebar-user-name" class="sidebar-name">Account</span><span id="sidebar-user-email" class="sidebar-email"></span></span>
-        </button>
-        <button type="button" class="sidebar-menu-btn" onclick="document.getElementById('btn-menu-home').click()" aria-label="Menu">
-          <span class="material-symbols-outlined text-[22px]" aria-hidden="true">menu</span>
         </button>
       </div>
       <p id="sidebar-shortcuts-hint" class="sidebar-hint">Press <kbd>?</kbd> for shortcuts</p>
@@ -9170,8 +9185,7 @@ var checkSnowball = document.getElementById('check-snowball');
       var SHORTCUT_TABS = ['btn-nav-home', 'btn-nav-cards', 'btn-nav-simulators', 'btn-nav-spaces', 'btn-nav-offers'];
       function overlayOpen() {
         if (document.querySelector('#spend-sheet.open, #info-sheet-overlay.open, #add-card-modal.modal-open')) return true;
-        var drawer = document.getElementById('global-menu-drawer');
-        if (drawer && !drawer.classList.contains('translate-x-full')) return true;
+        if (window.AvatarMenu && window.AvatarMenu.isOpen()) return true;
         return Array.prototype.some.call(document.querySelectorAll('[id^="modal-"], #ob-welcome, #ob-tips'), function (m) {
           return !m.classList.contains('hidden') && getComputedStyle(m).position === 'fixed' && m.getClientRects().length > 0;
         });
@@ -10519,16 +10533,13 @@ renderSpaces();
           if (typeof updateDTI === 'function') updateDTI();
           navigateTo('screen-profile', null);
         });
-        document.getElementById('btn-menu-simulators')?.addEventListener('click', () => toggleMenu(true));
 
         var btnProfSpaces = document.getElementById('btn-profile-spaces');
         if (btnProfSpaces) btnProfSpaces.addEventListener('click', function () {
           if (typeof updateDTI === 'function') updateDTI();
           navigateTo('screen-profile', null);
         });
-        document.getElementById('btn-menu-spaces')?.addEventListener('click', () => toggleMenu(true));
         
-        document.getElementById('btn-menu-offers')?.addEventListener('click', () => toggleMenu(true));
         document.getElementById('btn-profile-offers')?.addEventListener('click', () => {
           if (typeof updateDTI === 'function') updateDTI();
           navigateTo('screen-profile', null);
@@ -10841,78 +10852,18 @@ renderSpaces();
 
         updateStrategyUI(currentStrategy);
 
-        // ── Global Menu Drawer ──
-        function toggleMenu(show) {
-          var drawer = document.getElementById('global-menu-drawer');
-          var backdrop = document.getElementById('menu-backdrop');
-          if (show) {
-            drawer.classList.remove('translate-x-full');
-            backdrop.classList.remove('hidden');
-          } else {
-            drawer.classList.add('translate-x-full');
-            backdrop.classList.add('hidden');
-          }
-        }
-        var btnMenuHome = document.getElementById('btn-menu-home');
-        if (btnMenuHome) btnMenuHome.addEventListener('click', function () { toggleMenu(true); });
-        var btnMenuCards = document.getElementById('btn-menu-cards');
-        if (btnMenuCards) btnMenuCards.addEventListener('click', function () { toggleMenu(true); });
-        var btnCloseMenu = document.getElementById('btn-close-menu');
-        if (btnCloseMenu) btnCloseMenu.addEventListener('click', function () { toggleMenu(false); });
-        var menuBackdrop = document.getElementById('menu-backdrop');
-        if (menuBackdrop) menuBackdrop.addEventListener('click', function () { toggleMenu(false); });
-
-        // Drawer Action: Route, Scroll, and Highlight
-        function routeFromDrawerToProfile(targetId) {
-            toggleMenu(false); // Close the drawer
-            navigateTo('screen-profile', null); // Route to the profile screen
-
-            // Wait 300ms for the DOM un-hide transition, then scroll and highlight
+        // Open Profile at one section and highlight it briefly (account menu: Payoff strategy, CBSL rules)
+        function openProfileSection(targetId) {
+            navigateTo('screen-profile', null);
             setTimeout(() => {
                 const targetEl = document.getElementById(targetId);
-                if (targetEl) {
-                    // Smooth scroll to the element, placing it in the center of the viewport
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Apply the highlight effect (Emerald ring and soft background)
-                    targetEl.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-50');
-                    
-                    // Remove the highlight after 3 seconds
-                    setTimeout(() => {
-                        targetEl.classList.remove('ring-4', 'ring-emerald-400', 'bg-emerald-50');
-                    }, 3000);
-                }
-            }, 300); 
+                if (!targetEl) return;
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetEl.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-50');
+                setTimeout(() => targetEl.classList.remove('ring-4', 'ring-emerald-400', 'bg-emerald-50'), 3000);
+            }, 300);
         }
-
-        // Wire the specific buttons to their respective target IDs
-        document.getElementById('btn-menu-strategy')?.addEventListener('click', () => routeFromDrawerToProfile('section-payoff-method'));
-        document.getElementById('btn-menu-cbsl')?.addEventListener('click', () => routeFromDrawerToProfile('section-cbsl-rules'));
-
-        // Drawer Action: Export Data
-        document.getElementById('btn-menu-export')?.addEventListener('click', () => {
-            const data = {
-                cards: cards || [],
-                income: getUserIncome(),
-                strategy: getStrategy(),
-                exportDate: new Date().toISOString()
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            const fname = (window.currentUserData && window.currentUserData.firstName) ? window.currentUserData.firstName.toLowerCase() : "user";
-            downloadAnchorNode.setAttribute("download", fname + "_portfolio_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            toggleMenu(false);
-        });
-
-        // Drawer Action: Reset my card data
-        document.getElementById('btn-menu-reset')?.addEventListener('click', () => {
-            toggleMenu(false);
-            resetMyCardData();
-        });
+        window.openProfileSection = openProfileSection;
       }
       
       // Delete Card Modal functions
@@ -12054,8 +12005,6 @@ renderSpaces();
 
   </script>
 
-  <!-- GLOBAL MENU DRAWER -->
-  <div id="menu-backdrop" class="fixed inset-0 bg-slate-900/50 hidden z-40 cursor-pointer"></div>
   <!-- Account menu (desktop): opens from the avatar -->
   <div id="avatar-menu" class="avatar-menu" role="menu" aria-label="Account" aria-hidden="true">
     <div class="am-head">
@@ -12069,165 +12018,22 @@ renderSpaces();
     <div class="am-sep"></div>
     <button type="button" role="menuitem" class="am-item" data-am="profile"><span class="material-symbols-outlined" aria-hidden="true">person</span>Profile &amp; settings</button>
     <button type="button" role="menuitem" class="am-item" data-am="strategy"><span class="material-symbols-outlined" aria-hidden="true">route</span>Payoff strategy</button>
+    <button type="button" role="menuitem" class="am-item" data-am="cbsl"><span class="material-symbols-outlined" aria-hidden="true">gavel</span>CBSL rules</button>
     <div class="am-theme" role="radiogroup" aria-label="Appearance">
       <button type="button" role="radio" aria-checked="false" data-theme-choice="light" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">light_mode</span>Light</button>
       <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">dark_mode</span>Dark</button>
       <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" class="theme-opt flex-1 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[17px]" aria-hidden="true">brightness_auto</span>Auto</button>
     </div>
     <button type="button" role="menuitem" class="am-item" data-am="backup"><span class="material-symbols-outlined" aria-hidden="true">download</span>Download a backup</button>
-    <button type="button" role="menuitem" class="am-item" data-am="shortcuts"><span class="material-symbols-outlined" aria-hidden="true">keyboard</span>Keyboard shortcuts<span class="am-kbd">?</span></button>
+    <button type="button" role="menuitem" class="am-item desk-only" data-am="shortcuts"><span class="material-symbols-outlined" aria-hidden="true">keyboard</span>Keyboard shortcuts<span class="am-kbd">?</span></button>
     <button type="button" role="menuitem" class="am-item" data-am="guide"><span class="material-symbols-outlined" aria-hidden="true">explore</span>Replay app guide</button>
     <div class="am-sep"></div>
+    <button type="button" role="menuitem" class="am-item am-danger" data-am="reset"><span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span>Reset my card data</button>
     <button type="button" role="menuitem" class="am-item am-danger" data-am="signout"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Sign out</button>
+    <p class="am-note"><span class="material-symbols-outlined text-[14px] text-primary" aria-hidden="true">lock</span>Private by design. Serendib never asks for card numbers or passwords.</p>
   </div>
 
-  <div id="global-menu-drawer" class="fixed inset-y-0 right-0 w-80 bg-[#f8fafc] shadow-2xl transform translate-x-full transition-transform duration-300 z-50 flex flex-col justify-between overflow-hidden border-l border-outline-variant/30 rounded-l-[32px]">
-    <!-- DRAWER HEADER (Pinned Top) -->
-    <header class="bg-surface-container-lowest border-b border-surface-container px-6 pt-12 pb-4 flex items-center justify-between shrink-0">
-      <div class="flex flex-col">
-        <h1 class="text-[20px] text-on-surface tracking-tight font-bold">Menu</h1>
-        <div class="flex items-center gap-1.5 mt-0.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
-          <span id="drawer-portfolio-name" class="text-[12px] text-secondary tracking-normal">Seniru's Portfolio</span>
-        </div>
-      </div>
-      <!-- Circular Close Button -->
-      <button id="btn-close-menu" aria-label="Close menu" class="w-9 h-9 bg-surface-container hover:bg-surface-container-high text-secondary hover:text-on-surface rounded-full flex items-center justify-center transition-colors active:scale-95 duration-150">
-        <span class="material-symbols-outlined text-[20px]">close</span>
-      </button>
-    </header>
-    <!-- DRAWER BODY (Scrollable content) -->
-    <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-      <!-- SECTION 0: APPEARANCE -->
-      <section id="menu-appearance">
-        <div class="px-2 mb-2">
-          <span class="text-[11px] text-secondary font-bold tracking-wider">APPEARANCE</span>
-        </div>
-        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high p-2.5">
-          <div class="flex items-center gap-3 mb-2.5 px-0.5">
-            <div class="w-11 h-11 rounded-xl bg-surface-container text-secondary flex items-center justify-center shrink-0">
-              <span class="material-symbols-outlined text-[22px]">contrast</span>
-            </div>
-            <div>
-              <h2 class="text-[15px] leading-5 text-on-surface font-semibold">Theme</h2>
-              <p class="text-[12px] text-secondary mt-0.5">Auto follows your phone's setting</p>
-            </div>
-          </div>
-          <div class="flex bg-surface-container-low p-1 rounded-xl gap-1" role="radiogroup" aria-label="Appearance">
-            <button type="button" role="radio" aria-checked="false" data-theme-choice="light" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">light_mode</span>Light</button>
-            <button type="button" role="radio" aria-checked="false" data-theme-choice="dark" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">dark_mode</span>Dark</button>
-            <button type="button" role="radio" aria-checked="false" data-theme-choice="auto" class="theme-opt flex-1 py-2 rounded-lg text-[12px] font-semibold flex items-center justify-center gap-1 transition-colors"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">brightness_auto</span>Auto</button>
-          </div>
-        </div>
-      </section>
-      <!-- SECTION 1: STRATEGY & CONTROLS -->
-      <section>
-        <div class="px-2 mb-2">
-          <span class="text-[11px] text-secondary font-bold tracking-wider">STRATEGY &amp; CONTROLS</span>
-        </div>
-        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high p-1.5">
-          <!-- Action Row: Payoff Strategy -->
-          <button id="btn-menu-strategy" class="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-low transition-colors active:scale-[0.98] duration-150 group text-left cursor-pointer">
-            <div class="flex items-center gap-3">
-              <!-- Icon Container: Soft Mint / Green -->
-              <div class="w-11 h-11 rounded-xl bg-primary-container/25 text-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[22px]">account_tree</span>
-              </div>
-              <div>
-                <h2 class="text-[15px] leading-5 text-on-surface font-semibold group-hover:text-primary transition-colors">Payoff Strategy</h2>
-                <p class="text-[12px] text-secondary mt-0.5">Active: Debt Avalanche</p>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-outline-variant text-[20px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-          </button>
-        </div>
-      </section>
-      <!-- SECTION 2: RESOURCES & TOOLS -->
-      <section>
-        <div class="px-2 mb-2">
-          <span class="text-[11px] text-secondary font-bold tracking-wider">RESOURCES &amp; TOOLS</span>
-        </div>
-        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high p-1.5 flex flex-col">
-          <!-- Item 1: CBSL Regulatory Rules -->
-          <button id="btn-menu-cbsl" class="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-low transition-colors active:scale-[0.98] duration-150 group text-left cursor-pointer">
-            <div class="flex items-center gap-3">
-              <!-- Icon Container: Soft Gray Slate -->
-              <div class="w-11 h-11 rounded-xl bg-surface-container text-secondary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[22px]">gavel</span>
-              </div>
-              <div>
-                <h2 class="text-[15px] leading-5 text-on-surface font-semibold group-hover:text-primary transition-colors">CBSL Regulatory Rules</h2>
-                <p class="text-[12px] text-secondary mt-0.5">28% APR cap &amp; 4% min rule</p>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-outline-variant text-[20px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-          </button>
-          <!-- Divider -->
-          <div class="border-b border-surface-container my-1 mx-2"></div>
-          <!-- Item 2: Export Data -->
-          <button id="btn-menu-export" class="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container-low transition-colors active:scale-[0.98] duration-150 group text-left cursor-pointer">
-            <div class="flex items-center gap-3">
-              <!-- Icon Container: Soft Gray Slate -->
-              <div class="w-11 h-11 rounded-xl bg-surface-container text-secondary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[22px]">download</span>
-              </div>
-              <div>
-                <h2 class="text-[15px] leading-5 text-on-surface font-semibold group-hover:text-primary transition-colors">Export Data</h2>
-                <p class="text-[12px] text-secondary mt-0.5">JSON backup &amp; reports</p>
-              </div>
-            </div>
-            <span class="material-symbols-outlined text-outline-variant text-[20px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-          </button>
-        </div>
-      </section>
-      <!-- SECTION 3: DANGER ZONE -->
-      <section>
-        <div class="px-2 mb-2">
-          <span class="text-[11px] text-error font-bold tracking-wider">DATA &amp; STORAGE</span>
-        </div>
-        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-error-container p-1.5">
-          <!-- Item: Factory Reset / Clear Local Data -->
-          <button id="btn-menu-reset" class="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-error-container/40 transition-colors active:scale-[0.98] duration-150 group text-left cursor-pointer">
-            <div class="flex items-center gap-3">
-              <!-- Icon Container: Soft Red/Rose -->
-              <div class="w-11 h-11 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-[22px]">delete_forever</span>
-              </div>
-              <div>
-                <h2 class="text-[15px] leading-5 text-error font-semibold">Reset my card data</h2>
-                <p class="text-[12px] text-error/80 mt-0.5">Removes cards &amp; spaces, keeps your profile</p>
-              </div>
-            </div>
-            <div class="w-7 h-7 rounded-full bg-error-container/60 flex items-center justify-center">
-              <span class="material-symbols-outlined text-error text-[18px]">warning</span>
-            </div>
-          </button>
-        </div>
-      </section>
-      <!-- Additional Security Guarantee Badge Card -->
-      <div class="mx-1 mt-4 p-3 rounded-xl bg-surface-container-low border border-surface-container flex items-start gap-2.5">
-        <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">verified_user</span>
-        <div>
-          <p class="text-[12px] text-on-surface font-semibold">Private by design</p>
-          <p class="text-[11px] leading-4 text-secondary mt-0.5">Serendib never asks for card numbers or passwords. Your data is saved to your own account only.</p>
-        </div>
-      </div>
-    </div>
-    <!-- DRAWER FOOTER (Pinned Bottom) -->
-    <footer class="bg-surface-container-lowest border-t border-surface-container px-4 pt-3 pb-2 flex flex-col items-center shrink-0">
-      <!-- App security badge -->
-      <div class="flex items-center gap-1.5 text-secondary">
-        <span class="material-symbols-outlined text-[16px] text-primary">shield</span>
-        <span class="text-[11px] text-secondary font-semibold">Private by design &middot; saved to your account</span>
-      </div>
-      <!-- System info version -->
-      <p class="text-[10px] text-outline mt-1 tracking-tight font-medium">
-        Serendib CC v2.4.0 (Build 412)
-      </p>
-      <!-- iOS Home Indicator Bar -->
-      <div class="w-36 h-1.5 bg-surface-container-highest rounded-full mx-auto mt-3 mb-1"></div>
-    </footer>
-  </div>
+
 
   <!-- DTI Info Bottom Sheet Modal -->
   <div id="modal-dti-info" class="fixed inset-0 z-50 flex items-end justify-center hidden pointer-events-none">
@@ -13556,8 +13362,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         if (addCard && addCard.classList.contains('modal-open')) return true;
         var sheet = el('info-sheet-overlay');
         if (sheet && sheet.classList.contains('open')) return true;
-        var drawer = el('menu-backdrop');
-        if (drawer && !drawer.classList.contains('hidden')) return true;
+        if (window.AvatarMenu && window.AvatarMenu.isOpen()) return true;
         return MODAL_IDS.some(function (id) { var m = el(id); return m && !m.classList.contains('hidden'); });
       }
       // alt: a second target for layouts where the first is hidden (e.g. the Cards sub-tabs on a landscape iPad)
@@ -14579,8 +14384,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     /* ── Account menu (desktop): opens from any avatar; Profile, strategy, appearance, backup, shortcuts, guide, sign out ── */
     window.AvatarMenu = (function () {
       var menu, anchor = null;
-      function isDesktop() { return window.matchMedia('(min-width: 1280px)').matches; }
-      function items() { return Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"], [role="radio"]')); }
+      function items() { return Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"], [role="radio"]')).filter(function (b) { return b.getClientRects().length > 0; }); }
       function fill() {
         var pick = function (id) { var e = document.getElementById(id); return e ? e.textContent.trim() : ''; };
         document.getElementById('am-name').textContent = pick('sidebar-user-name') || 'Account';
@@ -14633,10 +14437,10 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       function run(act) {
         close(false);
         if (act === 'profile') window.navigateTo('screen-profile');
-        else if (act === 'strategy') {
-          window.navigateTo('screen-profile');
-          setTimeout(function () { var t = document.getElementById('section-payoff-method'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120);
-        } else if (act === 'backup') { var b = document.getElementById('btn-export-data'); if (b) b.click(); }
+        else if (act === 'strategy') window.openProfileSection('section-payoff-method');
+        else if (act === 'cbsl') window.openProfileSection('section-cbsl-rules');
+        else if (act === 'backup') { var b = document.getElementById('btn-export-data'); if (b) b.click(); }
+        else if (act === 'reset') { var r = document.getElementById('btn-reset-data'); if (r) r.click(); }
         else if (act === 'shortcuts') document.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
         else if (act === 'guide') { if (window.Onboarding) window.Onboarding.replay(); }
         else if (act === 'signout') { if (typeof window.signOutUser === 'function') window.signOutUser(); }
@@ -14656,14 +14460,17 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           av.addEventListener('keydown', function (e) {
             if (e.key !== 'Enter' && e.key !== ' ') return;
             e.preventDefault();
-            if (isDesktop()) toggle(av); else av.click();
+            toggle(av);
           });
         });
-        // Header avatars open the menu on desktop (tapping one on a phone or iPad still opens Profile)
+        // A tap on a header avatar opens the menu (code that clicks one itself, like "Back to profile", still opens Profile)
         document.addEventListener('click', function (e) {
           var av = e.target.closest && e.target.closest('#btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers');
-          if (av && e.isTrusted && isDesktop()) { e.preventDefault(); e.stopImmediatePropagation(); toggle(av); return; }
-          if (menu.classList.contains('open') && !menu.contains(e.target) && !(anchor && anchor.contains(e.target))) close(false);
+          if (av && e.isTrusted) { e.preventDefault(); e.stopImmediatePropagation(); toggle(av); return; }
+          // A tap outside only closes the menu; it doesn't also press whatever was underneath
+          if (menu.classList.contains('open') && !menu.contains(e.target) && !(anchor && anchor.contains(e.target))) {
+            e.preventDefault(); e.stopImmediatePropagation(); close(false);
+          }
         }, true);
         document.addEventListener('keydown', function (e) {
           if (!menu.classList.contains('open')) return;
@@ -14676,7 +14483,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
           } else if (e.key === 'Tab') close(false);
           else e.stopPropagation(); // keep the app's single-key shortcuts quiet while the menu is open
         }, true);
-        window.addEventListener('resize', function () { if (menu.classList.contains('open')) { if (isDesktop()) place(); else close(false); } });
+        window.addEventListener('resize', function () { if (menu.classList.contains('open')) place(); });
         window.addEventListener('scroll', function () { close(false); }, { passive: true });
       });
       return { toggle: toggle, close: close, isOpen: function () { return !!menu && menu.classList.contains('open'); } };
