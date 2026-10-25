@@ -1487,7 +1487,8 @@
 
     /* ══ Desktop compact dashboard (>= 1280 px). Phone and iPad never see any of this. ══ */
     .desk-only,
-    .avatar-menu {
+    .avatar-menu,
+    .desk-panel {
       display: none
     }
 
@@ -1550,6 +1551,14 @@
         display: flex
       }
 
+      .desk-panel {
+        display: block
+      }
+
+      #sub-view-list > .desk-panel {
+        margin-top: 16px
+      }
+
       /* Screen headers: one compact bar, title left, actions + avatar right */
       #screen-home > section:first-child,
       #screen-list > div:first-child,
@@ -1579,20 +1588,6 @@
         letter-spacing: -.01em
       }
 
-      #btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers {
-        display: block !important
-      }
-
-      #btn-profile-home > div, #btn-profile-cards > div, #btn-profile-simulators > div,
-      #btn-profile-spaces > div, #btn-profile-offers > div, #btn-profile-detail > div {
-        width: 36px;
-        height: 36px
-      }
-
-      #btn-profile-home > span, #btn-profile-cards > span, #btn-profile-simulators > span,
-      #btn-profile-spaces > span, #btn-profile-offers > span {
-        display: none
-      }
 
       #screen-detail header {
         height: 60px;
@@ -3137,11 +3132,6 @@
           </div>
         </div>
         <div class="flex items-center gap-1">
-          <button type="button" id="btn-profile-detail" class="desk-only ml-1 order-last items-center justify-center rounded-full" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">
-            <span class="w-9 h-9 rounded-full bg-surface-container-lowest border-2 border-primary-container flex items-center justify-center">
-              <span class="text-[13px] text-primary font-bold profile-initials-text">SM</span>
-            </span>
-          </button>
           <button type="button" id="btn-share-card" aria-label="Share progress" onclick="App.openShare()"
             class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all"><span
               class="material-symbols-outlined text-[20px]">ios_share</span></button>
@@ -7045,6 +7035,7 @@ var checkSnowball = document.getElementById('check-snowball');
       });
 
       function renderHomeDashboard() {
+        renderDeskPanels();
         var hour = new Date().getHours();
         var greetingText = "Good evening";
         if (hour >= 5 && hour < 12) greetingText = "Good morning";
@@ -7270,6 +7261,7 @@ var checkSnowball = document.getElementById('check-snowball');
       var overviewPlanTarget = null;
 
       function renderCardsOverview() {
+        renderDeskPanels();
         var container = document.getElementById("strategy-card-list");
         if (!container) return;
         
@@ -9230,6 +9222,165 @@ var checkSnowball = document.getElementById('check-snowball');
         if (!cards.length) { window.offersAddCard(); return; }
         openLogSheet({ cardId: lastUsedCardId(), type: type || 'purchase', pickCard: true });
       }
+
+      /* ── Desktop-only panels: upcoming payments, spending by category, utilisation by card, recent activity.
+         Built from the same data and rules as the rest of the app; only rendered on screens >= 1280 px. ── */
+      var deskMq = window.matchMedia('(min-width: 1280px)');
+      var DESK_PANEL_CLS = 'desk-panel bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-4 app-card-shadow';
+      function deskPanel(id, parentSel) {
+        var el = document.getElementById(id);
+        if (el) return el;
+        var parent = document.querySelector(parentSel);
+        if (!parent) return null;
+        el = document.createElement('section');
+        el.id = id;
+        el.className = DESK_PANEL_CLS;
+        parent.appendChild(el);
+        el.addEventListener('click', function (e) {
+          var row = e.target.closest('[data-desk-card]');
+          if (row) goDetail(row.getAttribute('data-desk-card'));
+        });
+        return el;
+      }
+      function deskHead(icon, title, sub) {
+        return '<div class="flex items-start gap-2.5 mb-3"><span class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary shrink-0">' +
+          '<span class="material-symbols-outlined text-[18px]" aria-hidden="true">' + icon + '</span></span>' +
+          '<div class="min-w-0"><h3 class="text-[14px] font-semibold text-on-surface leading-tight">' + title + '</h3>' +
+          (sub ? '<p class="text-[11px] text-secondary mt-0.5">' + sub + '</p>' : '') + '</div></div>';
+      }
+      function deskEmpty(text) { return '<p class="text-[12px] text-secondary py-3">' + text + '</p>'; }
+      function deskCardTag(c) {
+        return '<span class="inline-flex items-center gap-1.5 min-w-0">' + cardDot(c, 7) + '<span class="truncate">' + escapeHtml(cardName(c)) + '</span></span>';
+      }
+      var ROW = 'w-full flex items-center gap-3 py-2 px-1 -mx-1 rounded-lg text-left hover:bg-surface-container-low transition-colors cursor-pointer';
+
+      // Overdue payments, minimums due, statements closing and recurring charges in the next 30 days
+      function deskUpcoming(today) {
+        var until = addDays(today, 30), ev = [], tracked = 0;
+        cards.forEach(function (c) {
+          var cycle = isValidDay(c.dueDay) && isValidDay(c.statementDay);
+          if (cycle) {
+            tracked++;
+            var st = cycleStatus(c, today);
+            if (st && st.overdue) ev.push({ kind: 'overdue', date: st.overdue.since, card: c, amount: st.overdue.amount, days: st.overdue.days });
+            if (st && st.next) ev.push({ kind: 'due', date: st.next.s.due, card: c, amount: st.next.remaining });
+            else if (!st && c.balance > 0) ev.push({ kind: 'due', date: nextDueDayFrom(c.dueDay, today), card: c, amount: minPaymentFor(c) });
+            var per = billingPeriod(c, today);
+            if (per.hasCycle && per.end >= today) ev.push({ kind: 'statement', date: per.end, card: c });
+          }
+          activeRecurring(c, today).forEach(function (r) {
+            var d = recurringNextDue(r, today);
+            if (d) ev.push({ kind: 'recurring', date: d, card: c, amount: Number(r.amount) || 0, name: r.name });
+          });
+        });
+        ev = ev.filter(function (x) { return x.kind === 'overdue' || (x.date >= today && x.date <= until); });
+        ev.sort(function (a, b) {
+          if ((a.kind === 'overdue') !== (b.kind === 'overdue')) return a.kind === 'overdue' ? -1 : 1;
+          return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+        });
+        var html = deskHead('event_upcoming', 'Upcoming payments', 'Next 30 days across all cards');
+        if (!ev.length) return html + deskEmpty(tracked ? 'Nothing due in the next 30 days.' : 'Set each card\u2019s billing cycle to see its due dates here.');
+        return html + '<div class="flex flex-col">' + ev.slice(0, 8).map(function (x) {
+          var d = parseYmd(x.date), inDays = daysBetween(today, x.date);
+          var when = x.kind === 'overdue' ? x.days + (x.days === 1 ? ' day late' : ' days late')
+            : inDays === 0 ? 'Today' : inDays === 1 ? 'Tomorrow' : 'In ' + inDays + ' days';
+          var title = x.kind === 'overdue' ? 'Overdue payment' : x.kind === 'due' ? 'Minimum due' : x.kind === 'statement' ? 'Statement closes' : escapeHtml(x.name || 'Recurring charge');
+          var tone = x.kind === 'overdue' ? 'bg-error-container/60 text-error' : x.kind === 'due' ? 'bg-primary-container/15 text-primary' : 'bg-surface-container-low text-secondary';
+          return '<div role="button" tabindex="0" data-desk-card="' + escapeHtml(c_id(x.card)) + '" class="' + ROW + '">' +
+            '<span class="w-11 h-11 rounded-xl ' + tone + ' flex flex-col items-center justify-center shrink-0 leading-none">' +
+            '<span class="text-[15px] font-bold">' + d.getDate() + '</span><span class="text-[9px] font-bold uppercase mt-0.5">' + d.toLocaleDateString('en-GB', { month: 'short' }).slice(0, 3) + '</span></span>' +
+            '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + title + '</span>' +
+            '<span class="block text-[11px] text-secondary truncate">' + deskCardTag(x.card) + '</span></span>' +
+            '<span class="text-right shrink-0">' + (x.amount ? '<span class="block text-[13px] font-semibold text-on-surface num">' + fmtAmt(x.amount) + '</span>' : '') +
+            '<span class="block text-[11px] ' + (x.kind === 'overdue' ? 'text-error font-semibold' : 'text-secondary') + '">' + when + '</span></span></div>';
+        }).join('') + '</div>';
+      }
+      function c_id(c) { return String(c.id); }
+
+      // This statement period's spending on every card, by category, with budgets marked
+      function deskSpending(today) {
+        var totals = {}, budgets = {}, total = 0;
+        cards.forEach(function (c) {
+          var sum = periodSummary(c, billingPeriod(c, today));
+          total += sum.spent;
+          Object.keys(sum.byCat).forEach(function (k) { totals[k] = (totals[k] || 0) + sum.byCat[k]; });
+          var b = c.budgets || {};
+          Object.keys(b).forEach(function (k) { if (Number(b[k]) > 0) budgets[k] = (budgets[k] || 0) + Number(b[k]); });
+        });
+        var keys = Object.keys(totals).filter(function (k) { return totals[k] > 0; }).sort(function (a, b) { return totals[b] - totals[a]; }).slice(0, 7);
+        var html = deskHead('donut_small', 'Spending by category', 'This statement period, all cards' + (total > 0 ? ' \u00b7 ' + fmtAmt(total) : ''));
+        if (!keys.length) return html + deskEmpty('No spending logged this period yet. Log a purchase to see where your money goes.');
+        var scale = Math.max.apply(null, keys.map(function (k) { return Math.max(totals[k], budgets[k] || 0); }));
+        return html + '<div class="flex flex-col gap-3">' + keys.map(function (k) {
+          var cat = spendCategory(k), spent = totals[k], bud = budgets[k] || 0, over = bud > 0 && spent > bud;
+          return '<div><div class="flex items-center justify-between gap-2 text-[12px] mb-1">' +
+            '<span class="flex items-center gap-2 min-w-0 font-medium text-on-surface"><span class="material-symbols-outlined text-[16px] ' + cat.text + '" aria-hidden="true">' + cat.icon + '</span><span class="truncate">' + cat.label + '</span></span>' +
+            '<span class="num shrink-0 ' + (over ? 'text-error font-semibold' : 'text-secondary') + '">' + fmtAmt(spent) + (bud ? ' / ' + fmtAmt(bud) : '') + '</span></div>' +
+            '<div class="relative h-2 rounded-full bg-surface-container overflow-visible"><div class="h-full rounded-full ' + (over ? 'bg-error' : cat.bar) + '" style="width:' + Math.max(2, spent / scale * 100).toFixed(1) + '%"></div>' +
+            (bud ? '<span class="absolute -top-1 w-0.5 h-4 rounded bg-on-surface/40" style="left:calc(' + (bud / scale * 100).toFixed(1) + '% - 1px)" title="Budget ' + fmtAmt(bud) + '"></span>' : '') +
+            '</div></div>';
+        }).join('') + '</div>';
+      }
+
+      // Balance against limit for each card, highest first, with the 30% healthy line
+      function deskUtilisation() {
+        var list = cards.filter(function (c) { return Number(c.limit) > 0; }).map(function (c) { return { c: c, u: Math.min(100, (Number(c.balance) || 0) / Number(c.limit) * 100) }; })
+          .sort(function (a, b) { return b.u - a.u; });
+        var html = deskHead('stacked_bar_chart', 'Utilisation by card', 'Balance against limit. Under 30% is healthy');
+        if (!list.length) return html + deskEmpty('Link a card to see how much of each limit you are using.');
+        return html + '<div class="flex flex-col gap-1">' + list.map(function (x) {
+          var t = cardTheme(x.c), hot = x.u >= 30;
+          return '<div role="button" tabindex="0" data-desk-card="' + escapeHtml(c_id(x.c)) + '" class="' + ROW + ' flex-col items-stretch gap-1.5">' +
+            '<span class="flex items-center justify-between gap-2 text-[12px]"><span class="font-semibold text-on-surface min-w-0">' + deskCardTag(x.c) + '</span>' +
+            '<span class="num shrink-0 font-semibold ' + (x.u >= 50 ? 'text-error' : hot ? 'text-amber-700' : 'text-emerald-700') + '">' + Math.round(x.u) + '%</span></span>' +
+            '<span class="relative block h-2 rounded-full bg-surface-container"><span class="block h-full rounded-full" style="width:' + Math.max(1, x.u).toFixed(1) + '%;background:' + t.hex + '"></span>' +
+            '<span class="absolute -top-1 w-0.5 h-4 rounded bg-on-surface/40" style="left:calc(30% - 1px)" aria-hidden="true"></span></span>' +
+            '<span class="text-[11px] text-secondary num">' + fmtAmt(Number(x.c.balance) || 0) + ' of ' + fmtAmt(Number(x.c.limit)) + '</span></div>';
+        }).join('') + '</div>';
+      }
+
+      // The latest purchases, payments and refunds across all cards
+      function deskRecent(limit) {
+        var rows = [];
+        cards.forEach(function (c) { (c.ledger || []).forEach(function (e) { rows.push({ c: c, e: e }); }); });
+        rows.sort(function (a, b) {
+          if (a.e.date !== b.e.date) return a.e.date < b.e.date ? 1 : -1;
+          return (Number(b.e.createdAt) || 0) - (Number(a.e.createdAt) || 0);
+        });
+        var html = deskHead('receipt_long', 'Recent activity', 'Latest across all cards');
+        if (!rows.length) return html + deskEmpty('Nothing logged yet. Purchases and payments you log show up here.');
+        return html + '<div class="flex flex-col">' + rows.slice(0, limit).map(function (r) {
+          var e = r.e, cat = spendCategory(e.category), amt = Number(e.amount) || 0;
+          var icon = e.type === 'payment' ? 'payments' : e.type === 'refund' ? 'undo' : e.type === 'adjustment' ? 'tune' : cat.icon;
+          var tone = e.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : e.type === 'purchase' ? cat.bg + ' ' + cat.text : 'bg-surface-container-low text-secondary';
+          var title = e.merchant || (e.type === 'payment' ? 'Payment' : e.type === 'refund' ? 'Refund' : e.type === 'adjustment' ? 'Balance adjustment' : cat.label);
+          var minus = e.type === 'payment' || e.type === 'refund' || (e.type === 'adjustment' && amt < 0);
+          return '<div role="button" tabindex="0" data-desk-card="' + escapeHtml(c_id(r.c)) + '" class="' + ROW + '">' +
+            '<span class="w-9 h-9 rounded-lg ' + tone + ' flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">' + icon + '</span></span>' +
+            '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + escapeHtml(title) + '</span>' +
+            '<span class="flex items-center gap-1 text-[11px] text-secondary min-w-0">' + deskCardTag(r.c) + '<span class="shrink-0">\u00b7 ' + shortDate(e.date) + '</span></span></span>' +
+            '<span class="text-[13px] font-semibold num shrink-0 ' + (minus ? 'text-emerald-700' : 'text-on-surface') + '">' + (minus ? '\u2212 ' : '') + fmtAmt(Math.abs(amt)) + '</span></div>';
+        }).join('') + '</div>';
+      }
+
+      function renderDeskPanels() {
+        if (!deskMq.matches) return;
+        var today = ymd(new Date());
+        var put = function (id, parent, html) { var el = deskPanel(id, parent); if (el) el.innerHTML = html; };
+        put('home-desk-recent', '#home-content .tab-col-a1', deskRecent(6));
+        put('home-desk-spend', '#home-content .tab-col-a2', deskSpending(today));
+        put('home-desk-upcoming', '#home-content > .tab-col-b', deskUpcoming(today));
+        put('cards-desk-util', '#sub-view-overview', deskUtilisation());
+        put('cards-desk-upcoming', '#sub-view-list', deskUpcoming(today));
+        put('cards-desk-recent', '#sub-view-list', deskRecent(6));
+      }
+      if (deskMq.addEventListener) deskMq.addEventListener('change', renderDeskPanels); else deskMq.addListener(renderDeskPanels);
+      document.addEventListener('keydown', function (e) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.desk-panel [data-desk-card]')) {
+          e.preventDefault();
+          goDetail(e.target.closest('[data-desk-card]').getAttribute('data-desk-card'));
+        }
+      });
 
       // Home alerts: budgets gone over this period, and recurring charges due tomorrow
       function renderSpendAlerts() {
@@ -14434,10 +14585,15 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         var pick = function (id) { var e = document.getElementById(id); return e ? e.textContent.trim() : ''; };
         document.getElementById('am-name').textContent = pick('sidebar-user-name') || 'Account';
         document.getElementById('am-email').textContent = pick('sidebar-user-email');
-        var prov = pick('profile-account-provider');
+        var u = window.currentUser, ways = [];
+        (u && u.providerData || []).forEach(function (p) {
+          var name = { 'password': 'Email', 'google.com': 'Google', 'apple.com': 'Apple', 'twitter.com': 'X' }[p && p.providerId];
+          if (name && ways.indexOf(name) === -1) ways.push(name);
+        });
+        if (!ways.length && pick('profile-account-provider')) ways.push(/google/i.test(pick('profile-account-provider')) ? 'Google' : 'Email');
         var badge = document.getElementById('am-provider');
-        badge.textContent = /google/i.test(prov) ? 'Google' : (prov ? 'Email' : '');
-        badge.classList.toggle('hidden', !prov);
+        badge.textContent = ways.join(' · ');
+        badge.classList.toggle('hidden', !ways.length);
         if (window.paintAvatars) window.paintAvatars();
       }
       function place() {
@@ -14505,7 +14661,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         });
         // Header avatars open the menu on desktop (tapping one on a phone or iPad still opens Profile)
         document.addEventListener('click', function (e) {
-          var av = e.target.closest && e.target.closest('#btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers, #btn-profile-detail');
+          var av = e.target.closest && e.target.closest('#btn-profile-home, #btn-profile-cards, #btn-profile-simulators, #btn-profile-spaces, #btn-profile-offers');
           if (av && e.isTrusted && isDesktop()) { e.preventDefault(); e.stopImmediatePropagation(); toggle(av); return; }
           if (menu.classList.contains('open') && !menu.contains(e.target) && !(anchor && anchor.contains(e.target))) close(false);
         }, true);
