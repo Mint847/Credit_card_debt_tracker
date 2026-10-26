@@ -32,3 +32,4 @@ __pycache__/
 # Node / build output
 node_modules/
 packages/*/dist/
+apps/*/dist/

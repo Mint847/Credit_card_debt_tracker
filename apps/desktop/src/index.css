@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The phone app's tokens as RGB triplets: light first, then dark */
+:root {
+  --canvas: 248 249 250;      /* background */
+  --panel: 255 255 255;       /* surface-container-lowest */
+  --sunken: 243 244 245;      /* surface-container-low */
+  --line: 230 232 233;
+  --line-strong: 187 202 196; /* outline-variant */
+  --ink: 25 28 29;            /* on-surface */
+  --muted: 60 74 70;          /* on-surface-variant */
+  --faint: 108 122 118;       /* outline */
+  --brand: 0 131 116;         /* primary-container: buttons, white text 4.7:1 */
+  --brand-ink: 0 107 92;      /* primary: teal text */
+  --danger: 186 26 26;
+  --warn: 180 83 9;
+  --ok: 4 120 87;
+  color-scheme: light;
+}
+.dark {
+  --canvas: 15 20 22;
+  --panel: 21 27 29;
+  --sunken: 25 31 33;
+  --line: 39 48 50;
+  --line-strong: 63 73 70;
+  --ink: 224 227 227;
+  --muted: 190 201 196;
+  --faint: 138 148 144;
+  --brand: 0 131 116;
+  --brand-ink: 79 219 194;
+  --danger: 255 180 171;
+  --warn: 252 211 77;
+  --ok: 110 231 183;
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+  font-feature-settings: 'tnum' 0;
+}
+.num { font-variant-numeric: tabular-nums; }
+
+.icon {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
+  user-select: none;
+}
+.icon-fill { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+
+@layer components {
+  .panel { @apply bg-panel border border-line rounded-xl shadow-card; }
+  .panel-head { @apply flex items-center justify-between px-5 pt-4 pb-3; }
+  .panel-title { @apply text-[13px] font-semibold text-ink; }
+  .label { @apply text-[11px] font-semibold uppercase tracking-wider text-faint; }
+  .btn { @apply inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand text-white hover:bg-brand/90; }
+  .btn-ghost { @apply btn text-muted hover:bg-sunken hover:text-ink; }
+  .btn-outline { @apply btn border border-line bg-panel text-ink hover:bg-sunken; }
+  .field { @apply h-9 w-full rounded-lg border border-line bg-panel px-3 text-[13px] text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold; }
+  .kbd { @apply inline-flex items-center rounded border border-line bg-sunken px-1.5 text-[10px] font-semibold text-faint; }
+}
+
+/* Thin scrollbars inside panels */
+.scroll-thin { scrollbar-width: thin; scrollbar-color: rgb(var(--line-strong)) transparent; }

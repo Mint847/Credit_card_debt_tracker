@@ -6845,6 +6845,81 @@ var SerendibCore = (function() {
       retryCloudSync
     };
   }
+  function projectPlan(cards, strategy, budget) {
+    var baselineInterest = 0, baselineMonths = 0;
+    cards.filter(function(c) {
+      return c.balance > 0;
+    }).forEach(function(c) {
+      var rule = cardMinRule(c);
+      var res = calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor);
+      if (res.minMonths === Infinity || res.minMonths >= 1200) {
+        baselineMonths = Infinity;
+      } else {
+        baselineMonths = Math.max(baselineMonths, res.minMonths);
+        baselineInterest += res.minTotalInterest;
+      }
+    });
+    var portfolio = cards.filter(function(c) {
+      return c.balance > 0;
+    }).map(function(c) {
+      return Object.assign({}, c);
+    });
+    var interest = 0, months = 0, safetyLimit = 1200;
+    var total = function() {
+      return portfolio.reduce(function(s, c) {
+        return s + Math.max(0, c.balance);
+      }, 0);
+    };
+    var curve = [total()];
+    while (portfolio.some(function(c) {
+      return c.balance > 0.01;
+    }) && months < safetyLimit) {
+      var monthMinReq = 0;
+      portfolio.forEach(function(c) {
+        if (c.balance > 0.01) {
+          var i = c.balance * (cardApr(c) / 100 / 12);
+          c.balance += i;
+          interest += i;
+          monthMinReq += minPaymentFor(c);
+        }
+      });
+      if (budget < monthMinReq) {
+        months = Infinity;
+        break;
+      }
+      var surplus = budget;
+      portfolio.forEach(function(c) {
+        if (c.balance > 0.01) {
+          var minPmt = minPaymentFor(c);
+          c.balance -= minPmt;
+          surplus -= minPmt;
+        }
+      });
+      if (strategy === "snowball") {
+        portfolio.sort(function(a, b) {
+          return a.balance - b.balance;
+        });
+      } else {
+        portfolio.sort(function(a, b) {
+          var d = cardApr(b) - cardApr(a);
+          return d !== 0 ? d : a.balance - b.balance;
+        });
+      }
+      for (var k = 0; k < portfolio.length; k++) {
+        if (surplus <= 0.01) break;
+        var cc = portfolio[k];
+        if (cc.balance > 0.01) {
+          var payment = Math.min(cc.balance, surplus);
+          cc.balance -= payment;
+          surplus -= payment;
+        }
+      }
+      months++;
+      curve.push(total());
+    }
+    if (months >= safetyLimit) months = Infinity;
+    return { baselineMonths, baselineInterest, months, interest, curve };
+  }
   const core = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     APR,
@@ -6953,6 +7028,7 @@ var SerendibCore = (function() {
     planRestore,
     postDueRecurringOnCard,
     postRecurringNow,
+    projectPlan,
     rankSuggestions,
     readAccountCache,
     readBackup,
@@ -8185,82 +8261,10 @@ var checkSnowball = document.getElementById('check-snowball');
 
 
 
-        var portfolioBaseline = cards.filter(function(c) { return c.balance > 0; }).map(function(c) { return Object.assign({}, c); });
-        var portfolioTarget = cards.filter(function(c) { return c.balance > 0; }).map(function(c) { return Object.assign({}, c); });
-        
-        // 1. Baseline Loop (The Cost of Minimums)
-        var baselineTotalInterest = 0;
-        var baselineMaxMonths = 0;
-        portfolioBaseline.forEach(function(c) {
-            var rule = cardMinRule(c);
-            var res = window.calculateCBSLAmortization ? window.calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor) : {minMonths: Infinity, minTotalInterest: Infinity};
-            if (res.minMonths === Infinity || res.minMonths >= 1200) {
-                baselineMaxMonths = Infinity;
-            } else {
-                baselineMaxMonths = Math.max(baselineMaxMonths, res.minMonths);
-                baselineTotalInterest += res.minTotalInterest;
-            }
-        });
-
-        // 2. Target Loop (The Accelerated Cascading Plan)
-        var targetTotalInterest = 0;
-        var targetMonths = 0;
-        var safetyLimit = 1200; // 100 years max
-        
-        while (portfolioTarget.some(function(c) { return c.balance > 0.01; }) && targetMonths < safetyLimit) {
-            var monthMinReq = 0;
-            
-            // Add interest and calc minimums
-            portfolioTarget.forEach(function(c) {
-                if (c.balance > 0.01) {
-                    var interest = c.balance * (cardApr(c) / 100 / 12);
-                    c.balance += interest;
-                    targetTotalInterest += interest;
-                    monthMinReq += minPaymentFor(c);
-                }
-            });
-            
-            // Check if budget can even cover minimums
-            if (TOTAL_MONTHLY_BUDGET < monthMinReq) {
-                targetMonths = Infinity;
-                break;
-            }
-            
-            var surplus = TOTAL_MONTHLY_BUDGET;
-            
-            // Deduct minimums first
-            portfolioTarget.forEach(function(c) {
-                if (c.balance > 0.01) {
-                    var minPmt = minPaymentFor(c);
-                    c.balance -= minPmt;
-                    surplus -= minPmt;
-                }
-            });
-            
-            // Sort remaining cards for surplus cascade
-            if (strategy === "snowball") {
-                portfolioTarget.sort(function(a, b) { return a.balance - b.balance; });
-            } else {
-                portfolioTarget.sort(function(a, b) {
-                    var aprA = cardApr(a); var aprB = cardApr(b);
-                    if (aprB !== aprA) return aprB - aprA;
-                    return a.balance - b.balance;
-                });
-            }
-            
-            // Cascade surplus
-            for (var i = 0; i < portfolioTarget.length; i++) {
-                if (surplus <= 0.01) break;
-                var cc = portfolioTarget[i];
-                if (cc.balance > 0.01) {
-                    var payment = Math.min(cc.balance, surplus);
-                    cc.balance -= payment;
-                    surplus -= payment;
-                }
-            }
-            
-            targetMonths++;
-        }
+        // The plan and its minimums-only baseline come from the shared core (packages/core/src/plan.js)
+        var projection = SerendibCore.projectPlan(cards, strategy, TOTAL_MONTHLY_BUDGET);
+        var baselineTotalInterest = projection.baselineInterest, baselineMaxMonths = projection.baselineMonths;
+        var targetTotalInterest = projection.interest, targetMonths = projection.months, safetyLimit = 1200;
         
         var elMonths = document.getElementById("home-strategy-months");
         if (elMonths) {
