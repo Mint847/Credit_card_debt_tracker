@@ -1,11 +1,10 @@
 // Numbers the screens show, worked out exactly as the phone app does (same core functions,
 // same order). Kept here so every desktop screen reads them from one place.
 import {
-  ymd, addDays, daysBetween, cardApr, cardTheme, cardName, computeMonthlyBudget, allocateMonthlyPayments, calcPayoff,
+  ymd, addDays, cardApr, cardTheme, cardName, computeMonthlyBudget, allocateMonthlyPayments, calcPayoff,
   calcMinPayoff, cardMinRule, cycleStatus, isValidDay, minPaymentFor, nextDueDayFrom, billingPeriod, periodSummary,
   spendCategory, recurringNextDue, statementDatesBetween, amountDueNow, activeRecurring, projectPlan
 } from '@serendib/core';
-import { fmtAmt as fmt } from './format';
 import type { Card, Recurring, Strategy } from './types';
 
 export const today = (): string => ymd(new Date());
@@ -107,68 +106,6 @@ export function projection(cards: Card[], strategy: Strategy): Projection {
     speedUp: done && !neverBase ? pr.baselineMonths / pr.months : 0,
     debtFree, rows
   };
-}
-
-export interface Alert {
-  id: string;
-  tone: 'danger' | 'warn' | 'info';
-  icon: string;
-  title: string;
-  body: string;
-  card?: Card;
-  action?: { label: string; amount: number };
-}
-
-// The home screen's alerts: overdue (with CRIB timing), next payment due, high utilisation, budgets
-export function alerts(cards: Card[]): Alert[] {
-  const t = today(), out: Alert[] = [];
-  const upcoming: { card: Card; due: string; left: number; min: number }[] = [];
-  cards.forEach((c) => {
-    if (!isValidDay(c.dueDay) || !isValidDay(c.statementDay)) return;
-    const st = cycleStatus(c, t);
-    if (st) {
-      if (st.overdue) {
-        const o = st.overdue;
-        out.push({
-          id: 'over-' + c.id, tone: 'danger', icon: 'error', card: c,
-          title: 'Payment overdue · ' + o.days + (o.days === 1 ? ' day' : ' days'),
-          body: o.days >= 60
-            ? cardName(c) + ' is ' + o.days + ' days past due. At 90 days it’s classed as non-performing and reported to CRIB.'
-            : 'Pay ' + fmt(o.amount) + ' to catch up' + (o.days >= 30 ? '. At 30+ days a missed payment can be reported to CRIB.' : '. Late fees and interest are building.'),
-          action: { label: 'Log payment', amount: o.amount }
-        });
-      }
-      if (st.next) upcoming.push({ card: c, due: st.next.s.due, left: st.next.remaining, min: st.next.s.minDue });
-    } else if (c.balance > 0) {
-      const min = minPaymentFor(c);
-      upcoming.push({ card: c, due: nextDueDayFrom(c.dueDay, t), left: min, min });
-    }
-  });
-  upcoming.sort((a, b) => (a.due < b.due ? -1 : 1));
-  const u = upcoming[0];
-  if (u) {
-    const days = daysBetween(t, u.due);
-    out.push({
-      id: 'due-' + u.card.id, tone: days <= 3 ? 'warn' : 'info', icon: 'event', card: u.card,
-      title: days === 0 ? 'Payment due today' : days === 1 ? 'Payment due tomorrow' : 'Next payment due in ' + days + ' days',
-      body: u.left < u.min - 0.5 ? fmt(u.left) + ' left of the ' + fmt(u.min) + ' minimum.' : 'Minimum ' + fmt(u.left) + ' to avoid late fees and interest.',
-      action: { label: 'Log payment', amount: u.left }
-    });
-  }
-  cards.forEach((c) => {
-    const u2 = util(c);
-    if (u2 >= 75) out.push({ id: 'util-' + c.id, tone: 'warn', icon: 'speed', card: c, title: 'High utilisation · ' + Math.round(u2) + '%', body: 'Above 75% of the limit. Lenders and CRIB look for under 30%.' });
-    const sum = periodSummary(c, billingPeriod(c, t));
-    Object.keys(c.budgets || {}).forEach((k) => {
-      const b = (c.budgets || {})[k], spent = sum.byCat[k] || 0;
-      if (b > 0 && spent >= b * 0.9) {
-        out.push({ id: 'bud-' + c.id + k, tone: spent > b ? 'danger' : 'warn', icon: 'savings', card: c,
-          title: spendCategory(k).label + (spent > b ? ' over budget' : ' budget almost used'),
-          body: fmt(spent) + ' of ' + fmt(b) + ' this cycle.' });
-      }
-    });
-  });
-  return out;
 }
 
 export interface Upcoming {

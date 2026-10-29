@@ -35,3 +35,14 @@ test('snowball and avalanche cost different amounts of interest', () => {
   const av = projectPlan(cards, 'avalanche', 20000), sn = projectPlan(cards, 'snowball', 20000);
   expect(av.interest).toBeLessThanOrEqual(sn.interest);
 });
+
+import { strategySavings } from '../src/plan.js';
+test('the Avalanche chip shows what it really saves over Snowball', () => {
+  const cards = [{ id: 'a', balance: 200000, limit: 300000, apr: 28 }, { id: 'b', balance: 30000, limit: 100000, apr: 18 }];
+  window.currentUserData = { income: '120000' };
+  const s = strategySavings(cards);
+  expect(s.amount % 100).toBe(0);
+  expect(s.label).toMatch(/^(Save ~LKR [\d,]+|Same as Snowball)$/);
+  expect(strategySavings([]).label).toBe('Saves the most interest');
+  window.currentUserData = undefined;
+});

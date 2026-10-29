@@ -67,7 +67,7 @@ function buildCard(s: Spec, today: string): Card {
       source: 'manual', createdAt: 1000 + i });
   });
   entries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  entries.forEach((e) => { applyLedgerEffect(card, e, 1); card.ledger.push(e); });
+  entries.forEach((e) => { applyLedgerEffect(card, e, 1); card.ledger!.push(e); });
   return card;
 }
 

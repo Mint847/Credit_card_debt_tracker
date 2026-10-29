@@ -1026,15 +1026,27 @@ function mergeItems(primary, secondary, tombs) {
     return !(ts > 0 && ts >= (Number(item.updatedAt) || 0));
   });
 }
+// Onboarding flags only ever turn on, except when the guide is replayed: Replay stamps resetAt, and the
+// copy replayed most recently decides the flags Replay resets (the tips, the welcome and the checklist).
 function mergeOnboarding(a, b) {
   if (!a || typeof a !== 'object') return b || {};
   if (!b || typeof b !== 'object') return a;
   var out = Object.assign({}, a, b);
-  ['welcomeDone', 'checklistDismissed', 'checklistCompleted', 'simulatorTried'].forEach(function (k) { if (a[k] || b[k]) out[k] = true; });
+  var ra = Number(a.resetAt) || 0, rb = Number(b.resetAt) || 0;
+  var reset = ra === rb ? null : (ra > rb ? a : b);
+  ['welcomeDone', 'checklistDismissed', 'checklistCompleted'].forEach(function (k) {
+    if (reset) out[k] = !!reset[k]; else if (a[k] || b[k]) out[k] = true;
+  });
+  if (a.simulatorTried || b.simulatorTried) out.simulatorTried = true;
   out.version = Math.max(Number(a.version) || 0, Number(b.version) || 0) || undefined;
   if (out.version === undefined) delete out.version;
-  out.tipsSeen = Object.assign({}, a.tipsSeen || {}, b.tipsSeen || {});
-  Object.keys(out.tipsSeen).forEach(function (k) { out.tipsSeen[k] = !!((a.tipsSeen || {})[k] || (b.tipsSeen || {})[k]); });
+  if (ra || rb) out.resetAt = Math.max(ra, rb);
+  if (reset) {
+    out.tipsSeen = Object.assign({}, reset.tipsSeen || {});
+  } else {
+    out.tipsSeen = Object.assign({}, a.tipsSeen || {}, b.tipsSeen || {});
+    Object.keys(out.tipsSeen).forEach(function (k) { out.tipsSeen[k] = !!((a.tipsSeen || {})[k] || (b.tipsSeen || {})[k]); });
+  }
   return out;
 }
 function mergeAccount(a, b, now) {

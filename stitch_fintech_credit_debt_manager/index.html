@@ -18,6 +18,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet">
   <script>
+    /* ── New desktop app (beta): a PC that picked "Try the new desktop app" opens /desktop/. The choice is kept
+       per device in localStorage (serendib_desktop_beta); "Back to classic view" there clears it. ── */
+    (function () {
+      try {
+        if (localStorage.getItem('serendib_desktop_beta') === 'on' && (location.pathname === '/' || location.pathname === '/index.html') &&
+            window.matchMedia && window.matchMedia('(min-width: 1280px) and (pointer: fine)').matches) location.replace('/desktop/');
+      } catch (e) {}
+    })();
+  </script>
+  <script>
     /* ── Theme: Light / Dark / Auto (follows the device). Runs first so the page never flashes the wrong colours.
        The choice is kept per device in localStorage (serendib_theme). ── */
     (function () {
@@ -1626,7 +1636,8 @@
       overscroll-behavior: contain
     }
 
-    .am-item.desk-only {
+    .am-item.desk-only,
+    .am-item.desk-beta {
       display: none
     }
 
@@ -1653,6 +1664,12 @@
 
     @media (min-width: 1280px) {
       .am-item.desk-only {
+        display: flex
+      }
+    }
+
+    @media (min-width: 1280px) and (pointer: fine) {
+      .am-item.desk-beta {
         display: flex
       }
     }
@@ -3691,9 +3708,9 @@
               <p class="text-[11px] text-secondary mt-1 leading-relaxed">
                 Saves maximum interest (Target highest APR).
               </p>
-              <div
+              <div id="avalanche-savings"
                 class="mt-2.5 inline-block bg-teal-50 text-[#008f7a] text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                Save ~LKR 34,200
+                Saves the most interest
               </div>
             </button>
             <!-- Option 2: Snowball -->
@@ -3997,7 +4014,7 @@
           </div>
         </div>
         <!-- CTA Inside Sandbox -->
-        <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+        <button id="btn-sim-adopt" type="button" onclick="App.adoptFixedPlan()" class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
           <span>Adopt Fixed Repayment Plan</span>
           <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
@@ -4158,11 +4175,6 @@
               </div>
             </div>
           </div>
-          <!-- CTA Inside Sandbox -->
-          <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
-            <span>Compare Alternatives</span>
-            <span class="material-symbols-outlined text-base">arrow_forward</span>
-          </button>
         </section>
         <!-- Statutory Footnote -->
         <aside class="mx-4 mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-start gap-3.5">
@@ -4298,7 +4310,7 @@
             </div>
           </div>
           <!-- CTA Inside Sandbox -->
-          <button class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
+          <button id="btn-sim-negotiate" type="button" onclick="App.copyCashPriceRequest()" class="w-full bg-primary-container text-white font-headline-sm text-sm h-12 rounded-full flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-95 transition-all">
             <span>Negotiate Cash Discount</span>
             <span class="material-symbols-outlined text-base">arrow_forward</span>
           </button>
@@ -5901,15 +5913,24 @@ var SerendibCore = (function() {
     if (!a || typeof a !== "object") return b || {};
     if (!b || typeof b !== "object") return a;
     var out = Object.assign({}, a, b);
-    ["welcomeDone", "checklistDismissed", "checklistCompleted", "simulatorTried"].forEach(function(k) {
-      if (a[k] || b[k]) out[k] = true;
+    var ra = Number(a.resetAt) || 0, rb = Number(b.resetAt) || 0;
+    var reset = ra === rb ? null : ra > rb ? a : b;
+    ["welcomeDone", "checklistDismissed", "checklistCompleted"].forEach(function(k) {
+      if (reset) out[k] = !!reset[k];
+      else if (a[k] || b[k]) out[k] = true;
     });
+    if (a.simulatorTried || b.simulatorTried) out.simulatorTried = true;
     out.version = Math.max(Number(a.version) || 0, Number(b.version) || 0) || void 0;
     if (out.version === void 0) delete out.version;
-    out.tipsSeen = Object.assign({}, a.tipsSeen || {}, b.tipsSeen || {});
-    Object.keys(out.tipsSeen).forEach(function(k) {
-      out.tipsSeen[k] = !!((a.tipsSeen || {})[k] || (b.tipsSeen || {})[k]);
-    });
+    if (ra || rb) out.resetAt = Math.max(ra, rb);
+    if (reset) {
+      out.tipsSeen = Object.assign({}, reset.tipsSeen || {});
+    } else {
+      out.tipsSeen = Object.assign({}, a.tipsSeen || {}, b.tipsSeen || {});
+      Object.keys(out.tipsSeen).forEach(function(k) {
+        out.tipsSeen[k] = !!((a.tipsSeen || {})[k] || (b.tipsSeen || {})[k]);
+      });
+    }
     return out;
   }
   function mergeAccount(a, b, now) {
@@ -6349,6 +6370,89 @@ var SerendibCore = (function() {
     }
     return { entry, editing: !!input.editingId, warn, merchant };
   }
+  function merchantItems(cards, cardId) {
+    var seen = {}, items = [];
+    var ordered = cards.slice().sort(function(a, b) {
+      return (String(b.id) === String(cardId)) - (String(a.id) === String(cardId));
+    });
+    ordered.forEach(function(c) {
+      sortedLedger(c).forEach(function(e) {
+        if (!e.merchant || e.type === "payment" || e.source === "recurring") return;
+        var k = suggestNorm(e.merchant);
+        if (!k || seen[k]) return;
+        seen[k] = true;
+        items.push({ label: e.merchant, hint: spendCategory(e.category).label, category: e.category });
+      });
+    });
+    return items;
+  }
+  function defaultCategory(cards) {
+    var last = null;
+    cards.forEach(function(c) {
+      (c.ledger || []).forEach(function(e) {
+        if (e.type === "purchase" && e.source !== "recurring" && e.category && (!last || (e.createdAt || 0) > (last.createdAt || 0))) last = e;
+      });
+    });
+    return last ? last.category : "groceries";
+  }
+  function categoryForMerchant(cards, cardId, name) {
+    var k = suggestNorm(name);
+    var hit = merchantItems(cards, cardId).filter(function(m) {
+      return suggestNorm(m.label) === k;
+    })[0];
+    return hit && hit.category ? hit.category : null;
+  }
+  function overLimitWarning(card, type, amount, editing) {
+    if (!(card && card.limit > 0 && type === "purchase" && amount > 0)) return "";
+    var base = (Number(card.balance) || 0) - (editing ? Number(editing.applied) || 0 : 0);
+    return base + amount > card.limit ? "This takes the card over its " + fmtAmt$1(card.limit) + " limit." : "";
+  }
+  function paymentShortcuts(card, dueNow, plan) {
+    if (!card || !(card.balance > 0)) return [];
+    var seen = {};
+    return [["Due now", dueNow], ["Plan", plan], ["Full balance", card.balance]].filter(function(x) {
+      var v = Math.round(x[1] * 100) / 100;
+      if (!(v > 0) || seen[v]) return false;
+      seen[v] = true;
+      return true;
+    }).map(function(x) {
+      return { label: x[0], value: Math.round(x[1] * 100) / 100 };
+    });
+  }
+  var LOG_CARD_KEY = "serendib_last_log_card";
+  var SMS_HINT = "We only read it to fill the form. Nothing is saved until you tap Save.";
+  function smsFill(text, cards, todayStr) {
+    if (!String(text || "").trim()) return { empty: true, fromSms: false, status: { text: SMS_HINT, tone: "hint" } };
+    var r = parseBankSms(text, todayStr), filled = [], note = "", out = { type: r.type, clearAmount: false };
+    if (r.amount) {
+      out.amount = r.amount;
+      filled.push("amount");
+    } else if (r.foreign) out.clearAmount = true;
+    if (r.merchant) {
+      out.merchant = r.merchant;
+      filled.push("merchant");
+    }
+    if (r.date) {
+      out.date = r.date;
+      filled.push("date");
+    }
+    if (r.last4) {
+      var match = cards.filter(function(c) {
+        return c.last4 === r.last4;
+      })[0];
+      if (match) {
+        out.cardId = match.id;
+        filled.push("card");
+      } else note = " This SMS is for a card ending " + r.last4 + ". Add those digits in Edit Card to match it next time.";
+    }
+    out.fromSms = filled.length > 0;
+    out.status = r.foreign ? { text: "This SMS is in " + r.foreign + ". Enter the LKR amount from your statement." + note, tone: "warn" } : filled.length ? { text: "Filled " + filled.join(", ") + ". Check the details, then tap Save." + note, tone: "ok" } : { text: "We couldn’t read this SMS. Please fill in the details below.", tone: "warn" };
+    return out;
+  }
+  function logSavedText(type, amount, merchant, editing, warn) {
+    var what = type === "payment" ? "Payment of " + fmtAmt$1(amount) + " logged" : type === "refund" ? "Refund of " + fmtAmt$1(amount) + " logged" : type === "adjustment" ? "Adjustment saved" : "Logged " + fmtAmt$1(amount) + (merchant ? " at " + merchant : "");
+    return (editing ? "Entry updated" : what) + (warn ? ". " + warn : "");
+  }
   function findCardIn(cards, id) {
     if (id === null || id === void 0) return null;
     return cards.find(function(c) {
@@ -6724,6 +6828,30 @@ var SerendibCore = (function() {
       spaces: c.data.spaces
     };
   }
+  var BACKUP_MAX_BYTES = 2 * 1024 * 1024;
+  function backupFileName(todayStr) {
+    return "serendib-backup-" + todayStr + ".json";
+  }
+  function when(v) {
+    var d = new Date(v);
+    return isNaN(d) ? null : d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function backupWhen(exportedAt) {
+    return exportedAt && when(exportedAt) || "an unknown date";
+  }
+  function safetyCopyWhen(at) {
+    return when(at) || "";
+  }
+  function restoreMergeLine(newCards, newSpaces) {
+    if (!newCards.length && !newSpaces.length) return "Everything in this backup is already here.";
+    return "Adds " + newCards.length + (newCards.length === 1 ? " card" : " cards") + " and " + newSpaces.length + (newSpaces.length === 1 ? " space" : " spaces") + " you don’t have. Nothing else changes.";
+  }
+  function restoreReplaceWarning(cards, spaces) {
+    return "This replaces your " + countsText(cards, spaces) + ". You can undo straight after.";
+  }
+  function restoreDoneText(mode, newCards, newSpaces) {
+    return mode === "merge" ? "Added " + newCards.length + (newCards.length === 1 ? " card" : " cards") + " and " + newSpaces.length + (newSpaces.length === 1 ? " space" : " spaces") : "Backup restored";
+  }
   function readAccountCache(uid2, email) {
     var data = null;
     try {
@@ -6920,30 +7048,1202 @@ var SerendibCore = (function() {
     if (months >= safetyLimit) months = Infinity;
     return { baselineMonths, baselineInterest, months, interest, curve };
   }
+  function strategySavings(cards) {
+    var active = cards.filter(function(c) {
+      return c.balance > 0;
+    });
+    if (!active.length) return { amount: 0, label: "Saves the most interest" };
+    var budget = computeMonthlyBudget(cards);
+    var av = projectPlan(cards, "avalanche", budget), sn = projectPlan(cards, "snowball", budget);
+    if (av.months === Infinity || sn.months === Infinity) return { amount: 0, label: "Saves the most interest" };
+    var saved = Math.round(Math.max(0, sn.interest - av.interest) / 100) * 100;
+    return saved > 0 ? { amount: saved, label: "Save ~" + fmtLKR(saved) } : { amount: 0, label: "Same as Snowball" };
+  }
+  function authErrorMessage(err, providerName) {
+    var name = providerName || "This";
+    switch (err && err.code || "") {
+      case "auth/invalid-credential":
+      case "auth/invalid-login-credentials":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        return "Incorrect email or password.";
+      case "auth/invalid-email":
+        return "Enter a valid email address.";
+      case "auth/missing-password":
+        return "Enter your password.";
+      case "auth/email-already-in-use":
+        return "This email already has an account. Log in instead.";
+      case "auth/weak-password":
+      case "auth/password-does-not-meet-requirements":
+        return "Choose a stronger password that meets the requirements below.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Wait a few minutes and try again.";
+      case "auth/network-request-failed":
+        return "Can't reach the server. Check your connection and try again.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      case "auth/operation-not-allowed":
+      case "auth/configuration-not-found":
+      case "auth/invalid-oauth-provider":
+        return name + " sign-in isn't available yet. Use Google or email instead.";
+      case "auth/account-exists-with-different-credential":
+        return "This email already has an account. Log in with the method you used before.";
+      case "auth/unauthorized-domain":
+        return "Sign-in isn't allowed from this web address.";
+      case "auth/popup-blocked":
+        return "Your browser blocked the sign-in window. Allow pop-ups and try again.";
+      default:
+        return "Something went wrong. Please try again.";
+    }
+  }
+  function isQuietAuthError(err) {
+    var code = err && err.code;
+    return code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request";
+  }
+  function shouldRedirectAfter(err) {
+    var code = err && err.code;
+    return code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment";
+  }
+  function checkPasswordRules(password, confirm) {
+    password = password || "";
+    confirm = confirm || "";
+    var len = password.length >= 8;
+    var upper = /[A-Z]/.test(password);
+    var lower = /[a-z]/.test(password);
+    var num = /[0-9]/.test(password);
+    var special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password);
+    var match = password.length > 0 && password === confirm;
+    var isValid = len && upper && lower && num && special && match;
+    return { len, upper, lower, num, special, match, isValid };
+  }
+  function passwordNeedsText(rules) {
+    var missing = [];
+    if (!rules.len) missing.push("at least 8 characters");
+    if (!rules.upper) missing.push("an uppercase letter");
+    if (!rules.lower) missing.push("a lowercase letter");
+    if (!rules.num) missing.push("a number");
+    if (!rules.special) missing.push("a symbol");
+    return "Your password needs " + missing.join(", ") + ".";
+  }
+  function signupFormError(f) {
+    if (!f.firstName || !f.lastName || !f.email) return { field: null, message: "Enter your first name, last name and email address." };
+    if (!f.password) return { field: "password", message: "Create a password to continue." };
+    if (!f.confirm) return { field: "confirm", message: "Confirm your password." };
+    if (f.password !== f.confirm) return { field: "confirm", message: "Passwords don't match." };
+    var rules = checkPasswordRules(f.password, f.confirm);
+    if (!rules.isValid) return { field: "password", message: passwordNeedsText(rules), rules: true };
+    return null;
+  }
+  var PROVIDER_LABELS = { "password": "Email & password", "google.com": "Google", "apple.com": "Apple", "twitter.com": "X" };
+  function primaryProvider(u) {
+    var ids = (u && u.providerData || []).map(function(pd) {
+      return pd.providerId;
+    });
+    if (ids.indexOf("password") !== -1) return "password";
+    return ids[0] || "password";
+  }
+  function needsEmailVerification(u) {
+    return !!(u && !u.emailVerified && primaryProvider(u) === "password");
+  }
+  function deleteAccountError(err, provider) {
+    var code = err && err.code;
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return "Confirm with " + (PROVIDER_LABELS[provider] || "your sign-in method") + " to delete your account.";
+    if (code === "auth/wrong-password" || code === "auth/invalid-credential" || code === "auth/invalid-login-credentials") return "Incorrect password.";
+    return authErrorMessage(err);
+  }
+  function prepareAccount(data, user) {
+    data = data || {};
+    var dflt = Object.assign({}, data.defaults || {});
+    if (!data.firstName) dflt.firstName = true;
+    if (!data.income) dflt.income = true;
+    if (!data.strategy) dflt.strategy = true;
+    if (Object.keys(dflt).length) data.defaults = dflt;
+    else delete data.defaults;
+    var fname = data.firstName, lname = data.lastName;
+    if (!fname && user) {
+      if (user.displayName) {
+        var parts = user.displayName.trim().split(" ");
+        fname = parts[0];
+        if (parts.length > 1) lname = parts.slice(1).join(" ");
+      } else if (user.email) {
+        fname = user.email.split("@")[0];
+      }
+    }
+    fname = fname || "User";
+    lname = lname || "";
+    data.firstName = fname;
+    data.lastName = lname;
+    var cards = Array.isArray(data.cards) ? data.cards : [];
+    var spaces = Array.isArray(data.spaces) ? data.spaces : [];
+    spaces.forEach(ensureSpaceHistory);
+    cards.forEach(function(c) {
+      if (c.issuer === void 0) c.issuer = resolveIssuer(c.bank);
+      if (c.apr === void 0) c.apr = 28;
+    });
+    return {
+      data,
+      cards,
+      spaces,
+      strategy: data.strategy ? data.strategy : "avalanche",
+      income: data.income ? data.income : "175000",
+      initials: fname.charAt(0).toUpperCase() + (lname ? lname.charAt(0).toUpperCase() : "")
+    };
+  }
+  function parseAmountInput(v) {
+    var t = String(v == null ? "" : v).replace(/^\s*LKR/i, "").replace(/[,\s]/g, "");
+    if (!/^-?\d*\.?\d+$/.test(t)) return NaN;
+    return Math.round(parseFloat(t) * 100) / 100;
+  }
+  function shortDate(s) {
+    var d = parseYmd(s);
+    return d.getDate() + " " + d.toLocaleString("en-US", { month: "short" });
+  }
+  function ordinal(n) {
+    var s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  function budgetsFromInputs(raw) {
+    var next = {}, bad = null;
+    SPEND_CATEGORIES.forEach(function(c) {
+      var text = raw[c.key];
+      if (text === void 0 || !String(text).trim()) return;
+      var v = parseAmountInput(text);
+      if (!(v > 0)) bad = bad || c.label;
+      else next[c.key] = v;
+    });
+    if (bad) return { error: "Enter a valid amount for " + bad + ", or leave it blank." };
+    return { budgets: next };
+  }
+  function csvCell(v) {
+    var s = String(v == null ? "" : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function ledgerCsv(card) {
+    var rows = [["Date", "Type", "Amount (LKR)", "Category", "Merchant", "Note", "Source"].map(csvCell).join(",")];
+    sortedLedger(card).forEach(function(e) {
+      rows.push([
+        csvCell(e.date),
+        csvCell(e.type),
+        String(Number(e.amount) || 0),
+        csvCell(e.category ? spendCategory(e.category).label : ""),
+        csvCell(e.merchant || ""),
+        csvCell(e.note || ""),
+        csvCell(e.source || "")
+      ].join(","));
+    });
+    return rows.join("\r\n");
+  }
+  function ledgerCsvFileName(card, todayStr) {
+    return "serendib-" + cardName(card).toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + todayStr + ".csv";
+  }
+  function shareText(cards, card) {
+    var intro = "My credit card progress on Serendib: ";
+    if (!(card.balance > 0)) return intro + "this card is fully paid off.";
+    var util = card.limit > 0 ? Math.round(card.balance / card.limit * 100) : null;
+    var line = util === null ? "paying it down" : util + "% of my limit used";
+    var monthAgo = addDays(ymd(/* @__PURE__ */ new Date()), -30);
+    if (util !== null && (card.ledger || []).some(function(e) {
+      return e.date > monthAgo;
+    })) {
+      var then = Math.round(balanceAt(card, monthAgo) / card.limit * 100);
+      if (then > util) line += " (down from " + then + "% last month)";
+      else if (then < util) line += " (up from " + then + "% last month)";
+    }
+    var res = calcPayoff(card.balance, planAllocationFor(cards, card), cardApr(card));
+    var tail = "";
+    if (isFinite(res.months) && res.months > 0) {
+      var d = /* @__PURE__ */ new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + res.months);
+      tail = " On track to be debt-free by " + d.toLocaleString("en-US", { month: "short", year: "numeric" }) + ".";
+    }
+    return intro + line + "." + tail;
+  }
+  function recurringStatusText(item, todayStr, nextDue) {
+    if (isCancelled(item, todayStr)) return "Cancelled" + (item.endDate ? " on " + shortDate(item.endDate) : "") + ". Past charges stay in your history.";
+    if (item.paused) return "Paused. Nothing is logged until you resume it.";
+    return nextDue ? "Next charge on " + shortDate(nextDue) + ". Changes apply from the next charge." : "No more charges before the end date.";
+  }
+  function recurringDayHint(day) {
+    var d = parseInt(day, 10);
+    if (!isValidDay(d)) return "";
+    return "Logged on the " + ordinal(d) + " of each month" + (d > 28 ? ", or the last day in shorter months." : ".");
+  }
+  function chargeNowDate(day, now) {
+    var d = parseInt(day, 10);
+    if (!isValidDay(d)) return null;
+    now = now || /* @__PURE__ */ new Date();
+    var eff = clampDay(now.getFullYear(), now.getMonth(), d);
+    return eff > now.getDate() ? null : ymd(new Date(now.getFullYear(), now.getMonth(), eff));
+  }
+  function matchDiffText(card, value, fmt) {
+    var d = Math.round((value - card.balance) * 100) / 100;
+    if (!isFinite(value)) return "The app shows " + fmt(card.balance) + ".";
+    return d === 0 ? "Already matches." : (d > 0 ? "Adds " : "Reduces the balance by ") + fmt(Math.abs(d)) + ".";
+  }
+  function targetRange(minPayment, balance) {
+    return { min: Math.floor(minPayment), max: Math.ceil(balance * 1.05 + 1) };
+  }
+  function spaceStatusLine(s, todayStr, fmt) {
+    var cur = Number(s.currentLKR) || 0, target = Number(s.targetLKR) || 0;
+    if (target > 0 && cur >= target) return { text: "Goal reached", tone: "ok" };
+    var months = spaceMonthsLeft(s.targetDate, todayStr), need = spaceMonthlyNeeded(s, todayStr), pace = spaceRecentPace(s, todayStr);
+    if (!months) return { text: "Target date passed · " + fmt(target - cur) + " to go", tone: "warn" };
+    var line = fmt(Math.ceil(need)) + " a month for " + months + (months === 1 ? " month" : " months");
+    if (pace >= need - 0.5) return { text: line + " · on track", tone: "ok" };
+    return { text: line + (pace > 0 ? " · you’re adding about " + fmt(Math.round(pace)) + " a month" : " · no deposits in the last 3 months"), tone: "warn" };
+  }
+  function spaceHistoryLabel(h) {
+    return {
+      label: h.type === "deposit" ? h.note || "Deposit" : h.type === "withdraw" ? h.note || "Withdrawal" : "Paid a card",
+      icon: h.type === "deposit" ? "south_west" : h.type === "withdraw" ? "north_east" : "credit_card",
+      out: h.type !== "deposit"
+    };
+  }
+  function sortedSpaceHistory(s) {
+    return (s.history || []).slice().sort(function(a, b) {
+      return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt || 0) - (a.createdAt || 0);
+    });
+  }
+  function spacePayOptions(space, cards) {
+    var owing = cards.filter(function(c) {
+      return c.balance > 0;
+    });
+    var have = Number(space.currentLKR) || 0;
+    var pick = owing.slice().sort(function(a, b) {
+      return amountDueNow(b) - amountDueNow(a);
+    })[0] || null;
+    return {
+      owing,
+      pick,
+      suggest: function(c) {
+        var due = amountDueNow(c);
+        return Math.round(Math.min(have, due > 0 ? due : c.balance) * 100) / 100;
+      },
+      hint: function(c, fmt) {
+        var due = amountDueNow(c);
+        return (due > 0 ? fmt(due) + " due now · " : "") + fmt(c.balance) + " balance";
+      }
+    };
+  }
+  function debtToIncome(cards, incomeStr) {
+    var income = parseFloat(String(incomeStr == null ? "175000" : incomeStr));
+    if (isNaN(income)) income = 0;
+    var totalMin = 0;
+    cards.forEach(function(c) {
+      if (c.balance > 0) totalMin += minPaymentFor(c);
+    });
+    var pct = income > 0 ? (totalMin / income * 100).toFixed(1) : 0;
+    var v = parseFloat(pct);
+    return { pct, value: v, totalMin, tone: v > 40 ? "danger" : v > 20 ? "warn" : "ok" };
+  }
+  function lkr(n) {
+    return new Intl.NumberFormat("en-LK", { maximumFractionDigits: 0 }).format(n);
+  }
+  function simTime(m) {
+    var y = Math.floor(m / 12), rem = m % 12;
+    if (y === 0) return rem + " Mo";
+    if (rem === 0) return y + " Yr" + (y > 1 ? "s" : "");
+    return y + " Yr" + (y > 1 ? "s" : "") + " " + rem + " Mo";
+  }
+  function simAmount(v) {
+    return parseFloat(String(v == null ? "" : v).replace(/[^0-9.]/g, "")) || 0;
+  }
+  function simulateMinimum(balance, card) {
+    var apr = card ? cardApr(card) : 28;
+    var aprNote = !card ? "CBSL Statutory Ceiling" : card.isZeroPercent ? "0% plan rate" : "This card’s rate";
+    if (!(balance > 0)) return { apr, aprNote, empty: true };
+    var rule = cardMinRule(card);
+    var r = calculateCBSLAmortization(balance, apr, rule.pct, rule.floor);
+    if (!r) return { apr, aprNote, empty: true };
+    var savings = Math.max(0, r.minTotalInterest - r.fixedTotalInterest);
+    var first = Math.min(balance, Math.max(balance * rule.pct, rule.floor));
+    var firstInterest = Math.min(first, (balance - first) * (apr / 100 / 12));
+    var principal = first - firstInterest;
+    var principalPct = Math.round(principal / first * 100);
+    return {
+      apr,
+      aprNote,
+      empty: false,
+      minMonths: r.minMonths,
+      minInterest: r.minTotalInterest,
+      minTime: r.minMonths >= 600 ? "Never clears" : simTime(r.minMonths),
+      minWarning: r.minMonths > 120 ? "Payoff takes over a decade" : r.minMonths > 60 ? "Heavy compounding interest" : "Costly long-term debt",
+      fixedPayment: r.targetFixedPayment,
+      fixedMonths: r.fixedMonths,
+      fixedInterest: r.fixedTotalInterest,
+      fixedTitle: "IF PAYING FIXED LKR " + lkr(r.targetFixedPayment),
+      fixedTime: simTime(r.fixedMonths),
+      savings,
+      speed: (r.minMonths / r.fixedMonths).toFixed(1) + "x faster payoff pace",
+      firstPayment: first,
+      principal,
+      interest: firstInterest,
+      principalPct,
+      interestPct: 100 - principalPct
+    };
+  }
+  function advanceFeeRule(card) {
+    if (!card) return { percent: null, label: "Min LKR 500" };
+    var t = cardIssuer(card).fee;
+    return {
+      percent: t.type === "flat" ? 0 : t.percent,
+      label: t.type === "greater" ? "Min LKR " + new Intl.NumberFormat("en-LK").format(t.fixed) : t.type === "plus" ? "Plus flat LKR " + new Intl.NumberFormat("en-LK").format(t.fixed) : "Flat fee (No %)"
+    };
+  }
+  function simulateCashAdvance(amount, daysRaw, card, custom) {
+    var d = parseFloat(daysRaw);
+    var days = isFinite(d) && d >= 0 ? Math.round(d) : 30;
+    var apr, res;
+    if (card) {
+      apr = cashAdvanceApr(card);
+      res = calcCashAdvance(amount, days, card);
+    } else {
+      var pct = Math.max(0, parseFloat(custom && custom.feePct) || 0);
+      apr = parseFloat(custom && custom.apr) || 28;
+      res = calcCashAdvance(amount, days, null, { fee: computeAdvanceFee({ type: "greater", percent: pct, fixed: 500 }, amount), apr });
+    }
+    var out = { apr, days, daily: "Daily rate " + (apr / 365).toFixed(3) + "%" };
+    if (!(amount > 0)) {
+      out.empty = true;
+      return out;
+    }
+    var hidden = res.advanceFee + res.interest;
+    out.empty = false;
+    out.fee = res.advanceFee;
+    out.interest = res.interest;
+    out.hidden = hidden;
+    out.total = amount + hidden;
+    out.sub1 = "For an LKR " + lkr(amount) + " withdrawal";
+    out.sub2 = "Settled in " + days + " day" + (days === 1 ? "" : "s");
+    out.insight = "+" + (hidden / amount * 100).toFixed(1) + "% total cost";
+    return out;
+  }
+  function simulateSurcharge(price, feePct, monthsRaw) {
+    var months = parseInt(monthsRaw, 10) || 12;
+    var rate = parseFloat(feePct) || 0;
+    if (!(price > 0) || months <= 0) return { empty: true };
+    var s = calcSurchargeAPR(price, rate / 100, months);
+    return {
+      empty: false,
+      hidden: s.surchargeAmt,
+      total: s.totalPay,
+      apr: s.apr,
+      monthly: s.monthly,
+      sub: "For an LKR " + lkr(price) + " item",
+      insight: "+" + rate.toFixed(1) + "% total cost"
+    };
+  }
+  var SIM_PRESETS = [1e5, 25e4, 5e5, 1e6];
+  var SURCHARGE_PRESETS = [5e4, 1e5, 25e4, 5e5];
+  function payoffStart(card) {
+    var minPmt = minPaymentFor(card);
+    var r = { min: Math.floor(minPmt), max: Math.ceil(card.balance * 1.05 + 1) };
+    var v = card.targetPayment ? card.targetPayment : Math.round(minPmt * 2.5);
+    return { value: Math.min(r.max, Math.max(r.min, v)), min: r.min, max: r.max };
+  }
+  function payoffPreset(card, preset) {
+    var minPmt = minPaymentFor(card);
+    var v = preset === "rec" ? Math.max(minPmt * 3, card.balance * 0.1) : preset === "half" ? card.balance * 0.5 : preset === "full" ? card.balance : minPmt;
+    var s = payoffStart(card);
+    return Math.min(s.max, Math.max(s.min, Math.round(v)));
+  }
+  function cardPayoffSim(card, payment) {
+    var balance = card.balance;
+    if (!(balance > 0)) return { paidOff: true, minDuration: "Paid off", minInterest: fmtLKR(0), planDuration: "Paid off", planInterest: fmtLKR(0), payment: fmtLKR(0) + " / mo", tag: "", headline: "This card is fully paid off. Nothing to pay this month." };
+    var minPmt = minPaymentFor(card);
+    var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
+    var out = {
+      paidOff: false,
+      minDuration: !isFinite(minRes.months) ? "Never clears!" : fmtMonths(minRes.months),
+      minInterest: !isFinite(minRes.totalInterest) ? "Unending" : fmtLKR(Math.round(minRes.totalInterest)),
+      payment: fmtLKR(payment) + " / mo"
+    };
+    var planRes = calcPayoff(balance, payment, cardApr(card));
+    if (!isFinite(planRes.months)) return Object.assign(out, { planDuration: "Too low to pay down", planInterest: "N/A", tag: "", headline: "This payment is below the monthly interest. Please increase the amount." });
+    var planInt = Math.round(planRes.totalInterest);
+    var tag = isFinite(minRes.totalInterest) ? Math.max(0, Math.round(minRes.totalInterest) - planInt) > 0 ? "Save " + fmtLKR(Math.max(0, Math.round(minRes.totalInterest) - planInt)) : "Optimal!" : "Save enormously!";
+    var extra = Math.round(payment - minPmt);
+    var minMo = isFinite(minRes.months) ? minRes.months : 9999;
+    var saved = ((minMo - planRes.months) / 12).toFixed(1);
+    var headline = payment >= balance ? "Clear your entire balance this month and save " + fmtLKR(Math.round(isFinite(minRes.totalInterest) ? minRes.totalInterest : 0)) + " in interest!" : extra > 0 ? "Pay " + fmtLKR(extra) + " more per month and be debt-free ~" + saved + " years earlier!" : "Currently at the bank minimum. Pay extra to cut years of debt.";
+    return Object.assign(out, { planDuration: fmtMonths(planRes.months), planInterest: fmtLKR(planInt), tag, headline });
+  }
+  function cardAdvanceSim(card, amount) {
+    if (!amount || amount < 1) return null;
+    var rows = [15, 30, 60].map(function(d) {
+      var r = calcCashAdvance(amount, d, card);
+      return { days: d, total: r.total, cost: r.interest + r.advanceFee };
+    });
+    var r60 = calcCashAdvance(amount, 60, card);
+    return { principal: amount, fee: cardFee(card, amount), rows, effRate: fmtPct((r60.total / amount - 1) * (365 / 60) * 100, 1) + " p.a." };
+  }
+  var CARD_SURCHARGE_TENURES = [3, 6, 12];
+  function cashPriceRequest(price, sim) {
+    if (!sim || sim.empty) return "";
+    return "I’d like to pay the cash price of LKR " + lkr(price) + ". The 0% plan adds a LKR " + lkr(sim.hidden) + " fee, which works out to about " + sim.apr.toFixed(1) + "% a year. Could you offer a cash discount instead?";
+  }
+  var OFFER_CATEGORIES = [
+    { key: "all", label: "All", icon: "apps" },
+    { key: "groceries", label: "Groceries", icon: "shopping_basket" },
+    { key: "dining", label: "Dining", icon: "restaurant" },
+    { key: "travel", label: "Travel & Hotels", icon: "flight" },
+    { key: "shopping", label: "Shopping", icon: "shopping_bag" },
+    { key: "instalments", label: "0% Instalments", icon: "percent" },
+    { key: "fuel_bills", label: "Fuel & Bills", icon: "local_gas_station" },
+    { key: "health", label: "Health & Wellness", icon: "favorite" },
+    { key: "online", label: "Online", icon: "language" },
+    { key: "other", label: "Other", icon: "local_offer" }
+  ];
+  var LEGACY_CATEGORY = { "groceries": "groceries", "dining": "dining", "travel": "travel", "0% epp": "instalments", "fuel & bills": "fuel_bills" };
+  var OFFERS_CACHE_KEY = "serendib_offers_cache";
+  function localDateStr(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function offerCategory(key) {
+    return OFFER_CATEGORIES.filter(function(c) {
+      return c.key === key;
+    })[0] || OFFER_CATEGORIES[OFFER_CATEGORIES.length - 1];
+  }
+  function offerCategoryKey(category) {
+    var key = String(category || "all").toLowerCase();
+    return OFFER_CATEGORIES.some(function(c) {
+      return c.key === key;
+    }) ? key : LEGACY_CATEGORY[key] || "all";
+  }
+  function normalizeOffer(o) {
+    var issuer = o.issuer && SL_CARD_ISSUERS[o.issuer] ? o.issuer : resolveIssuer(o.bank) || "default";
+    var cat = String(o.category || "").toLowerCase();
+    cat = OFFER_CATEGORIES.some(function(c) {
+      return c.key === cat;
+    }) ? cat : LEGACY_CATEGORY[cat] || "other";
+    if (cat === "all") cat = "other";
+    var scope = o.cardScope || {};
+    return {
+      id: String(o.id),
+      issuer,
+      bank: o.bank || (SL_CARD_ISSUERS[issuer] || {}).name || "Bank",
+      merchant: o.merchant || "",
+      headline: o.headline || "",
+      details: o.details || o.subtext || "",
+      discountText: o.discountText || "",
+      category: cat,
+      cardScope: {
+        allCards: scope.allCards !== false && !(scope.tiers && scope.tiers.length) && !(scope.networks && scope.networks.length) && !scope.text,
+        networks: scope.networks || [],
+        tiers: scope.tiers || (o.tier && o.tier !== "All" ? [o.tier] : []),
+        text: scope.text || ""
+      },
+      validFrom: o.validFrom || "",
+      validUntil: o.validUntil || o.expiryDate || "",
+      days: o.days || "",
+      minSpend: o.minSpend || null,
+      terms: o.terms || "",
+      sourceUrl: /^https:\/\//i.test(o.sourceUrl || "") ? o.sourceUrl : "",
+      status: o.status || "published"
+    };
+  }
+  function sampleOffers() {
+    var inDays = function(n) {
+      var d = /* @__PURE__ */ new Date();
+      d.setDate(d.getDate() + n);
+      return localDateStr(d);
+    };
+    return [
+      {
+        id: "sample1",
+        issuer: "combank",
+        bank: "Commercial Bank",
+        merchant: "Keells",
+        category: "groceries",
+        headline: "25% off fresh produce at Keells",
+        discountText: "25% off",
+        details: "On weekends with Visa Gold & Platinum credit cards. Max discount LKR 2,500.",
+        cardScope: { allCards: false, networks: ["Visa"], tiers: ["Gold", "Platinum"], text: "Visa Gold & Platinum cards" },
+        validUntil: inDays(2),
+        days: "Weekends",
+        terms: "Valid only on weekends. Maximum discount LKR 2,500 per transaction."
+      },
+      {
+        id: "sample2",
+        issuer: "ntb",
+        bank: "Nations Trust Bank",
+        merchant: "Cinnamon Grand",
+        category: "dining",
+        headline: "1-for-1 main course at Cinnamon Grand",
+        discountText: "1-for-1",
+        details: "With Nations Trust American Express Platinum cards. Reservations required.",
+        cardScope: { allCards: false, networks: ["American Express"], tiers: ["Platinum"], text: "American Express Platinum cards" },
+        validUntil: inDays(0),
+        terms: "Not valid on public holidays. Subject to availability."
+      },
+      {
+        id: "sample3",
+        issuer: "sampath",
+        bank: "Sampath Bank",
+        merchant: "Electronics partners",
+        category: "instalments",
+        headline: "0% interest 12-month instalment plan",
+        discountText: "0% for 12 months",
+        details: "Convert electronics purchases over LKR 50,000 via Sampath Vishwa.",
+        cardScope: { allCards: true },
+        validUntil: inDays(10),
+        minSpend: 5e4,
+        terms: "A processing fee may apply for early settlement."
+      }
+    ];
+  }
+  function issuerKeyOf(c) {
+    return c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c.bank) || "default";
+  }
+  function offerCardMatch(offer, userCards) {
+    var mine = userCards.filter(function(c) {
+      return issuerKeyOf(c) === offer.issuer;
+    });
+    if (!mine.length) return null;
+    if (offer.cardScope.allCards) return { card: mine[0], certain: true };
+    var words = offer.cardScope.tiers.concat(offer.cardScope.networks).map(function(w) {
+      return String(w).toLowerCase();
+    });
+    var hit = mine.filter(function(c) {
+      var nick = String(c.nick || "").toLowerCase();
+      return words.some(function(w) {
+        return w && (nick.indexOf(w) !== -1 || w === "american express" && nick.indexOf("amex") !== -1);
+      });
+    })[0];
+    return hit ? { card: hit, certain: false } : null;
+  }
+  function offersView(opts) {
+    var today = localDateStr(/* @__PURE__ */ new Date());
+    var userCards = (opts.cards || []).filter(function(c) {
+      return c && c.bank;
+    });
+    var myIssuers = {};
+    userCards.forEach(function(c) {
+      myIssuers[issuerKeyOf(c)] = true;
+    });
+    var live = (opts.offers || []).map(normalizeOffer).filter(function(o) {
+      return o.status !== "expired" && (!o.validUntil || o.validUntil >= today);
+    });
+    var mode = opts.mode;
+    var banks = {};
+    live.forEach(function(o) {
+      banks[o.issuer] = o.bank;
+    });
+    var bank = opts.bank && opts.bank !== "all" && banks[opts.bank] ? opts.bank : "all";
+    var pool = mode === "my-cards" ? live.filter(function(o) {
+      return myIssuers[o.issuer];
+    }) : live.filter(function(o) {
+      return bank === "all" || o.issuer === bank;
+    });
+    var counts = {};
+    pool.forEach(function(o) {
+      counts[o.category] = (counts[o.category] || 0) + 1;
+    });
+    var category = opts.category || "all";
+    var chips = OFFER_CATEGORIES.filter(function(c) {
+      return c.key === "all" || c.key === category || counts[c.key];
+    }).map(function(c) {
+      return { key: c.key, label: c.label, icon: c.icon, count: c.key === "all" ? pool.length : counts[c.key] || 0, active: c.key === category };
+    });
+    var bankList = Object.keys(banks).sort(function(a, b) {
+      return banks[a].localeCompare(banks[b]);
+    }).map(function(k) {
+      return { key: k, name: banks[k] };
+    });
+    var shown = (category === "all" ? pool : pool.filter(function(o) {
+      return o.category === category;
+    })).slice();
+    var weekAhead = (function() {
+      var d = /* @__PURE__ */ new Date();
+      d.setDate(d.getDate() + 7);
+      return localDateStr(d);
+    })();
+    shown.sort(function(a, b) {
+      var aSoon = a.validUntil && a.validUntil <= weekAhead, bSoon = b.validUntil && b.validUntil <= weekAhead;
+      if (aSoon !== bSoon) return aSoon ? -1 : 1;
+      if (aSoon) return a.validUntil.localeCompare(b.validUntil);
+      return String(b.validFrom).localeCompare(String(a.validFrom));
+    });
+    var endingThisWeek = pool.filter(function(o) {
+      return o.validUntil && o.validUntil <= weekAhead;
+    }).length;
+    var updated = "";
+    if (opts.updatedAt) {
+      var ud = new Date(opts.updatedAt);
+      if (!isNaN(ud)) updated = "Updated " + ud.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    }
+    var title, sub;
+    if (mode === "my-cards" && !userCards.length) {
+      title = "Offers for your cards";
+      sub = "Add a card to see what it gets you";
+    } else if (mode === "my-cards") {
+      title = pool.length + (pool.length === 1 ? " offer" : " offers") + " on your cards";
+      sub = [endingThisWeek ? endingThisWeek + " ending this week" : "None ending this week", updated].filter(Boolean).join(" · ");
+    } else {
+      var bankCount = {};
+      pool.forEach(function(o) {
+        bankCount[o.issuer] = 1;
+      });
+      var nb = Object.keys(bankCount).length;
+      title = pool.length + (pool.length === 1 ? " offer" : " offers") + " from " + nb + (nb === 1 ? " bank" : " banks");
+      sub = [endingThisWeek ? endingThisWeek + " ending this week" : "", updated].filter(Boolean).join(" · ") || "Across Sri Lankan card issuers";
+    }
+    var empty = null, catLabel = offerCategory(category).label;
+    if (mode === "my-cards" && !userCards.length) {
+      empty = { kind: "no-cards", icon: "credit_card", title: "Add a card to see offers for it", body: "We’ll show the promotions your banks are running right now." };
+    } else if (!shown.length) {
+      var noun = category === "all" ? "" : catLabel + " ";
+      empty = {
+        kind: "none",
+        icon: "search_off",
+        title: mode === "my-cards" ? "No " + noun + "offers for your cards right now" : "No " + noun + "offers right now",
+        body: mode === "my-cards" ? "Your banks may have offers in other categories, or check what other banks are running." : "Try another category or bank.",
+        allCategories: category !== "all",
+        seeAllBanks: mode === "my-cards"
+      };
+    }
+    return { pool, chips, banks: bankList, bank, shown, title, sub, badge: opts.samples ? "Sample" : "Live", samples: !!opts.samples, empty, userCards };
+  }
+  function offerCardInfo(offer, userCards) {
+    var todayDate = /* @__PURE__ */ new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    var match = offerCardMatch(offer, userCards);
+    var urgency = null;
+    if (offer.validUntil) {
+      var parts = offer.validUntil.split("-");
+      var exp = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      var diff = Math.round((exp - todayDate) / 864e5);
+      if (diff === 0) urgency = { tone: "today", text: "Ends today" };
+      else if (diff > 0 && diff <= 3) urgency = { tone: "soon", text: "Ends in " + diff + " days" };
+    }
+    var eligibility = offer.cardScope.allCards ? "All " + offer.bank + " credit cards" : offer.cardScope.text || "Valid on " + offer.cardScope.networks.concat(offer.cardScope.tiers).join(", ");
+    var matchLine = "";
+    if (match && match.certain) matchLine = "Your " + (match.card.nick || "card") + " qualifies";
+    else if (match) matchLine = "Your " + (match.card.nick || "card") + " may qualify, check terms";
+    var meta = [];
+    if (offer.validUntil) {
+      var vp = offer.validUntil.split("-");
+      meta.push("Until " + new Date(+vp[0], +vp[1] - 1, +vp[2]).toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
+    }
+    if (offer.days) meta.push(offer.days);
+    if (offer.minSpend) meta.push("Min. LKR " + Number(offer.minSpend).toLocaleString("en-US"));
+    return { match, urgency, eligibility, matchLine, meta: meta.join(" · "), category: offerCategory(offer.category) };
+  }
+  function offerTerms(offer) {
+    return {
+      title: offer.headline || "Terms & Conditions",
+      body: offer.terms || "The bank hasn't published detailed terms for this offer here. Check the bank's site.",
+      link: offer.sourceUrl ? { href: offer.sourceUrl, label: "View on " + offer.bank + "'s site" } : null
+    };
+  }
+  function offerContentKey(o) {
+    var norm = function(v) {
+      return String(v || "").toLowerCase().replace(/\s+/g, " ").trim();
+    };
+    return [o.issuer, o.merchant, o.validUntil, o.discountText].map(norm).join("|");
+  }
+  function readOfferForm(f) {
+    if (!f.headline) return { error: "Add a headline." };
+    if (!f.validUntil || !/^\d{4}-\d{2}-\d{2}$/.test(f.validUntil)) return { error: "Add a valid end date." };
+    if (f.validFrom && f.validFrom > f.validUntil) return { error: "The start date is after the end date." };
+    if (f.sourceUrl && !/^https:\/\//i.test(f.sourceUrl)) return { error: "The bank page URL must start with https://" };
+    var minSpend = f.minSpend === "" || f.minSpend == null ? null : Number(f.minSpend);
+    if (minSpend !== null && (!isFinite(minSpend) || minSpend < 0)) return { error: "Minimum spend must be a positive number." };
+    var offer = {
+      issuer: f.issuer,
+      bank: SL_CARD_ISSUERS[f.issuer].name,
+      merchant: f.merchant,
+      headline: f.headline,
+      discountText: f.discountText,
+      details: f.details,
+      category: f.category,
+      cardScope: { allCards: !!f.allCards, networks: [], tiers: [], text: f.allCards ? "" : f.scopeText },
+      validFrom: f.validFrom,
+      validUntil: f.validUntil,
+      days: f.days,
+      minSpend,
+      terms: f.terms,
+      sourceUrl: f.sourceUrl
+    };
+    offer.contentKey = offerContentKey(offer);
+    return { offer };
+  }
+  function collectorStatus(meta) {
+    if (!meta || !meta.lastRunAt) return { text: "The collector hasn't run yet.", tone: "none" };
+    var failed = (meta.sources || []).filter(function(x) {
+      return !x.ok;
+    });
+    return {
+      text: "Last collector run: " + new Date(meta.lastRunAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) + (failed.length ? " · Failed: " + failed.map(function(x) {
+        return x.bank || x.issuer;
+      }).join(", ") : " · All banks OK"),
+      tone: failed.length ? "warn" : "ok"
+    };
+  }
+  function adminPublishedList(published, query) {
+    var q = String(query || "").toLowerCase();
+    return published.filter(function(o) {
+      return !q || [o.bank, o.merchant, o.headline].join(" ").toLowerCase().indexOf(q) !== -1;
+    }).sort(function(a, b) {
+      return String(a.validUntil).localeCompare(String(b.validUntil));
+    });
+  }
+  var ADMIN_TOASTS = { approve: "Offer published", reject: "Draft rejected", expire: "Offer expired", save: "Offer updated", create: "Offer published" };
+  var HELP_TEXTS = {
+    spaces_info: {
+      icon: "savings",
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+      title: "Sinking Funds",
+      subtitle: "Why they matter for debt management",
+      body: [
+        { type: "p", text: "Spaces allow you to ring-fence money ahead of time for upcoming bills or unexpected expenses." },
+        {
+          type: "rule",
+          items: [
+            { icon: "shield", label: "Debt Buffer", value: "Protects you from using credit cards for emergencies", color: "text-emerald-600" },
+            { icon: "account_balance_wallet", label: "Repayment Fund", value: "Accumulate cash to pay off high-interest cards", color: "text-emerald-600" }
+          ]
+        },
+        {
+          type: "highlight",
+          bg: "bg-emerald-50",
+          border: "border-emerald-200",
+          icon: "lightbulb",
+          iconColor: "text-emerald-600",
+          text: "Building sinking funds parallel to your debt payoff helps you permanently break the credit reliance cycle."
+        }
+      ]
+    },
+    billing: {
+      icon: "calendar_month",
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
+      title: "Billing Cycle",
+      subtitle: "How your monthly statement works",
+      body: [
+        { type: "p", text: "Your billing cycle is a fixed 30–day period after which your bank generates a statement with the total amount owed." },
+        {
+          type: "rule",
+          items: [
+            { icon: "event", label: "Statement date", value: "28th of each month (typical)", color: "text-blue-600" },
+            { icon: "schedule", label: "Payment due", value: "~21 days after statement date", color: "text-amber-600" },
+            { icon: "percent", label: "Grace period", value: "Interest-free if full balance paid by due date", color: "text-primary" }
+          ]
+        },
+        {
+          type: "highlight",
+          bg: "bg-blue-50",
+          border: "border-blue-200",
+          icon: "lightbulb",
+          iconColor: "text-blue-600",
+          text: "Pay your full statement balance by the due date each month to enjoy a completely interest-free credit line."
+        }
+      ]
+    },
+    apr: {
+      icon: "account_balance",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-700",
+      title: "28% APR — CBSL Ceiling Rate",
+      subtitle: "Central Bank of Sri Lanka regulation",
+      body: [
+        { type: "p", text: "The Central Bank of Sri Lanka (CBSL) caps credit card interest at 28% per annum. All Sri Lankan banks must apply this rate or lower." },
+        {
+          type: "rule",
+          items: [
+            { icon: "percent", label: "Annual rate (APR)", value: "28.00%", color: "text-amber-700" },
+            { icon: "calendar_month", label: "Monthly rate", value: "2.333%", color: "text-amber-700" },
+            { icon: "today", label: "Daily rate", value: "0.0767%", color: "text-amber-700" },
+            { icon: "trending_up", label: "Compounding method", value: "Monthly on unpaid balance", color: "text-secondary" }
+          ]
+        },
+        {
+          type: "highlight",
+          bg: "bg-rose-50",
+          border: "border-rose-200",
+          icon: "warning",
+          iconColor: "text-error",
+          text: "Interest is charged on your entire outstanding balance if even Rs. 1 remains unpaid after the due date — not just the unpaid portion."
+        },
+        { type: "p", text: "Source: CBSL Direction No. 3 of 2021 on Maximum Interest Rates applicable to Credit Cards." }
+      ]
+    },
+    payoff: {
+      icon: "warning",
+      iconBg: "bg-rose-50",
+      iconColor: "text-rose-600",
+      title: "The Minimum Payment Trap",
+      subtitle: "Why paying only the minimum is dangerous",
+      body: [
+        { type: "p", text: "Banks require only 4% of your outstanding balance (minimum Rs. 1,000) as a monthly payment. While this feels affordable, it is designed to keep you in debt longer." },
+        {
+          type: "rule",
+          items: [
+            { icon: "remove_circle", label: "Minimum payment", value: "4% of balance (min Rs. 1,000)", color: "text-error" },
+            { icon: "percent", label: "Interest accrues", value: "28% APR on remaining balance", color: "text-error" },
+            { icon: "hourglass_bottom", label: "Result", value: "Most of your payment covers interest, not principal", color: "text-secondary" }
+          ]
+        },
+        {
+          type: "example",
+          title: "Example: Rs. 100,000 balance",
+          rows: [
+            { label: "Minimum payment/mo", value: "Rs. 4,000", bold: false },
+            { label: "Interest charged/mo", value: "Rs. 2,333", bold: false },
+            { label: "Actual principal paid", value: "Rs. 1,667", bold: false },
+            { label: "Years to pay off", value: "~12 years", bold: true },
+            { label: "Total interest paid", value: "~Rs. 93,000", bold: true }
+          ]
+        },
+        {
+          type: "highlight",
+          bg: "bg-emerald-50",
+          border: "border-emerald-200",
+          icon: "bolt",
+          iconColor: "text-primary",
+          text: "Paying just Rs. 8,000/month (2× the minimum) on the same balance would clear it in ~14 months and save over Rs. 75,000 in interest."
+        }
+      ]
+    },
+    apr_profile: {
+      icon: "account_balance",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-700",
+      title: "Maximum APR Cap",
+      subtitle: "Central Bank of Sri Lanka regulation",
+      body: [
+        { type: "p", text: "The Central Bank of Sri Lanka (CBSL) enforces a maximum interest rate cap of 28% per annum on all credit card advances under the Monetary Law Act to regulate consumer lending." }
+      ]
+    },
+    strategy_acceleration: {
+      icon: "speed",
+      iconBg: "bg-teal-50",
+      iconColor: "text-teal-600",
+      title: "Target Repayment Pace",
+      subtitle: "Automated Strategy Allocation",
+      body: [
+        { type: "p", text: 'This bar tracks your total monthly commitment across all cards. It dynamically scales based on the "Simulate monthly payment" values you save for individual cards.' },
+        { type: "p", text: "By increasing your target payment above the bank minimums, you aggressively accelerate your debt-free date and minimize compounding interest." }
+      ]
+    },
+    min_pmt_profile: {
+      icon: "warning",
+      iconBg: "bg-rose-50",
+      iconColor: "text-rose-600",
+      title: "Minimum Payment Trap",
+      subtitle: "CBSL Statutory Minimum",
+      body: [
+        { type: "p", text: "CBSL mandates that banks accept a minimum payment of 4% of the balance. While this prevents default and late fees, paying only this amount retroactively voids your grace period and maximizes the compound interest paid to the bank." }
+      ]
+    },
+    crib: {
+      icon: "warning",
+      iconBg: "bg-error-container",
+      iconColor: "text-error",
+      title: "CRIB Default Classification",
+      subtitle: "Central Bank of Sri Lanka",
+      body: [
+        { type: "p", text: "The Central Bank of Sri Lanka (CBSL) classifies credit facilities past due for more than 90 days as Non-Performing Credit Facilities (NPCF). This severely restricts future borrowing across the banking sector." }
+      ]
+    },
+    surcharge_rules: {
+      icon: "gavel",
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-700",
+      title: "Merchant Surcharge Rules",
+      subtitle: "Visa, Mastercard & CBSL Guidelines",
+      body: [
+        { type: "p", text: "Under standard Visa and Mastercard network rules, merchants are generally prohibited from passing the Merchant Discount Rate (swipe fee) directly to the consumer as a line-item credit card surcharge. Knowing this true cost helps you negotiate better cash prices or identify unfair point-of-sale penalties." }
+      ]
+    }
+  };
+  function homeAlertData(cards, todayStr) {
+    var upcoming = [], overdue = [], tracked = 0, overs = [], dues = [], bleed = 0;
+    var tomorrow = addDays(todayStr, 1);
+    cards.forEach(function(c) {
+      if (isValidDay(c.dueDay) && isValidDay(c.statementDay)) {
+        var st = cycleStatus(c, todayStr);
+        if (st) {
+          tracked++;
+          if (st.overdue) overdue.push({ card: c, st });
+          if (st.next) upcoming.push({ card: c, due: st.next.s.due, left: st.next.remaining, min: st.next.s.minDue });
+        } else if (c.balance > 0) {
+          var min = minPaymentFor(c);
+          upcoming.push({ card: c, due: nextDueDayFrom(c.dueDay, todayStr), left: min, min });
+        }
+      }
+      var b = c.budgets || {};
+      if (Object.keys(b).length) {
+        var s = periodSummary(c, billingPeriod(c, todayStr));
+        Object.keys(b).forEach(function(k) {
+          if (b[k] > 0 && (s.byCat[k] || 0) > b[k]) overs.push({ card: c, cat: k, spent: s.byCat[k], budget: b[k] });
+        });
+      }
+      activeRecurring(c, todayStr).forEach(function(r) {
+        if (recurringNextDue(r, todayStr) === tomorrow) dues.push({ card: c, item: r });
+      });
+      if (c.balance > 0) bleed += c.balance * (cardApr(c) / 100 / 12);
+    });
+    upcoming.sort(function(a, b) {
+      return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
+    });
+    overdue.sort(function(a, b) {
+      return b.st.overdue.days - a.st.overdue.days;
+    });
+    overs.sort(function(a, b) {
+      return b.spent - b.budget - (a.spent - a.budget);
+    });
+    return { upcoming, overdue, tracked, overs, dues, bleed };
+  }
+  function homeAlerts(cards, todayStr, fmt) {
+    var d = homeAlertData(cards, todayStr), items = [];
+    var u = d.upcoming[0];
+    if (u) {
+      var days = daysBetween(todayStr, u.due);
+      var partial = u.left < u.min - 0.5;
+      items.push({
+        kind: "payment",
+        tone: "due",
+        eyebrow: "Payment due",
+        date: shortDate(u.due),
+        cards: [u.card],
+        title: days === 0 ? "Payment Due Today" : days === 1 ? "Payment Due Tomorrow" : "Next Payment Due in " + days + " Days",
+        text: partial ? fmt(u.left) + " left of the " + fmt(u.min) + " minimum." : "Minimum Required: " + fmt(u.left) + " to avoid late fees and interest penalties.",
+        strong: fmt(u.left),
+        action: { kind: "log-payment", label: "Log payment", cardId: u.card.id, amount: u.left }
+      });
+    } else if (d.tracked && !d.overdue.length) {
+      items.push({ kind: "ontrack", tone: "ok", eyebrow: "On track", title: "All minimums paid this cycle", text: "Nice work. We’ll remind you when the next statements arrive.", cards: [] });
+    }
+    var worst = d.overdue[0];
+    if (worst) {
+      var o = worst.st.overdue, c = worst.card;
+      var more = d.overdue.length > 1 ? " · " + (d.overdue.length - 1) + " more card" + (d.overdue.length > 2 ? "s" : "") + " overdue" : "";
+      if (!o.answered) {
+        items.push({
+          kind: "ask",
+          tone: "ask",
+          eyebrow: "Check-in",
+          title: "Payment check",
+          cards: [c],
+          text: "Did you pay " + cardName(c) + "’s " + fmt(o.amount) + " minimum due " + shortDate(o.since) + "?",
+          action: { kind: "ask", cardId: c.id, amount: o.amount }
+        });
+      } else if (o.days < 60) {
+        items.push({
+          kind: "overdue",
+          tone: "late",
+          eyebrow: "Overdue",
+          title: "Payment overdue · " + o.days + (o.days === 1 ? " day" : " days"),
+          cards: [c],
+          text: "Pay " + fmt(o.amount) + " to catch up" + (o.days >= 30 ? ". At 30+ days a missed payment can be reported to CRIB." : ". Late fees and interest are building.") + more,
+          action: { kind: "catch-up", label: "Catch-up plan", cardId: c.id }
+        });
+      } else {
+        var left = Math.max(0, 90 - o.days);
+        items.push({
+          kind: "crib",
+          tone: "critical",
+          eyebrow: "Critical",
+          title: "CRIB Default Warning",
+          cards: [c],
+          text: cardName(c) + " is " + o.days + " days past due. " + (left > 0 ? left + (left === 1 ? " day" : " days") + " before it’s classed as non-performing (90 days) and reported to CRIB." : "It has passed 90 days and is likely reported to CRIB as non-performing.") + more,
+          action: { kind: "catch-up", label: "Catch-up plan", cardId: c.id },
+          help: "crib"
+        });
+      }
+    }
+    if (d.overs.length) {
+      var ob = d.overs[0];
+      items.push({
+        kind: "budget",
+        tone: "budget",
+        eyebrow: "Over budget",
+        title: "Over budget: " + spendCategory(ob.cat).label,
+        cards: [ob.card],
+        text: fmt(ob.spent) + " spent of a " + fmt(ob.budget) + " budget this period" + (d.overs.length > 1 ? " · " + (d.overs.length - 1) + " more over budget" : ""),
+        action: { kind: "open-card", label: "View card", cardId: ob.card.id }
+      });
+    }
+    if (d.dues.length) {
+      var dueCards = [];
+      d.dues.forEach(function(x) {
+        if (dueCards.indexOf(x.card) === -1) dueCards.push(x.card);
+      });
+      items.push({
+        kind: "recurring",
+        tone: "recurring",
+        eyebrow: "Tomorrow",
+        cards: dueCards,
+        title: d.dues.length === 1 ? "Recurring charge due tomorrow" : d.dues.length + " recurring charges due tomorrow",
+        text: d.dues.slice(0, 2).map(function(x) {
+          return x.item.name + " " + fmt(Number(x.item.amount) || 0);
+        }).join(" · ") + (d.dues.length > 2 ? " · +" + (d.dues.length - 2) + " more" : ""),
+        action: { kind: "open-card", label: "View card", cardId: d.dues[0].card.id }
+      });
+    }
+    if (d.bleed > 0) {
+      items.push({ kind: "interest", tone: "interest", eyebrow: "Interest", title: "Monthly Compounding Bleed", chip: "CBSL 28.0% APR Ceiling", amount: d.bleed, cards: [] });
+    }
+    return items;
+  }
+  function catchUpPlan(card, cards, todayStr, fmt) {
+    var st = cycleStatus(card, todayStr), o = st && st.overdue;
+    var owed = o ? o.amount : amountDueNow(card);
+    var untracked = cards.filter(function(c) {
+      return c.balance > 0 && !(isValidDay(c.statementDay) && isValidDay(c.dueDay));
+    }).length;
+    var steps = [
+      { n: 1, title: "Pay " + fmt(owed) + " to catch up", body: "This brings the missed minimums up to date. Log it here once you’ve paid in your banking app.", action: { kind: "log-payment", label: "Log payment", amount: owed } },
+      { n: 2, title: "Pause new spending on this card", body: "Every new purchase adds to what’s owed. Set a small budget so the app warns you before you spend.", action: { kind: "budgets", label: "Set budgets" } },
+      { n: 3, title: "Talk to " + card.bank + " before 90 days", body: "Call the number on the back of your card and ask about a payment plan or restructuring. Banks are usually more flexible before an account reaches 90 days past due." }
+    ];
+    if (untracked) steps.push({ n: 4, title: "Track due dates on your other cards", body: untracked + " other card" + (untracked === 1 ? "" : "s") + " ha" + (untracked === 1 ? "s" : "ve") + " no billing cycle, so the app can’t warn you before they’re due." });
+    return {
+      owed,
+      banner: o ? { title: fmt(o.amount) + " overdue since " + shortDate(o.since), body: o.days + (o.days === 1 ? " day" : " days") + " past due. Accounts 90 days past due are classed as non-performing and reported to CRIB." } : null,
+      steps
+    };
+  }
+  function answerNotYet(card, todayStr) {
+    var st = cycleStatus(card, todayStr), o = st && st.overdue;
+    if (!o) return false;
+    o.statements.forEach(function(s) {
+      s.answered = "no";
+    });
+    return true;
+  }
+  var CHECKLIST = [
+    { key: "income", label: "Set your monthly income", hint: "Sizes your monthly repayment budget", icon: "payments" },
+    { key: "strategy", label: "Choose a payoff strategy", hint: "Avalanche or Snowball", icon: "route" },
+    { key: "card", label: "Link your first card", hint: "Limit and current balance", icon: "credit_card" },
+    { key: "billing", label: "Set a billing cycle", hint: "Turns on due-date alerts", icon: "event" },
+    { key: "sim", label: "Try a simulator", hint: "See what minimum payments really cost", icon: "calculate" },
+    { key: "buffer", label: "Create an emergency buffer", hint: "A savings space for surprises", icon: "savings" }
+  ];
+  var TIP_SCREENS = ["screen-home", "screen-list", "screen-detail", "screen-simulators", "screen-spaces", "view-offers", "screen-profile"];
+  function onboardingState(data) {
+    if (!data) return null;
+    if (!data.onboarding || typeof data.onboarding !== "object") data.onboarding = {};
+    var o = data.onboarding;
+    if (!o.tipsSeen || typeof o.tipsSeen !== "object") o.tipsSeen = {};
+    return o;
+  }
+  function checklistDone(key, o, cards, spaces) {
+    switch (key) {
+      case "income":
+        return !!o.incomeSet;
+      case "strategy":
+        return !!o.strategyChosen;
+      case "card":
+        return cards.length > 0;
+      case "billing":
+        return cards.some(function(c) {
+          return isValidDay(c.statementDay) && isValidDay(c.dueDay);
+        });
+      case "sim":
+        return !!o.simulatorTried;
+      case "buffer":
+        return spaces.length > 0;
+      default:
+        return false;
+    }
+  }
+  function checklistState(o, cards, spaces) {
+    var items = CHECKLIST.map(function(it) {
+      return Object.assign({ done: checklistDone(it.key, o, cards, spaces) }, it);
+    });
+    var done = items.filter(function(i) {
+      return i.done;
+    }).length, all = done === items.length;
+    return {
+      items,
+      done,
+      allDone: all,
+      title: all ? "You're all set" : "Get started",
+      progress: all ? "All " + items.length + " steps done" : done + " of " + items.length + " done",
+      pct: Math.round(done / items.length * 100),
+      hidden: !o || !o.version || !!o.checklistDismissed
+    };
+  }
+  function migrateOnboarding(o, data, cards, legacyTourDone) {
+    if (o.version) return false;
+    if (data && data.hasCompletedTour === true || legacyTourDone || cards.length > 0) {
+      o.welcomeDone = true;
+      o.incomeSet = true;
+      o.strategyChosen = true;
+      TIP_SCREENS.forEach(function(s) {
+        o.tipsSeen[s] = true;
+      });
+    }
+    o.version = 2;
+    return true;
+  }
+  function welcomeIncome(raw) {
+    raw = String(raw == null ? "" : raw).trim();
+    if (raw === "") return { income: "" };
+    var inc = parseFloat(raw);
+    if (isNaN(inc) || inc <= 0) return { error: "Enter your monthly income in LKR, or leave it blank to add it later." };
+    return { income: String(Math.round(inc)) };
+  }
+  function replayOnboarding(o, cards, spaces, legacyTourDone, data) {
+    migrateOnboarding(o, data, cards, legacyTourDone);
+    TIP_SCREENS.forEach(function(s) {
+      o.tipsSeen[s] = false;
+    });
+    var allDone = CHECKLIST.every(function(it) {
+      return checklistDone(it.key, o, cards, spaces);
+    });
+    if (!allDone) {
+      o.checklistDismissed = false;
+      o.checklistCompleted = false;
+    }
+    o.welcomeDone = false;
+    o.resetAt = Date.now();
+  }
+  var CHECKLIST_HIDDEN_TOAST = "Checklist hidden. You can replay the guide from Profile.";
   const core = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
+    ADMIN_TOASTS,
     APR,
+    BACKUP_MAX_BYTES,
     BACKUP_VERSION,
+    CARD_SURCHARGE_TENURES,
     CARD_THEMES,
     CA_FEE_MIN,
     CA_FEE_PCT,
+    CHECKLIST,
+    CHECKLIST_HIDDEN_TOAST,
     DAILY_RATE,
     DEFAULT_CARDS,
+    HELP_TEXTS,
     LEDGER_SOURCES,
     LEDGER_TYPES,
+    LEGACY_CATEGORY,
+    LOG_CARD_KEY,
     LS_KEY,
     MIN_PMT_FLOOR,
     MIN_PMT_PCT,
     MONTHLY_RATE,
+    OFFERS_CACHE_KEY,
+    OFFER_CATEGORIES,
+    PROVIDER_LABELS,
     RECURRING_SUGGESTIONS,
     SAFETY_MAX,
+    SIM_PRESETS,
     SL_CARD_ISSUERS,
     SL_ISSUER_CARDS,
     SL_ISSUER_NOTES,
+    SMS_HINT,
     SMS_MONTHS,
     SPACE_FORM_ERROR,
     SPEND_CATEGORIES,
+    SURCHARGE_PRESETS,
     SYNC_FIELDS,
+    TIP_SCREENS,
     TOMBSTONE_DAYS,
     _num,
     _pick,
@@ -6953,14 +8253,21 @@ var SerendibCore = (function() {
     addCard,
     addDays,
     addFunds,
+    adminPublishedList,
+    advanceFeeRule,
     afterBalanceChange,
     allocateMonthlyPayments,
     amountDueNow,
+    answerNotYet,
     applyLedgerEffect,
     archiveOldLedger,
+    authErrorMessage,
+    backupFileName,
+    backupWhen,
     balanceAt,
     bankSuggestions,
     billingPeriod,
+    budgetsFromInputs,
     buildBackupDoc,
     calcCashAdvance,
     calcMinPayoff,
@@ -6969,19 +8276,29 @@ var SerendibCore = (function() {
     calculateCBSLAmortization,
     calculateNextStatement,
     cancelRecurringItem,
+    cardAdvanceSim,
     cardApr,
     cardFee,
     cardFloor,
     cardIssuer,
     cardMinRule,
     cardName,
+    cardPayoffSim,
     cardTheme,
     cashAdvanceApr,
+    cashPriceRequest,
+    catchUpPlan,
+    categoryForMerchant,
+    chargeNowDate,
+    checkPasswordRules,
+    checklistDone,
+    checklistState,
     clampDay,
     cleanCard,
     cleanEntry,
     cleanRecurring,
     cleanSpace,
+    collectorStatus,
     computeAdvanceFee,
     computeMonthlyBudget,
     countsText,
@@ -6991,6 +8308,9 @@ var SerendibCore = (function() {
     cycleStatus,
     dayToLocalDateStr,
     daysBetween,
+    debtToIncome,
+    defaultCategory,
+    deleteAccountError,
     dueDateFor,
     ensureSpaceHistory,
     entryLabel,
@@ -7003,68 +8323,122 @@ var SerendibCore = (function() {
     getStrategy,
     getUserIncome,
     highlightMatch,
+    homeAlertData,
+    homeAlerts,
     initCycleTracking,
     isCancelled,
+    isQuietAuthError,
     isRealYmd,
     isValidDay,
+    issuerKeyOf,
     issuerNetworks,
     lastStatementOnOrBefore,
+    ledgerCsv,
+    ledgerCsvFileName,
     localDateStrToDay,
+    logSavedText,
     logSystemEntry,
+    matchDiffText,
     matchStatement,
+    merchantItems,
     mergeAccount,
     mergeItems,
     mergeOnboarding,
     mergeTombstones,
+    migrateOnboarding,
     minPaymentFor,
     monthlyRecurringTotal,
+    needsEmailVerification,
     nextDueDayFrom,
     nextStatementAfter,
+    normalizeOffer,
+    offerCardInfo,
+    offerCardMatch,
+    offerCategory,
+    offerCategoryKey,
+    offerContentKey,
+    offerTerms,
+    offersView,
+    onboardingState,
+    ordinal,
+    overLimitWarning,
+    parseAmountInput,
     parseBankSms,
     parseYmd,
+    passwordNeedsText,
     payCardFromSpace,
+    paymentShortcuts,
+    payoffPreset,
+    payoffStart,
     periodSummary,
     planAllocationFor,
     planRestore,
     postDueRecurringOnCard,
     postRecurringNow,
+    prepareAccount,
+    primaryProvider,
     projectPlan,
     rankSuggestions,
     readAccountCache,
     readBackup,
+    readOfferForm,
     readSafetyCopies,
     recordStatements,
+    recurringDayHint,
     recurringDueDates,
     recurringNextDue,
+    recurringStatusText,
     refreshCycles,
     relinkSpacePayment,
     removeCard,
     removeEntry,
     removeSpace,
+    replayOnboarding,
     resolveIssuer,
     restoreDiff,
+    restoreDoneText,
     restoreEntry,
+    restoreMergeLine,
+    restoreReplaceWarning,
     runDueRecurring,
     safeId,
     safetyCopyToBackup,
+    safetyCopyWhen,
+    sampleOffers,
     saveEntry,
     saveRecurringItem,
     saveSafetyCopy,
     setBillingCycle,
     setTargetPayment,
     settleCard,
+    shareText,
+    shortDate,
+    shouldRedirectAfter,
+    signupFormError,
+    simAmount,
+    simTime,
+    simulateCashAdvance,
+    simulateMinimum,
+    simulateSurcharge,
     skipPostedCharges,
+    smsFill,
     sortedLedger,
+    sortedSpaceHistory,
+    spaceHistoryLabel,
     spaceMonthlyNeeded,
     spaceMonthsLeft,
+    spacePayOptions,
     spaceRecentPace,
+    spaceStatusLine,
     spendCategory,
     statementDatesBetween,
     statementWhenText,
+    strategySavings,
     suggestEscape,
     suggestNorm,
     syncFilled,
     syncSig,
+    targetRange,
     tierSuggestions,
     toggleRecurringPaused,
     uid,
@@ -7073,6 +8447,7 @@ var SerendibCore = (function() {
     unlinkSpacePayment,
     updateCardDetails,
     updateSpace,
+    welcomeIncome,
     withTimeout,
     withdrawFromSpace,
     ymd
@@ -7362,35 +8737,12 @@ var SerendibCore = (function() {
 
       // keepSync: the new data is a local change (restore / undo) to be stamped on the next save
       function setCloudData(data, keepSync) {
-        window.currentUserData = data || {};
-        // Fields this copy didn't have, so they're filled by defaults below (name from the email, default income)
-        var cud = window.currentUserData, dflt = Object.assign({}, cud.defaults || {});
-        if (!cud.firstName) dflt.firstName = true;
-        if (!cud.income) dflt.income = true;
-        if (!cud.strategy) dflt.strategy = true;
-        if (Object.keys(dflt).length) cud.defaults = dflt; else delete cud.defaults;
-        let fname = window.currentUserData.firstName;
-        let lname = window.currentUserData.lastName;
-
-        if (!fname && window.currentUser) {
-            if (window.currentUser.displayName) {
-                const parts = window.currentUser.displayName.trim().split(" ");
-                fname = parts[0];
-                if (parts.length > 1) {
-                    lname = parts.slice(1).join(" ");
-                }
-            } else if (window.currentUser.email) {
-                fname = window.currentUser.email.split("@")[0];
-            }
-        }
-
-        fname = fname || "User";
-        lname = lname || "";
-
-        window.currentUserData.firstName = fname;
-        window.currentUserData.lastName = lname;
-
-        const initial = fname.charAt(0).toUpperCase() + (lname ? lname.charAt(0).toUpperCase() : "");
+        // Defaults, the name to show, and the cards/spaces shape come from the shared core (packages/core/src/account.js)
+        var prep = SerendibCore.prepareAccount(data || {}, window.currentUser);
+        window.currentUserData = prep.data;
+        let fname = prep.data.firstName;
+        let lname = prep.data.lastName;
+        const initial = prep.initials;
 
         const initialsEls = document.querySelectorAll('.profile-initials-text');
         initialsEls.forEach(el => el.innerText = initial);
@@ -7406,13 +8758,8 @@ var SerendibCore = (function() {
         const drawerName = document.getElementById('drawer-portfolio-name');
         if (drawerName) drawerName.innerText = fname + "'s Portfolio";
 
-        cards = (data && Array.isArray(data.cards)) ? data.cards : [];
-        spaces = (data && Array.isArray(data.spaces)) ? data.spaces : [];
-        spaces.forEach(ensureSpaceHistory);
-        cards.forEach(function (c) {
-            if (c.issuer === undefined) c.issuer = resolveIssuer(c.bank);
-            if (c.apr === undefined) c.apr = 28.0;
-        });
+        cards = prep.cards;
+        spaces = prep.spaces;
 
         var incStr = (data && data.income) ? data.income : "175000";
         var elProfileIncome = document.getElementById("profile-income-input");
@@ -7514,21 +8861,11 @@ var checkSnowball = document.getElementById('check-snowball');
       window.offersBank = 'all';
       window.offersUpdatedAt = null;
 
-      var OFFER_CATEGORIES = [
-        { key: 'all', label: 'All', icon: 'apps' },
-        { key: 'groceries', label: 'Groceries', icon: 'shopping_basket' },
-        { key: 'dining', label: 'Dining', icon: 'restaurant' },
-        { key: 'travel', label: 'Travel & Hotels', icon: 'flight' },
-        { key: 'shopping', label: 'Shopping', icon: 'shopping_bag' },
-        { key: 'instalments', label: '0% Instalments', icon: 'percent' },
-        { key: 'fuel_bills', label: 'Fuel & Bills', icon: 'local_gas_station' },
-        { key: 'health', label: 'Health & Wellness', icon: 'favorite' },
-        { key: 'online', label: 'Online', icon: 'language' },
-        { key: 'other', label: 'Other', icon: 'local_offer' }
-      ];
-      // Older offer documents used display labels as categories
-      var LEGACY_CATEGORY = { 'groceries': 'groceries', 'dining': 'dining', 'travel': 'travel', '0% epp': 'instalments', 'fuel & bills': 'fuel_bills' };
-      var OFFERS_CACHE_KEY = 'serendib_offers_cache';
+      // Categories, reading offer documents, samples, card matching and the feed's rules come from
+      // the shared core (packages/core/src/offers.js)
+      var OFFER_CATEGORIES = SerendibCore.OFFER_CATEGORIES;
+      var LEGACY_CATEGORY = SerendibCore.LEGACY_CATEGORY;
+      var OFFERS_CACHE_KEY = SerendibCore.OFFERS_CACHE_KEY;
 
       function escapeHtml(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
@@ -7538,70 +8875,9 @@ var checkSnowball = document.getElementById('check-snowball');
       function localDateStr(d) {
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       }
-      function categoryMeta(key) {
-        return OFFER_CATEGORIES.filter(function (c) { return c.key === key; })[0] || OFFER_CATEGORIES[OFFER_CATEGORIES.length - 1];
-      }
-
-      // Accepts the published schema and the older sample shape, returns one consistent shape
-      function normalizeOffer(o) {
-        var issuer = (o.issuer && SL_CARD_ISSUERS[o.issuer]) ? o.issuer : (resolveIssuer(o.bank) || 'default');
-        var cat = String(o.category || '').toLowerCase();
-        cat = OFFER_CATEGORIES.some(function (c) { return c.key === cat; }) ? cat : (LEGACY_CATEGORY[cat] || 'other');
-        if (cat === 'all') cat = 'other';
-        var scope = o.cardScope || {};
-        return {
-          id: String(o.id),
-          issuer: issuer,
-          bank: o.bank || (SL_CARD_ISSUERS[issuer] || {}).name || 'Bank',
-          merchant: o.merchant || '',
-          headline: o.headline || '',
-          details: o.details || o.subtext || '',
-          discountText: o.discountText || '',
-          category: cat,
-          cardScope: {
-            allCards: scope.allCards !== false && !(scope.tiers && scope.tiers.length) && !(scope.networks && scope.networks.length) && !scope.text,
-            networks: scope.networks || [],
-            tiers: scope.tiers || (o.tier && o.tier !== 'All' ? [o.tier] : []),
-            text: scope.text || ''
-          },
-          validFrom: o.validFrom || '',
-          validUntil: o.validUntil || o.expiryDate || '',
-          days: o.days || '',
-          minSpend: o.minSpend || null,
-          terms: o.terms || '',
-          sourceUrl: /^https:\/\//i.test(o.sourceUrl || '') ? o.sourceUrl : '',
-          status: o.status || 'published'
-        };
-      }
-
-      // Shown while no live offers are published yet (empty collection) or Firestore is unreachable.
-      // Labelled "Sample offers" in the feed so they aren't mistaken for real bank promotions.
-      function sampleOffers() {
-        var inDays = function (n) { var d = new Date(); d.setDate(d.getDate() + n); return localDateStr(d); };
-        return [
-          {
-            id: "sample1", issuer: "combank", bank: "Commercial Bank", merchant: "Keells", category: "groceries",
-            headline: "25% off fresh produce at Keells", discountText: "25% off",
-            details: "On weekends with Visa Gold & Platinum credit cards. Max discount LKR 2,500.",
-            cardScope: { allCards: false, networks: ["Visa"], tiers: ["Gold", "Platinum"], text: "Visa Gold & Platinum cards" },
-            validUntil: inDays(2), days: "Weekends", terms: "Valid only on weekends. Maximum discount LKR 2,500 per transaction."
-          },
-          {
-            id: "sample2", issuer: "ntb", bank: "Nations Trust Bank", merchant: "Cinnamon Grand", category: "dining",
-            headline: "1-for-1 main course at Cinnamon Grand", discountText: "1-for-1",
-            details: "With Nations Trust American Express Platinum cards. Reservations required.",
-            cardScope: { allCards: false, networks: ["American Express"], tiers: ["Platinum"], text: "American Express Platinum cards" },
-            validUntil: inDays(0), terms: "Not valid on public holidays. Subject to availability."
-          },
-          {
-            id: "sample3", issuer: "sampath", bank: "Sampath Bank", merchant: "Electronics partners", category: "instalments",
-            headline: "0% interest 12-month instalment plan", discountText: "0% for 12 months",
-            details: "Convert electronics purchases over LKR 50,000 via Sampath Vishwa.",
-            cardScope: { allCards: true }, validUntil: inDays(10), minSpend: 50000,
-            terms: "A processing fee may apply for early settlement."
-          }
-        ];
-      }
+      function categoryMeta(key) { return SerendibCore.offerCategory(key); }
+      function normalizeOffer(o) { return SerendibCore.normalizeOffer(o); }
+      function sampleOffers() { return SerendibCore.sampleOffers(); }
 
       function readOffersCache() {
         try { var raw = localStorage.getItem(OFFERS_CACHE_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
@@ -7656,8 +8932,7 @@ var checkSnowball = document.getElementById('check-snowball');
       };
 
       window.setOffersCategory = function(category) {
-        var key = String(category || 'all').toLowerCase();
-        window.offersCategory = OFFER_CATEGORIES.some(function (c) { return c.key === key; }) ? key : (LEGACY_CATEGORY[key] || 'all');
+        window.offersCategory = SerendibCore.offerCategoryKey(category);
         renderOffers();
       };
 
@@ -7669,15 +8944,15 @@ var checkSnowball = document.getElementById('check-snowball');
       window.openTermsModal = function(offerId) {
         const raw = (window.allOffers || []).find(o => String(o.id) === String(offerId));
         if (!raw) return;
-        const offer = normalizeOffer(raw);
-        document.getElementById('offer-terms-title').textContent = offer.headline || 'Terms & Conditions';
-        document.getElementById('offer-terms-body').textContent = offer.terms || "The bank hasn't published detailed terms for this offer here. Check the bank's site.";
+        const terms = SerendibCore.offerTerms(normalizeOffer(raw));
+        document.getElementById('offer-terms-title').textContent = terms.title;
+        document.getElementById('offer-terms-body').textContent = terms.body;
         const link = document.getElementById('offer-terms-source');
         if (link) {
-          link.classList.toggle('hidden', !offer.sourceUrl);
-          if (offer.sourceUrl) {
-            link.href = offer.sourceUrl;
-            link.querySelector('[data-label]').textContent = "View on " + offer.bank + "'s site";
+          link.classList.toggle('hidden', !terms.link);
+          if (terms.link) {
+            link.href = terms.link.href;
+            link.querySelector('[data-label]').textContent = terms.link.label;
           }
         }
         document.getElementById('modal-offer-terms').classList.remove('hidden');
@@ -7687,23 +8962,7 @@ var checkSnowball = document.getElementById('check-snowball');
         document.getElementById('modal-offer-terms').classList.add('hidden');
       };
 
-      function issuerKeyOf(c) {
-        return (c.issuer && SL_CARD_ISSUERS[c.issuer]) ? c.issuer : (resolveIssuer(c.bank) || 'default');
-      }
-
-      // Which of the user's cards an offer applies to. Bank-wide offers apply to every card from
-      // that bank; tier/network offers only "may" apply, matched loosely on the card's nickname.
-      function offerCardMatch(offer, userCards) {
-        var mine = userCards.filter(function (c) { return issuerKeyOf(c) === offer.issuer; });
-        if (!mine.length) return null;
-        if (offer.cardScope.allCards) return { card: mine[0], certain: true };
-        var words = offer.cardScope.tiers.concat(offer.cardScope.networks).map(function (w) { return String(w).toLowerCase(); });
-        var hit = mine.filter(function (c) {
-          var nick = String(c.nick || '').toLowerCase();
-          return words.some(function (w) { return w && (nick.indexOf(w) !== -1 || (w === 'american express' && nick.indexOf('amex') !== -1)); });
-        })[0];
-        return hit ? { card: hit, certain: false } : null;
-      }
+      function issuerKeyOf(c) { return SerendibCore.issuerKeyOf(c); }
 
       function offerEmptyState(icon, title, body, actions) {
         return '<div class="flex flex-col items-center text-center py-10 px-4 bg-surface-container-lowest border border-dashed border-outline-variant/60 rounded-[24px]">' +
@@ -7733,35 +8992,19 @@ var checkSnowball = document.getElementById('check-snowball');
           });
         }
 
-        const today = localDateStr(new Date());
-        const userCards = (cards || []).filter(function (c) { return c && c.bank; });
-        const myIssuers = {};
-        userCards.forEach(function (c) { myIssuers[issuerKeyOf(c)] = true; });
-
-        // Live offers only: published and not past their end date
-        const live = (window.allOffers || []).map(normalizeOffer).filter(function (o) {
-          return o.status !== 'expired' && (!o.validUntil || o.validUntil >= today);
-        });
         const mode = window.offersMatchMode;
-        const pool = mode === 'my-cards'
-          ? live.filter(function (o) { return myIssuers[o.issuer]; })
-          : live.filter(function (o) { return window.offersBank === 'all' || o.issuer === window.offersBank; });
-
-        // Category chips with counts for the current view; empty ones hidden (All, and the selected one, always shown)
-        const counts = {};
-        pool.forEach(function (o) { counts[o.category] = (counts[o.category] || 0) + 1; });
+        const view = SerendibCore.offersView({ offers: window.allOffers, cards: cards, mode: mode, category: window.offersCategory,
+          bank: window.offersBank, updatedAt: window.offersUpdatedAt, samples: window.offersAreSamples });
+        const userCards = view.userCards;
         const selectedCat = window.offersCategory;
         const chipsEl = document.getElementById('offers-category-chips');
         if (chipsEl) {
-          chipsEl.innerHTML = OFFER_CATEGORIES.filter(function (c) {
-            return c.key === 'all' || c.key === selectedCat || counts[c.key];
-          }).map(function (c) {
-            var n = c.key === 'all' ? pool.length : (counts[c.key] || 0);
-            var active = c.key === selectedCat;
+          chipsEl.innerHTML = view.chips.map(function (c) {
+            var active = c.active;
             return '<button type="button" onclick="setOffersCategory(\'' + c.key + '\')" aria-pressed="' + active + '" class="category-chip whitespace-nowrap px-4 py-2 rounded-full text-[14px] font-semibold flex items-center gap-1.5 transition-colors ' +
               (active ? 'bg-primary-fixed/25 text-primary border border-primary/30 shadow-2xs' : 'bg-surface-container-lowest text-secondary border border-outline-variant/40 hover:bg-surface-container') + '">' +
               '<span class="material-symbols-outlined text-[16px]" aria-hidden="true">' + c.icon + '</span>' + escapeHtml(c.label) +
-              '<span class="text-[11px] font-bold ' + (active ? 'text-primary/80' : 'text-secondary/70') + '">' + n + '</span></button>';
+              '<span class="text-[11px] font-bold ' + (active ? 'text-primary/80' : 'text-secondary/70') + '">' + c.count + '</span></button>';
           }).join('');
         }
 
@@ -7770,109 +9013,61 @@ var checkSnowball = document.getElementById('check-snowball');
         const bankSel = document.getElementById('offers-bank-filter');
         if (bankWrap) bankWrap.classList.toggle('hidden', mode !== 'explore');
         if (bankSel && mode === 'explore') {
-          var banks = {};
-          live.forEach(function (o) { banks[o.issuer] = o.bank; });
-          var keys = Object.keys(banks).sort(function (a, b) { return banks[a].localeCompare(banks[b]); });
-          if (window.offersBank !== 'all' && !banks[window.offersBank]) window.offersBank = 'all';
-          bankSel.innerHTML = '<option value="all">All banks</option>' + keys.map(function (k) {
-            return '<option value="' + escapeHtml(k) + '"' + (k === window.offersBank ? ' selected' : '') + '>' + escapeHtml(banks[k]) + '</option>';
+          window.offersBank = view.bank;
+          bankSel.innerHTML = '<option value="all">All banks</option>' + view.banks.map(function (b) {
+            return '<option value="' + escapeHtml(b.key) + '"' + (b.key === window.offersBank ? ' selected' : '') + '>' + escapeHtml(b.name) + '</option>';
           }).join('');
         }
 
-        const shown = (selectedCat === 'all' ? pool : pool.filter(function (o) { return o.category === selectedCat; })).slice();
-        // Ending within a week first (soonest first), then newest
-        const weekAhead = (function () { var d = new Date(); d.setDate(d.getDate() + 7); return localDateStr(d); })();
-        shown.sort(function (a, b) {
-          var aSoon = a.validUntil && a.validUntil <= weekAhead, bSoon = b.validUntil && b.validUntil <= weekAhead;
-          if (aSoon !== bSoon) return aSoon ? -1 : 1;
-          if (aSoon) return a.validUntil.localeCompare(b.validUntil);
-          return String(b.validFrom).localeCompare(String(a.validFrom));
-        });
-
-        // Summary banner
-        const endingThisWeek = pool.filter(function (o) { return o.validUntil && o.validUntil <= weekAhead; }).length;
+        const shown = view.shown;
         const titleEl = document.getElementById('offers-summary-title');
         const subEl = document.getElementById('offers-summary-sub');
         const badgeEl = document.getElementById('offers-summary-badge');
-        var updated = '';
-        if (window.offersUpdatedAt) {
-          var ud = new Date(window.offersUpdatedAt);
-          if (!isNaN(ud)) updated = 'Updated ' + ud.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-        }
         if (titleEl && subEl) {
-          if (mode === 'my-cards' && !userCards.length) {
-            titleEl.textContent = 'Offers for your cards';
-            subEl.textContent = 'Add a card to see what it gets you';
-          } else if (mode === 'my-cards') {
-            titleEl.textContent = pool.length + (pool.length === 1 ? ' offer' : ' offers') + ' on your cards';
-            subEl.textContent = [endingThisWeek ? endingThisWeek + ' ending this week' : 'None ending this week', updated].filter(Boolean).join(' · ');
-          } else {
-            var bankCount = {}; pool.forEach(function (o) { bankCount[o.issuer] = 1; });
-            titleEl.textContent = pool.length + (pool.length === 1 ? ' offer' : ' offers') + ' from ' + Object.keys(bankCount).length + (Object.keys(bankCount).length === 1 ? ' bank' : ' banks');
-            subEl.textContent = [endingThisWeek ? endingThisWeek + ' ending this week' : '', updated].filter(Boolean).join(' · ') || 'Across Sri Lankan card issuers';
-          }
+          titleEl.textContent = view.title;
+          subEl.textContent = view.sub;
         }
         if (badgeEl) {
-          badgeEl.textContent = window.offersAreSamples ? 'Sample' : 'Live';
-          badgeEl.className = 'text-[12px] px-2.5 py-1 rounded-full font-bold ' + (window.offersAreSamples ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700');
+          badgeEl.textContent = view.badge;
+          badgeEl.className = 'text-[12px] px-2.5 py-1 rounded-full font-bold ' + (view.samples ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700');
         }
 
-        const sampleNote = window.offersAreSamples
+        const sampleNote = view.samples
           ? '<p class="text-[12px] text-secondary bg-surface-container rounded-xl px-3 py-2">Sample offers: live bank promotions will appear here once they are published.</p>'
           : '';
 
         // Empty states
-        const catLabel = categoryMeta(selectedCat).label;
-        if (mode === 'my-cards' && !userCards.length) {
-          feed.innerHTML = sampleNote + offerEmptyState('credit_card', 'Add a card to see offers for it',
-            "We'll show the promotions your banks are running right now.",
+        if (view.empty && view.empty.kind === 'no-cards') {
+          feed.innerHTML = sampleNote + offerEmptyState(view.empty.icon, view.empty.title, view.empty.body,
             '<button type="button" class="' + OFFER_BTN_PRIMARY + '" onclick="offersAddCard()">Add card</button>' +
             '<button type="button" class="' + OFFER_BTN_SECONDARY + '" onclick="setOffersMatchMode(\'explore\')">Explore all</button>');
           return;
         }
-        if (!shown.length) {
-          var noun = selectedCat === 'all' ? '' : catLabel + ' ';
-          feed.innerHTML = sampleNote + offerEmptyState('search_off',
-            mode === 'my-cards' ? 'No ' + noun + 'offers for your cards right now' : 'No ' + noun + 'offers right now',
-            mode === 'my-cards' ? 'Your banks may have offers in other categories, or check what other banks are running.' : 'Try another category or bank.',
-            (selectedCat !== 'all' ? '<button type="button" class="' + OFFER_BTN_SECONDARY + '" onclick="setOffersCategory(\'all\')">All categories</button>' : '') +
-            (mode === 'my-cards' ? '<button type="button" class="' + OFFER_BTN_PRIMARY + '" onclick="setOffersMatchMode(\'explore\')">See all banks</button>' : ''));
+        if (view.empty) {
+          feed.innerHTML = sampleNote + offerEmptyState(view.empty.icon, view.empty.title, view.empty.body,
+            (view.empty.allCategories ? '<button type="button" class="' + OFFER_BTN_SECONDARY + '" onclick="setOffersCategory(\'all\')">All categories</button>' : '') +
+            (view.empty.seeAllBanks ? '<button type="button" class="' + OFFER_BTN_PRIMARY + '" onclick="setOffersMatchMode(\'explore\')">See all banks</button>' : ''));
           return;
         }
 
-        const todayDate = new Date(); todayDate.setHours(0, 0, 0, 0);
         let html = "";
         shown.forEach(function (offer) {
-          const match = offerCardMatch(offer, userCards);
+          const info = SerendibCore.offerCardInfo(offer, userCards);
+          const match = info.match;
           const userCard = match ? match.card : null;
           const theme = userCard ? cardTheme(userCard) : { bg: 'bg-surface-container', text: 'text-on-surface' };
-          const cat = categoryMeta(offer.category);
+          const cat = info.category;
 
           let urgencyHtml = "";
-          if (offer.validUntil) {
-            const parts = offer.validUntil.split('-');
-            const expDate = new Date(+parts[0], +parts[1] - 1, +parts[2]);
-            const diffDays = Math.round((expDate - todayDate) / 86400000);
-            if (diffDays === 0) {
-              urgencyHtml = '<span class="text-[12px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-rose-200/60"><span class="material-symbols-outlined text-[14px]">bolt</span>Ends today</span>';
-            } else if (diffDays > 0 && diffDays <= 3) {
-              urgencyHtml = '<span class="text-[12px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-200/60"><span class="material-symbols-outlined text-[14px]">schedule</span>Ends in ' + diffDays + ' days</span>';
-            }
+          if (info.urgency && info.urgency.tone === 'today') {
+            urgencyHtml = '<span class="text-[12px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-rose-200/60"><span class="material-symbols-outlined text-[14px]">bolt</span>' + info.urgency.text + '</span>';
+          } else if (info.urgency) {
+            urgencyHtml = '<span class="text-[12px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-200/60"><span class="material-symbols-outlined text-[14px]">schedule</span>' + info.urgency.text + '</span>';
           }
 
-          var eligibility = offer.cardScope.allCards ? 'All ' + offer.bank + ' credit cards'
-            : (offer.cardScope.text || ('Valid on ' + offer.cardScope.networks.concat(offer.cardScope.tiers).join(', ')));
-          var matchLine = '';
-          if (match && match.certain) matchLine = 'Your ' + (userCard.nick || 'card') + ' qualifies';
-          else if (match) matchLine = 'Your ' + (userCard.nick || 'card') + ' may qualify, check terms';
-
-          var meta = [];
-          if (offer.validUntil) {
-            var vp = offer.validUntil.split('-');
-            meta.push('Until ' + new Date(+vp[0], +vp[1] - 1, +vp[2]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
-          }
-          if (offer.days) meta.push(offer.days);
-          if (offer.minSpend) meta.push('Min. LKR ' + Number(offer.minSpend).toLocaleString('en-US'));
+          var eligibility = info.eligibility;
+          var matchLine = info.matchLine;
+          var meta = info.meta ? [info.meta] : [];
 
           html += '<article class="bg-surface-container-lowest rounded-[24px] p-5 border border-outline-variant/40 shadow-xs flex flex-col gap-3 hover:shadow-md transition-shadow">' +
             '<div class="flex items-center justify-between gap-2">' +
@@ -7908,10 +9103,7 @@ var checkSnowball = document.getElementById('check-snowball');
       var adminState = { tab: 'drafts', drafts: [], published: [], meta: null, adding: false, query: '' };
 
       // Same key the collector uses to recognise an offer it has already proposed or published
-      function offerContentKey(o) {
-        var norm = function (v) { return String(v || '').toLowerCase().replace(/\s+/g, ' ').trim(); };
-        return [o.issuer, o.merchant, o.validUntil, o.discountText].map(norm).join('|');
-      }
+      function offerContentKey(o) { return SerendibCore.offerContentKey(o); }
 
       async function isAdminUser() {
         var u = window.currentUser;
@@ -7985,30 +9177,7 @@ var checkSnowball = document.getElementById('check-snowball');
       function readAdminForm(root) {
         var f = {};
         root.querySelectorAll('[data-field]').forEach(function (el) { f[el.getAttribute('data-field')] = el.type === 'checkbox' ? el.checked : el.value.trim(); });
-        if (!f.headline) return { error: 'Add a headline.' };
-        if (!f.validUntil || !/^\d{4}-\d{2}-\d{2}$/.test(f.validUntil)) return { error: 'Add a valid end date.' };
-        if (f.validFrom && f.validFrom > f.validUntil) return { error: 'The start date is after the end date.' };
-        if (f.sourceUrl && !/^https:\/\//i.test(f.sourceUrl)) return { error: 'The bank page URL must start with https://' };
-        var minSpend = f.minSpend === '' ? null : Number(f.minSpend);
-        if (minSpend !== null && (!isFinite(minSpend) || minSpend < 0)) return { error: 'Minimum spend must be a positive number.' };
-        var offer = {
-          issuer: f.issuer,
-          bank: SL_CARD_ISSUERS[f.issuer].name,
-          merchant: f.merchant,
-          headline: f.headline,
-          discountText: f.discountText,
-          details: f.details,
-          category: f.category,
-          cardScope: { allCards: !!f.allCards, networks: [], tiers: [], text: f.allCards ? '' : f.scopeText },
-          validFrom: f.validFrom,
-          validUntil: f.validUntil,
-          days: f.days,
-          minSpend: minSpend,
-          terms: f.terms,
-          sourceUrl: f.sourceUrl
-        };
-        offer.contentKey = offerContentKey(offer);
-        return { offer: offer };
+        return SerendibCore.readOfferForm(f);
       }
 
       function adminCard(o, kind) {
@@ -8047,16 +9216,9 @@ var checkSnowball = document.getElementById('check-snowball');
         if (!list) return;
         var meta = document.getElementById('admin-offers-meta');
         if (meta) {
-          var m = adminState.meta;
-          if (m && m.lastRunAt) {
-            var failed = (m.sources || []).filter(function (x) { return !x.ok; });
-            meta.textContent = 'Last collector run: ' + new Date(m.lastRunAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) +
-              (failed.length ? ' · Failed: ' + failed.map(function (x) { return x.bank || x.issuer; }).join(', ') : ' · All banks OK');
-            meta.className = 'text-[12px] font-medium rounded-xl px-3 py-2 ' + (failed.length ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-800');
-          } else {
-            meta.textContent = "The collector hasn't run yet.";
-            meta.className = 'text-[12px] font-medium rounded-xl px-3 py-2 bg-surface-container text-secondary';
-          }
+          var cs = SerendibCore.collectorStatus(adminState.meta);
+          meta.textContent = cs.text;
+          meta.className = 'text-[12px] font-medium rounded-xl px-3 py-2 ' + (cs.tone === 'warn' ? 'bg-amber-50 text-amber-800' : cs.tone === 'ok' ? 'bg-emerald-50 text-emerald-800' : 'bg-surface-container text-secondary');
         }
         var dt = document.getElementById('admin-tab-drafts'), pt = document.getElementById('admin-tab-published');
         var ACTIVE = 'flex-1 py-2 rounded-lg text-[13px] font-semibold bg-surface-container-lowest text-on-surface shadow-xs';
@@ -8074,9 +9236,7 @@ var checkSnowball = document.getElementById('check-snowball');
             : '<p class="text-[13px] text-secondary py-6 text-center">No drafts waiting for review.</p>';
         } else {
           var q = adminState.query.toLowerCase();
-          var items = adminState.published.filter(function (o) {
-            return !q || [o.bank, o.merchant, o.headline].join(' ').toLowerCase().indexOf(q) !== -1;
-          }).sort(function (a, b) { return String(a.validUntil).localeCompare(String(b.validUntil)); });
+          var items = SerendibCore.adminPublishedList(adminState.published, adminState.query);
           html += items.length ? items.map(function (o) { return adminCard(o, 'published'); }).join('')
             : '<p class="text-[13px] text-secondary py-6 text-center">No published offers' + (q ? ' match your search' : '') + '.</p>';
         }
@@ -8121,7 +9281,7 @@ var checkSnowball = document.getElementById('check-snowball');
             }
           }
           if (typeof window.showToast === 'function') {
-            window.showToast({ approve: 'Offer published', reject: 'Draft rejected', expire: 'Offer expired', save: 'Offer updated', create: 'Offer published' }[action], 'info');
+            window.showToast(SerendibCore.ADMIN_TOASTS[action], 'info');
           }
           await loadAdminOffers();
           fetchOffers(); // refresh what users see
@@ -8583,11 +9743,12 @@ var checkSnowball = document.getElementById('check-snowball');
         fill.style.width = util.toFixed(1) + "%";
         fill.className = "h-full rounded-full transition-all duration-500 " + theme.bar;
 
-        var minPmt = minPaymentFor(c);
         var sl = document.getElementById("ps-slider");
-        sl.min = Math.floor(minPmt);
-        sl.max = Math.ceil(c.balance * 1.05 + 1);
-        sl.value = c.targetPayment ? c.targetPayment : Math.round(minPmt * 2.5);
+        var start = SerendibCore.payoffStart(c); // packages/core/src/simulators.js
+        sl.min = start.min;
+        sl.max = start.max;
+        sl.value = start.value;
+        psExact = start.value;
         if (App._updateSliderFill) App._updateSliderFill(sl);
         runPayoffSim(c, parseFloat(sl.value));
         renderCycleRow(c);
@@ -8613,23 +9774,15 @@ var checkSnowball = document.getElementById('check-snowball');
 
       /* ── Spending: per-card ledger, recurring charges, budgets and insights ── */
       var lastRecurringDay = null;
-      var LOG_CARD_KEY = 'serendib_last_log_card';
+      var LOG_CARD_KEY = SerendibCore.LOG_CARD_KEY;
 
       function fmtAmt(n) { return fmtLKR(n, Math.round(n * 100) % 100 ? 2 : 0); }
-      function shortDate(s) {
-        var d = parseYmd(s);
-        return d.getDate() + ' ' + d.toLocaleString('en-US', { month: 'short' });
-      }
+      // shortDate, ordinal, parseAmountInput, ledgerCsv, shareText and the sheet hints come from the
+      // shared core (packages/core/src/screen-rules.js)
+      function shortDate(s) { return SerendibCore.shortDate(s); }
 
-      function ordinal(n) {
-        var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
-        return n + (s[(v - 20) % 10] || s[v] || s[0]);
-      }
-      function parseAmountInput(v) {
-        var t = String(v == null ? '' : v).replace(/^\s*LKR/i, '').replace(/[,\s]/g, '');
-        if (!/^-?\d*\.?\d+$/.test(t)) return NaN;
-        return Math.round(parseFloat(t) * 100) / 100;
-      }
+      function ordinal(n) { return SerendibCore.ordinal(n); }
+      function parseAmountInput(v) { return SerendibCore.parseAmountInput(v); }
       function lastUsedCardId() { try { return localStorage.getItem(LOG_CARD_KEY); } catch (e) { return null; } }
       function rememberCard(id) { try { localStorage.setItem(LOG_CARD_KEY, String(id)); } catch (e) {} }
 
@@ -8919,29 +10072,10 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       // Merchants already logged on any card, this card's first; each remembers its last category
-      function merchantItems(cardId) {
-        var seen = {}, items = [];
-        var ordered = cards.slice().sort(function (a, b) { return (String(b.id) === String(cardId)) - (String(a.id) === String(cardId)); });
-        ordered.forEach(function (c) {
-          sortedLedger(c).forEach(function (e) {
-            if (!e.merchant || e.type === 'payment' || e.source === 'recurring') return;
-            var k = suggestNorm(e.merchant);
-            if (!k || seen[k]) return;
-            seen[k] = true;
-            items.push({ label: e.merchant, hint: spendCategory(e.category).label, category: e.category });
-          });
-        });
-        return items;
-      }
-      function defaultCategory() {
-        var last = null;
-        cards.forEach(function (c) {
-          (c.ledger || []).forEach(function (e) {
-            if (e.type === 'purchase' && e.source !== 'recurring' && e.category && (!last || (e.createdAt || 0) > (last.createdAt || 0))) last = e;
-          });
-        });
-        return last ? last.category : 'groceries';
-      }
+      // Merchant suggestions, the default category, the over-limit warning and the payment shortcuts
+      // come from the shared core (packages/core/src/ledger-actions.js)
+      function merchantItems(cardId) { return SerendibCore.merchantItems(cards, cardId); }
+      function defaultCategory() { return SerendibCore.defaultCategory(cards); }
 
       /* Log a purchase, payment or refund (or edit one) */
       var logState = null;
@@ -9016,14 +10150,9 @@ var checkSnowball = document.getElementById('check-snowball');
             if (!box) return;
             var c = findCard(logState.cardId);
             if (!c || logState.type !== 'payment' || !(c.balance > 0)) { box.classList.add('hidden'); box.innerHTML = ''; return; }
-            var seen = {}, chips = [['Due now', amountDueNow(c)], ['Plan', planAllocationFor(c)], ['Full balance', c.balance]].filter(function (x) {
-              var v = Math.round(x[1] * 100) / 100;
-              if (!(v > 0) || seen[v]) return false;
-              seen[v] = true;
-              return true;
-            });
+            var chips = SerendibCore.paymentShortcuts(c, amountDueNow(c), planAllocationFor(c));
             box.innerHTML = chips.map(function (x) {
-              return '<button type="button" class="spend-chip shrink-0" data-amount="' + (Math.round(x[1] * 100) / 100) + '">' + x[0] + ' · ' + fmtAmt(x[1]) + '</button>';
+              return '<button type="button" class="spend-chip shrink-0" data-amount="' + x.value + '">' + x.label + ' · ' + fmtAmt(x.value) + '</button>';
             }).join('');
             box.classList.toggle('hidden', !chips.length);
           }
@@ -9044,16 +10173,11 @@ var checkSnowball = document.getElementById('check-snowball');
             updateWarn();
           }
           function categoryFor(name) {
-            var k = suggestNorm(name);
-            var hit = merchantItems(logState.cardId).filter(function (m) { return suggestNorm(m.label) === k; })[0];
-            if (hit && hit.category) { logState.category = hit.category; setChoice(catsEl, 'data-cat', hit.category); }
+            var cat = SerendibCore.categoryForMerchant(cards, logState.cardId, name);
+            if (cat) { logState.category = cat; setChoice(catsEl, 'data-cat', cat); }
           }
           function updateWarn() {
-            var c = findCard(logState.cardId), amt = parseAmountInput(amountEl.value), msg = '';
-            if (c && c.limit > 0 && logState.type === 'purchase' && amt > 0) {
-              var base = (Number(c.balance) || 0) - (editing ? (Number(editing.applied) || 0) : 0);
-              if (base + amt > c.limit) msg = 'This takes the card over its ' + fmtAmt(c.limit) + ' limit.';
-            }
+            var msg = SerendibCore.overLimitWarning(findCard(logState.cardId), logState.type, parseAmountInput(amountEl.value), editing);
             var w = document.getElementById('log-warn');
             w.textContent = msg;
             w.classList.toggle('hidden', !msg);
@@ -9078,44 +10202,33 @@ var checkSnowball = document.getElementById('check-snowball');
             });
             document.getElementById('log-sms').addEventListener('input', function () { applySms(this.value); });
           }
+          // What an SMS fills in, and the status line, come from the shared core (packages/core/src/ledger-actions.js)
           function applySms(text) {
             var status = document.getElementById('log-sms-status');
-            if (!text.trim()) {
-              status.textContent = 'We only read it to fill the form. Nothing is saved until you tap Save.';
-              status.className = 'text-[11px] mt-1.5 text-secondary';
+            var f = SerendibCore.smsFill(text, cards, ymd(new Date()));
+            var TONE = { ok: 'text-[11px] mt-1.5 text-emerald-700 font-semibold', warn: 'text-[11px] mt-1.5 text-amber-700 font-semibold', hint: 'text-[11px] mt-1.5 text-secondary' };
+            if (f.empty) {
+              status.textContent = f.status.text;
+              status.className = TONE.hint;
               logState.fromSms = false;
               return;
             }
-            var r = parseBankSms(text, ymd(new Date())), filled = [], note = '';
-            setType(r.type);
-            if (r.amount) { amountEl.value = r.amount; filled.push('amount'); }
-            else if (r.foreign) amountEl.value = '';
-            if (r.merchant) { merchantEl.value = r.merchant; categoryFor(r.merchant); filled.push('merchant'); }
-            if (r.date) { document.getElementById('log-date').value = r.date; filled.push('date'); }
-            if (r.last4) {
-              var match = cards.filter(function (c) { return c.last4 === r.last4; })[0];
-              if (match) {
-                logState.cardId = match.id;
-                setChoice(document.getElementById('log-cards'), 'data-card', match.id);
-                setSheetAccent(match);
-                var nameEl = document.getElementById('log-card-name');
-                if (nameEl) nameEl.innerHTML = '<span class="sr-only">On </span>' + cardChip(match);
-                filled.push('card');
-              } else {
-                note = ' This SMS is for a card ending ' + r.last4 + '. Add those digits in Edit Card to match it next time.';
-              }
+            setType(f.type);
+            if (f.amount) amountEl.value = f.amount;
+            else if (f.clearAmount) amountEl.value = '';
+            if (f.merchant) { merchantEl.value = f.merchant; categoryFor(f.merchant); }
+            if (f.date) document.getElementById('log-date').value = f.date;
+            if (f.cardId) {
+              var match = findCard(f.cardId);
+              logState.cardId = match.id;
+              setChoice(document.getElementById('log-cards'), 'data-card', match.id);
+              setSheetAccent(match);
+              var nameEl = document.getElementById('log-card-name');
+              if (nameEl) nameEl.innerHTML = '<span class="sr-only">On </span>' + cardChip(match);
             }
-            logState.fromSms = filled.length > 0;
-            if (r.foreign) {
-              status.textContent = 'This SMS is in ' + r.foreign + '. Enter the LKR amount from your statement.' + note;
-              status.className = 'text-[11px] mt-1.5 text-amber-700 font-semibold';
-            } else if (filled.length) {
-              status.textContent = 'Filled ' + filled.join(', ') + '. Check the details, then tap Save.' + note;
-              status.className = 'text-[11px] mt-1.5 text-emerald-700 font-semibold';
-            } else {
-              status.textContent = 'We couldn’t read this SMS. Please fill in the details below.';
-              status.className = 'text-[11px] mt-1.5 text-amber-700 font-semibold';
-            }
+            logState.fromSms = f.fromSms;
+            status.textContent = f.status.text;
+            status.className = TONE[f.status.tone];
             updateWarn();
           }
           document.getElementById('log-save').addEventListener('click', function () { saveLogEntry(false); });
@@ -9148,17 +10261,15 @@ var checkSnowball = document.getElementById('check-snowball');
         commitSpending();
 
         var editingWas = !!logState.editingId;
-        var what = type === 'payment' ? 'Payment of ' + fmtAmt(amt) + ' logged' : type === 'refund' ? 'Refund of ' + fmtAmt(amt) + ' logged'
-          : type === 'adjustment' ? 'Adjustment saved' : 'Logged ' + fmtAmt(amt) + (merchant ? ' at ' + merchant : '');
         var cardId = card.id, entryId = entry.id;
-        window.showToast((editingWas ? 'Entry updated' : what) + (warn ? '. ' + warn : ''), warn ? 'warning' : 'percent',
+        window.showToast(SerendibCore.logSavedText(type, amt, merchant, editingWas, warn), warn ? 'warning' : 'percent',
           editingWas ? { card: card } : { card: card, actionLabel: 'Undo', onAction: function () { undoAdd(cardId, entryId); } });
 
         if (addAnother) {
           ['log-amount', 'log-merchant', 'log-note', 'log-sms'].forEach(function (id) { var f = document.getElementById(id); if (f) f.value = ''; });
           logState.fromSms = false;
           var status = document.getElementById('log-sms-status');
-          if (status) { status.textContent = 'We only read it to fill the form. Nothing is saved until you tap Save.'; status.className = 'text-[11px] mt-1.5 text-secondary'; }
+          if (status) { status.textContent = SerendibCore.SMS_HINT; status.className = 'text-[11px] mt-1.5 text-secondary'; }
           document.getElementById('log-warn').classList.add('hidden');
           document.getElementById('log-amount').focus();
           return;
@@ -9232,9 +10343,7 @@ var checkSnowball = document.getElementById('check-snowball');
         if (item) {
           var next = recurringNextDue(item, today);
           html += '<p class="text-[12px] rounded-lg bg-surface-container-low px-3 py-2 mb-4 text-on-surface-variant">' +
-            escapeHtml(gone ? 'Cancelled' + (item.endDate ? ' on ' + shortDate(item.endDate) : '') + '. Past charges stay in your history.'
-              : item.paused ? 'Paused. Nothing is logged until you resume it.'
-              : next ? 'Next charge on ' + shortDate(next) + '. Changes apply from the next charge.' : 'No more charges before the end date.') + '</p>';
+            escapeHtml(SerendibCore.recurringStatusText(item, today, next)) + '</p>';
         }
         html += '<label for="rec-name" class="' + LABEL + '">Name</label>' +
           '<input id="rec-name" type="text" maxlength="40" autocomplete="off" class="stitch-input" placeholder="e.g. Netflix, Dialog, Gym" value="' + (item ? escapeHtml(item.name) : '') + '">' +
@@ -9279,11 +10388,11 @@ var checkSnowball = document.getElementById('check-snowball');
           function syncDay() {
             var d = parseInt(dayEl.value, 10), hint = document.getElementById('rec-day-hint'), wrap = document.getElementById('rec-now-wrap');
             if (!isValidDay(d)) { hint.textContent = ''; if (wrap) wrap.classList.add('hidden'); return; }
-            hint.textContent = 'Logged on the ' + ordinal(d) + ' of each month' + (d > 28 ? ', or the last day in shorter months.' : '.');
+            hint.textContent = SerendibCore.recurringDayHint(d);
             if (wrap) {
-              var now = new Date(), eff = clampDay(now.getFullYear(), now.getMonth(), d);
-              wrap.classList.toggle('hidden', eff > now.getDate());
-              document.getElementById('rec-now-title').textContent = 'Add this month’s charge now (' + shortDate(ymd(new Date(now.getFullYear(), now.getMonth(), eff))) + ')';
+              var nowDate = SerendibCore.chargeNowDate(d, new Date());
+              wrap.classList.toggle('hidden', !nowDate);
+              if (nowDate) document.getElementById('rec-now-title').textContent = 'Add this month’s charge now (' + shortDate(nowDate) + ')';
             }
           }
           dayEl.addEventListener('input', syncDay);
@@ -9372,14 +10481,11 @@ var checkSnowball = document.getElementById('check-snowball');
         openSpendSheet('Category budgets', html, function (body) {
           document.getElementById('bud-cancel').addEventListener('click', closeSpendSheet);
           document.getElementById('bud-save').addEventListener('click', function () {
-            var next = {}, bad = null;
-            Array.prototype.forEach.call(body.querySelectorAll('[data-budget]'), function (inp) {
-              if (!inp.value.trim()) return;
-              var v = parseAmountInput(inp.value);
-              if (!(v > 0)) bad = bad || spendCategory(inp.getAttribute('data-budget')).label;
-              else next[inp.getAttribute('data-budget')] = v;
-            });
-            if (bad) return showSheetError('bud-error', 'Enter a valid amount for ' + bad + ', or leave it blank.');
+            var raw = {};
+            Array.prototype.forEach.call(body.querySelectorAll('[data-budget]'), function (inp) { raw[inp.getAttribute('data-budget')] = inp.value; });
+            var res = SerendibCore.budgetsFromInputs(raw);
+            if (res.error) return showSheetError('bud-error', res.error);
+            var next = res.budgets;
             card.budgets = next;
             commitSpending();
             closeSpendSheet();
@@ -9389,19 +10495,7 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       /* Full history */
-      function csvCell(v) {
-        var s = String(v == null ? '' : v);
-        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // keep spreadsheet apps from running it as a formula
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      function ledgerCsv(card) {
-        var rows = [['Date', 'Type', 'Amount (LKR)', 'Category', 'Merchant', 'Note', 'Source'].map(csvCell).join(',')];
-        sortedLedger(card).forEach(function (e) {
-          rows.push([csvCell(e.date), csvCell(e.type), String(Number(e.amount) || 0), csvCell(e.category ? spendCategory(e.category).label : ''),
-            csvCell(e.merchant || ''), csvCell(e.note || ''), csvCell(e.source || '')].join(','));
-        });
-        return rows.join('\r\n');
-      }
+      function ledgerCsv(card) { return SerendibCore.ledgerCsv(card); }
       function openHistorySheet(cardId) {
         var card = findCard(cardId);
         if (!card) return;
@@ -9462,7 +10556,7 @@ var checkSnowball = document.getElementById('check-snowball');
             var blob = new Blob(['﻿' + ledgerCsv(card)], { type: 'text/csv;charset=utf-8' });
             var a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'serendib-' + cardName(card).toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + ymd(new Date()) + '.csv';
+            a.download = SerendibCore.ledgerCsvFileName(card, ymd(new Date()));
             document.body.appendChild(a);
             a.click();
             setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -9486,9 +10580,7 @@ var checkSnowball = document.getElementById('check-snowball');
         openSpendSheet('Match my statement', html, function () {
           var inp = document.getElementById('match-amount');
           inp.addEventListener('input', function () {
-            var v = parseAmountInput(inp.value), d = Math.round((v - card.balance) * 100) / 100;
-            document.getElementById('match-diff').textContent = !isFinite(v) ? 'The app shows ' + fmtAmt(card.balance) + '.'
-              : d === 0 ? 'Already matches.' : (d > 0 ? 'Adds ' : 'Reduces the balance by ') + fmtAmt(Math.abs(d)) + '.';
+            document.getElementById('match-diff').textContent = SerendibCore.matchDiffText(card, parseAmountInput(inp.value), fmtAmt);
           });
           document.getElementById('match-cancel').addEventListener('click', closeSpendSheet);
           document.getElementById('match-save').addEventListener('click', function () {
@@ -9535,26 +10627,15 @@ var checkSnowball = document.getElementById('check-snowball');
 
       // Home: next payment due, "did you pay?" prompt, overdue and CRIB warnings. Returns alert count.
       function renderDueAlerts() {
-        var today = ymd(new Date()), count = 0, upcoming = [], overdue = [], tracked = 0;
-        cards.forEach(function (c) {
-          if (!isValidDay(c.dueDay) || !isValidDay(c.statementDay)) return;
-          var st = cycleStatus(c, today);
-          if (st) {
-            tracked++;
-            if (st.overdue) overdue.push({ card: c, st: st });
-            if (st.next) upcoming.push({ card: c, due: st.next.s.due, left: st.next.remaining, min: st.next.s.minDue });
-          } else if (c.balance > 0) {
-            // Not tracked yet (e.g. offline at sign-in): next due day and today's minimum
-            var min = minPaymentFor(c);
-            upcoming.push({ card: c, due: nextDueDayFrom(c.dueDay, today), left: min, min: min });
-          }
-        });
+        // What's due, overdue and tracked comes from the shared core (packages/core/src/home-alerts.js)
+        var today = ymd(new Date()), count = 0;
+        var alertData = SerendibCore.homeAlertData(cards, today);
+        var upcoming = alertData.upcoming, overdue = alertData.overdue, tracked = alertData.tracked;
 
         // Next payment due (skips cycles already paid)
         var elPay = document.getElementById('home-alert-payment');
         function setAlertEyebrow(id, text) { var e = document.querySelector('#' + id + ' [data-eyebrow]'); if (e) e.textContent = text; }
         if (elPay) {
-          upcoming.sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
           var u = upcoming[0];
           var countdown = document.getElementById('home-alert-payment-countdown');
           var dateEl = document.getElementById('home-alert-payment-date');
@@ -9589,7 +10670,6 @@ var checkSnowball = document.getElementById('check-snowball');
         }
 
         // Overdue: ask first, then warn by how late it is
-        overdue.sort(function (a, b) { return b.st.overdue.days - a.st.overdue.days; });
         var worst = overdue[0];
         var elAsk = document.getElementById('home-alert-ask');
         var elLate = document.getElementById('home-alert-overdue');
@@ -9603,7 +10683,7 @@ var checkSnowball = document.getElementById('check-snowball');
             document.getElementById('home-alert-ask-card').innerHTML = cardChip(c);
             document.getElementById('home-alert-ask-yes').onclick = function () { openLogSheet({ cardId: c.id, type: 'payment', prefill: o.amount }); };
             document.getElementById('home-alert-ask-no').onclick = function () {
-              o.statements.forEach(function (s) { s.answered = 'no'; });
+              SerendibCore.answerNotYet(c, ymd(new Date()));
               commitSpending();
             };
             elAsk.classList.remove('hidden');
@@ -9629,26 +10709,21 @@ var checkSnowball = document.getElementById('check-snowball');
       function openRemedialSheet(cardId) {
         var card = findCard(cardId);
         if (!card) return;
-        var today = ymd(new Date()), st = cycleStatus(card, today), o = st && st.overdue;
-        var owed = o ? o.amount : amountDueNow(card);
-        var untracked = cards.filter(function (c) { return c.balance > 0 && !(isValidDay(c.statementDay) && isValidDay(c.dueDay)); }).length;
+        // The plan's steps and wording come from the shared core (packages/core/src/home-alerts.js)
+        var plan = SerendibCore.catchUpPlan(card, cards, ymd(new Date()), fmtAmt), owed = plan.owed;
         var step = function (n, title, body, btn) {
           return '<li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-surface-container-low text-on-surface text-[13px] font-bold flex items-center justify-center shrink-0">' + n + '</span>' +
             '<div class="flex-1 min-w-0"><p class="text-[13px] font-semibold text-on-surface">' + title + '</p><p class="text-[12px] text-secondary mt-0.5 leading-relaxed">' + body + '</p>' + (btn || '') + '</div></li>';
         };
         var BTN = 'mt-2 h-9 px-4 rounded-full text-[12px] font-bold active:scale-95 transition-all';
-        var bank = escapeHtml(card.bank);
         var html = sheetCardLine(card) +
-          (o ? '<div class="rounded-xl bg-rose-50 border border-rose-200 p-3 mb-4"><p class="text-[13px] font-bold text-rose-800">' + fmtAmt(o.amount) + ' overdue since ' + shortDate(o.since) + '</p>' +
-            '<p class="text-[12px] text-rose-700 mt-0.5">' + o.days + (o.days === 1 ? ' day' : ' days') + ' past due. Accounts 90 days past due are classed as non-performing and reported to CRIB.</p></div>' : '') +
-          '<ol class="space-y-4">' +
-          step(1, 'Pay ' + fmtAmt(owed) + ' to catch up', 'This brings the missed minimums up to date. Log it here once you\u2019ve paid in your banking app.',
-            '<button type="button" id="rem-pay" class="' + BTN + ' bg-primary-container text-white">Log payment</button>') +
-          step(2, 'Pause new spending on this card', 'Every new purchase adds to what\u2019s owed. Set a small budget so the app warns you before you spend.',
-            '<button type="button" id="rem-budget" class="' + BTN + ' border border-outline-variant text-on-surface">Set budgets</button>') +
-          step(3, 'Talk to ' + bank + ' before 90 days', 'Call the number on the back of your card and ask about a payment plan or restructuring. Banks are usually more flexible before an account reaches 90 days past due.') +
-          (untracked ? step(4, 'Track due dates on your other cards', untracked + ' other card' + (untracked === 1 ? '' : 's') + ' ha' + (untracked === 1 ? 's' : 've') + ' no billing cycle, so the app can\u2019t warn you before they\u2019re due.') : '') +
-          '</ol>';
+          (plan.banner ? '<div class="rounded-xl bg-rose-50 border border-rose-200 p-3 mb-4"><p class="text-[13px] font-bold text-rose-800">' + escapeHtml(plan.banner.title) + '</p>' +
+            '<p class="text-[12px] text-rose-700 mt-0.5">' + escapeHtml(plan.banner.body) + '</p></div>' : '') +
+          '<ol class="space-y-4">' + plan.steps.map(function (st) {
+            var btn = st.n === 1 ? '<button type="button" id="rem-pay" class="' + BTN + ' bg-primary-container text-white">Log payment</button>'
+              : st.n === 2 ? '<button type="button" id="rem-budget" class="' + BTN + ' border border-outline-variant text-on-surface">Set budgets</button>' : '';
+            return step(st.n, escapeHtml(st.title), escapeHtml(st.body), btn);
+          }).join('') + '</ol>';
         setSheetAccent(card);
         openSpendSheet('Catch-up plan', html, function () {
           document.getElementById('rem-pay').addEventListener('click', function () { openLogSheet({ cardId: card.id, type: 'payment', prefill: owed }); });
@@ -9657,27 +10732,7 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       /* Share progress: utilisation and debt-free month only; no amounts, limits or bank details */
-      function shareText(card) {
-        var intro = 'My credit card progress on Serendib: ';
-        if (!(card.balance > 0)) return intro + 'this card is fully paid off.';
-        var util = card.limit > 0 ? Math.round(card.balance / card.limit * 100) : null;
-        var line = util === null ? 'paying it down' : util + '% of my limit used';
-        var monthAgo = addDays(ymd(new Date()), -30);
-        if (util !== null && (card.ledger || []).some(function (e) { return e.date > monthAgo; })) {
-          var then = Math.round(balanceAt(card, monthAgo) / card.limit * 100);
-          if (then > util) line += ' (down from ' + then + '% last month)';
-          else if (then < util) line += ' (up from ' + then + '% last month)';
-        }
-        var res = calcPayoff(card.balance, planAllocationFor(card), cardApr(card));
-        var tail = '';
-        if (isFinite(res.months) && res.months > 0) {
-          var d = new Date();
-          d.setDate(1);
-          d.setMonth(d.getMonth() + res.months);
-          tail = ' On track to be debt-free by ' + d.toLocaleString('en-US', { month: 'short', year: 'numeric' }) + '.';
-        }
-        return intro + line + '.' + tail;
-      }
+      function shareText(card) { return SerendibCore.shareText(cards, card); }
       function copyText(text) {
         function fallback() {
           var ta = document.createElement('textarea');
@@ -9726,23 +10781,17 @@ var checkSnowball = document.getElementById('check-snowball');
       function findSpace(id) { return spaces.find(function (s) { return String(s.id) === String(id); }) || null; }
       function spaceHistoryRow(h) {
         var card = h.cardId ? findCard(h.cardId) : null;
-        var out = h.type !== 'deposit';
-        var label = h.type === 'deposit' ? (h.note || 'Deposit') : h.type === 'withdraw' ? (h.note || 'Withdrawal') : 'Paid a card';
-        var icon = h.type === 'deposit' ? 'south_west' : h.type === 'withdraw' ? 'north_east' : 'credit_card';
+        var lab = SerendibCore.spaceHistoryLabel(h), out = lab.out, label = lab.label, icon = lab.icon;
         return '<div class="flex items-center gap-3 py-2">' +
           '<span class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ' + (out ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700') + '"><span class="material-symbols-outlined text-[18px]" aria-hidden="true">' + icon + '</span></span>' +
           '<span class="flex-1 min-w-0"><span class="block text-[13px] font-semibold text-on-surface truncate">' + escapeHtml(label) + '</span>' +
           '<span class="block text-[11px] text-secondary">' + shortDate(h.date) + '</span>' + (card ? '<span class="block mt-1">' + cardChip(card) + '</span>' : '') + '</span>' +
           '<span class="text-[13px] font-bold num whitespace-nowrap ' + (out ? 'text-on-surface' : 'text-emerald-700') + '">' + (out ? '\u2212 ' : '+ ') + fmtAmt(Number(h.amount) || 0) + '</span></div>';
       }
+      // Status line, history labels and the pay suggestion come from the shared core (packages/core/src/screen-rules.js)
       function spaceStatusLine(s, today) {
-        var cur = Number(s.currentLKR) || 0, target = Number(s.targetLKR) || 0;
-        if (target > 0 && cur >= target) return { text: 'Goal reached', tone: 'text-emerald-700' };
-        var months = spaceMonthsLeft(s.targetDate, today), need = spaceMonthlyNeeded(s, today), pace = spaceRecentPace(s, today);
-        if (!months) return { text: 'Target date passed · ' + fmtAmt(target - cur) + ' to go', tone: 'text-amber-700' };
-        var line = fmtAmt(Math.ceil(need)) + ' a month for ' + months + (months === 1 ? ' month' : ' months');
-        if (pace >= need - 0.5) return { text: line + ' · on track', tone: 'text-emerald-700' };
-        return { text: line + (pace > 0 ? ' · you\u2019re adding about ' + fmtAmt(Math.round(pace)) + ' a month' : ' · no deposits in the last 3 months'), tone: 'text-amber-700' };
+        var st = SerendibCore.spaceStatusLine(s, today, fmtAmt);
+        return { text: st.text, tone: st.tone === 'ok' ? 'text-emerald-700' : 'text-amber-700' };
       }
       function openSpaceSheet(id) {
         var s = findSpace(id);
@@ -9760,7 +10809,7 @@ var checkSnowball = document.getElementById('check-snowball');
           '<button type="button" id="space-withdraw" class="' + BTN + ' border border-outline-variant text-on-surface"' + (cur > 0 ? '' : ' disabled') + '>Withdraw</button>' +
           '<button type="button" id="space-pay" class="' + BTN + ' border border-outline-variant text-on-surface"' + (cur > 0 ? '' : ' disabled') + '>Pay a card</button></div>' +
           '<h4 class="text-[13px] font-semibold text-on-surface mt-5 mb-1">History</h4>' +
-          (s.history.length ? s.history.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.createdAt || 0) - (a.createdAt || 0); }).map(spaceHistoryRow).join('')
+          (s.history.length ? SerendibCore.sortedSpaceHistory(s).map(spaceHistoryRow).join('')
             : '<p class="text-[12px] text-secondary py-4 text-center">No activity yet.</p>');
         openSpendSheet(s.name, html, function () {
           document.getElementById('space-add').addEventListener('click', function () { closeSpendSheet(); window.openAddFundsModal(s.id); });
@@ -9816,11 +10865,11 @@ var checkSnowball = document.getElementById('check-snowball');
       function openSpacePay(id) {
         var s = findSpace(id);
         if (!s) return;
-        var owing = cards.filter(function (c) { return c.balance > 0; });
+        var opts = SerendibCore.spacePayOptions(s, cards), owing = opts.owing;
         var have = Number(s.currentLKR) || 0;
         if (!owing.length) { window.showToast('None of your cards has a balance to pay.', 'info'); return; }
-        var pick = owing.slice().sort(function (a, b) { return amountDueNow(b) - amountDueNow(a); })[0];
-        var suggest = function (c) { var due = amountDueNow(c); return Math.min(have, due > 0 ? due : c.balance); };
+        var pick = opts.pick;
+        var suggest = opts.suggest;
         var html = '<p class="text-[12px] text-secondary -mt-1 mb-4">From ' + escapeHtml(s.name) + ' (' + fmtAmt(have) + '). This logs a payment on the card and takes it from the space.</p>' +
           '<p class="' + LABEL + '" id="sp-card-label">Card</p><div id="sp-cards" role="radiogroup" aria-labelledby="sp-card-label" class="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-4">' +
           owing.map(function (c) {
@@ -9837,8 +10886,7 @@ var checkSnowball = document.getElementById('check-snowball');
         openSpendSheet('Pay a card from ' + s.name, html, function () {
           var amountEl = document.getElementById('sp-amount');
           function hint() {
-            var due = amountDueNow(chosen);
-            document.getElementById('sp-hint').textContent = (due > 0 ? fmtAmt(due) + ' due now · ' : '') + fmtAmt(chosen.balance) + ' balance';
+            document.getElementById('sp-hint').textContent = opts.hint(chosen, fmtAmt);
           }
           bindChoice(document.getElementById('sp-cards'), 'data-card', function (cid) {
             chosen = findCard(cid);
@@ -9871,14 +10919,14 @@ var checkSnowball = document.getElementById('check-snowball');
         var blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'serendib-backup-' + ymd(new Date()) + '.json';
+        a.download = SerendibCore.backupFileName(ymd(new Date()));
         document.body.appendChild(a);
         a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
         window.showToast('Backup downloaded', 'percent');
       }
       function openRestoreFile(file) {
-        if (file.size > 2 * 1024 * 1024) { showRestoreError('This file is too large to be a Serendib backup.'); return; }
+        if (file.size > SerendibCore.BACKUP_MAX_BYTES) { showRestoreError('This file is too large to be a Serendib backup.'); return; }
         var reader = new FileReader();
         reader.onload = function () {
           var parsed;
@@ -9899,7 +10947,7 @@ var checkSnowball = document.getElementById('check-snowball');
       }
       function openRestoreSheet(data) {
         var diff = SerendibCore.restoreDiff(cards, spaces, data), newCards = diff.newCards, newSpaces = diff.newSpaces;
-        var when = data.exportedAt && !isNaN(new Date(data.exportedAt)) ? new Date(data.exportedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'an unknown date';
+        var when = SerendibCore.backupWhen(data.exportedAt);
         var row = function (label, value) { return '<div class="flex justify-between gap-3 py-2 border-b border-outline-variant/30"><span class="text-[12px] text-secondary">' + label + '</span><span class="text-[12px] font-semibold text-on-surface text-right">' + escapeHtml(value) + '</span></div>'; };
         var html = '<p class="text-[13px] text-on-surface mb-3">Backup from <strong>' + escapeHtml(when) + '</strong></p>' +
           row('In the backup', countsText(data.cards, data.spaces)) + row('In the app now', countsText(cards, spaces)) +
@@ -9908,7 +10956,7 @@ var checkSnowball = document.getElementById('check-snowball');
           '<span><span class="block text-[13px] font-semibold text-on-surface">Replace everything</span><span class="block text-[11px] text-secondary mt-0.5">Your current cards and spaces are swapped for the backup\u2019s.</span></span></label>' +
           '<label class="flex items-start gap-3 rounded-xl border border-outline-variant/60 p-3 cursor-pointer"><input type="radio" name="restore-mode" value="merge" class="mt-0.5 w-5 h-5 accent-emerald-600 shrink-0"' + (newCards.length || newSpaces.length ? '' : ' disabled') + '>' +
           '<span><span class="block text-[13px] font-semibold text-on-surface">Add what\u2019s missing</span><span class="block text-[11px] text-secondary mt-0.5">' +
-          (newCards.length || newSpaces.length ? 'Adds ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') + ' you don\u2019t have. Nothing else changes.' : 'Everything in this backup is already here.') + '</span></span></label></div>' +
+          SerendibCore.restoreMergeLine(newCards, newSpaces) + '</span></span></label></div>' +
           '<p id="restore-warn" class="hidden text-[12px] text-error font-semibold mt-3" role="alert"></p>' +
           '<div class="flex gap-3 mt-5"><button type="button" id="restore-cancel" class="' + BTN_SECONDARY + '">Cancel</button><button type="button" id="restore-go" class="' + BTN_PRIMARY + '">Restore</button></div>';
         openSpendSheet('Restore from a backup', html, function (body) {
@@ -9920,7 +10968,7 @@ var checkSnowball = document.getElementById('check-snowball');
             if (mode === 'replace' && !armed) {
               armed = true;
               go.textContent = 'Yes, replace my data';
-              showSheetError('restore-warn', 'This replaces your ' + countsText(cards, spaces) + '. You can undo straight after.');
+              showSheetError('restore-warn', SerendibCore.restoreReplaceWarning(cards, spaces));
               return;
             }
             applyRestore(data, mode, newCards, newSpaces);
@@ -9932,7 +10980,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var list = user ? readSafetyCopies(user.uid) : [];
         var html = list.length ? '<p class="text-[12px] text-secondary -mt-1 mb-3 leading-relaxed">This device keeps its last few copies of your cards and spaces. Pick one to see what\u2019s in it before anything changes.</p>' +
           list.map(function (c, i) {
-            var when = new Date(c.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            var when = SerendibCore.safetyCopyWhen(c.at);
             return '<button type="button" data-copy="' + i + '" class="w-full text-left rounded-xl border border-outline-variant/40 p-3 mb-2 hover:bg-surface-container-low active:scale-[0.99] transition-all">' +
               '<span class="block text-[13px] font-semibold text-on-surface">' + escapeHtml(when) + '</span>' +
               '<span class="block text-[12px] text-secondary mt-0.5">' + escapeHtml(countsText(c.data.cards || [], c.data.spaces || [])) + (c.reason ? ' \u00b7 ' + escapeHtml(c.reason) : '') + '</span></button>';
@@ -9960,7 +11008,7 @@ var checkSnowball = document.getElementById('check-snowball');
         window.renderDashboard();
         closeSpendSheet();
         navigateTo('screen-home', 'btn-nav-home');
-        window.showToast(mode === 'merge' ? 'Added ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') : 'Backup restored', 'percent',
+        window.showToast(SerendibCore.restoreDoneText(mode, newCards, newSpaces), 'percent',
           { actionLabel: 'Undo', onAction: function () {
             setCloudData(before, true);
             saveUserData();
@@ -10186,20 +11234,13 @@ var checkSnowball = document.getElementById('check-snowball');
 
       // Home alerts: budgets gone over this period, and recurring charges due tomorrow
       function renderSpendAlerts() {
-        var today = ymd(new Date()), tomorrow = addDays(today, 1), overs = [], dues = [], count = 0;
-        cards.forEach(function (c) {
-          var b = c.budgets || {};
-          if (Object.keys(b).length) {
-            var s = periodSummary(c, billingPeriod(c, today));
-            Object.keys(b).forEach(function (k) { if (b[k] > 0 && (s.byCat[k] || 0) > b[k]) overs.push({ card: c, cat: k, spent: s.byCat[k], budget: b[k] }); });
-          }
-          activeRecurring(c, today).forEach(function (r) { if (recurringNextDue(r, today) === tomorrow) dues.push({ card: c, item: r }); });
-        });
+        // Over-budget categories and tomorrow's recurring charges come from the shared core
+        var today = ymd(new Date()), count = 0;
+        var alertData = SerendibCore.homeAlertData(cards, today), overs = alertData.overs, dues = alertData.dues;
         var elB = document.getElementById('home-alert-budget');
         if (elB) {
           elB.classList.toggle('hidden', !overs.length);
           if (overs.length) {
-            overs.sort(function (a, b) { return (b.spent - b.budget) - (a.spent - a.budget); });
             var o = overs[0];
             document.getElementById('home-alert-budget-title').textContent = 'Over budget: ' + spendCategory(o.cat).label;
             document.getElementById('home-alert-budget-card').innerHTML = cardChip(o.card);
@@ -10310,66 +11351,25 @@ var checkSnowball = document.getElementById('check-snowball');
           saveTargetBtn.classList.toggle("opacity-50", paidOff);
           saveTargetBtn.classList.toggle("pointer-events-none", paidOff);
         }
-        if (paidOff) {
-          document.getElementById("ps-min-duration").textContent = "Paid off";
-          document.getElementById("ps-min-interest").textContent = fmtLKR(0);
-          document.getElementById("ps-plan-duration").textContent = "Paid off";
-          document.getElementById("ps-plan-interest").textContent = fmtLKR(0);
-          document.getElementById("ps-payment-display").textContent = fmtLKR(0) + " / mo";
-          document.getElementById("ps-savings-tag").textContent = "";
-          document.getElementById("ps-impact-headline").textContent = "This card is fully paid off. Nothing to pay this month.";
-          return;
-        }
-        var minPmt = minPaymentFor(card);
-        var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
-        document.getElementById("ps-min-duration").textContent =
-          !isFinite(minRes.months) ? "Never clears!" : fmtMonths(minRes.months);
-        document.getElementById("ps-min-interest").textContent =
-          !isFinite(minRes.totalInterest) ? "Unending" : fmtLKR(Math.round(minRes.totalInterest));
-        document.getElementById("ps-payment-display").textContent = fmtLKR(payment) + " / mo";
-        var planRes = calcPayoff(balance, payment, cardApr(card));
-        if (!isFinite(planRes.months)) {
-          document.getElementById("ps-plan-duration").textContent = "Too low to pay down";
-          document.getElementById("ps-plan-interest").textContent = "N/A";
-          document.getElementById("ps-savings-tag").textContent = "";
-          document.getElementById("ps-impact-headline").textContent = "This payment is below the monthly interest. Please increase the amount.";
-          return;
-        }
-        var planInt = Math.round(planRes.totalInterest);
-        document.getElementById("ps-plan-duration").textContent = fmtMonths(planRes.months);
-        document.getElementById("ps-plan-interest").textContent = fmtLKR(planInt);
-        if (isFinite(minRes.totalInterest)) {
-          var sav = Math.max(0, Math.round(minRes.totalInterest) - planInt);
-          document.getElementById("ps-savings-tag").textContent = sav > 0 ? "Save " + fmtLKR(sav) : "Optimal!";
-        } else {
-          document.getElementById("ps-savings-tag").textContent = "Save enormously!";
-        }
-        var extra = Math.round(payment - minPmt);
-        var minMo = isFinite(minRes.months) ? minRes.months : 9999;
-        var saved = ((minMo - planRes.months) / 12).toFixed(1);
-        var headline;
-        if (payment >= balance) {
-          headline = "Clear your entire balance this month and save " + fmtLKR(Math.round(isFinite(minRes.totalInterest) ? minRes.totalInterest : 0)) + " in interest!";
-        } else if (extra > 0) {
-          headline = "Pay " + fmtLKR(extra) + " more per month and be debt-free ~" + saved + " years earlier!";
-        } else {
-          headline = "Currently at the bank minimum. Pay extra to cut years of debt.";
-        }
-        document.getElementById("ps-impact-headline").textContent = headline;
+        // Durations, interest, the savings tag and the headline come from the shared core (simulators.js)
+        var sim = SerendibCore.cardPayoffSim(card, payment);
+        document.getElementById("ps-min-duration").textContent = sim.minDuration;
+        document.getElementById("ps-min-interest").textContent = sim.minInterest;
+        document.getElementById("ps-plan-duration").textContent = sim.planDuration;
+        document.getElementById("ps-plan-interest").textContent = sim.planInterest;
+        document.getElementById("ps-payment-display").textContent = sim.payment;
+        document.getElementById("ps-savings-tag").textContent = sim.tag;
+        document.getElementById("ps-impact-headline").textContent = sim.headline;
       }
 
+      // The exact amount of the last preset picked (null once the slider is dragged)
+      var psExact = null;
       function psSetSlider(preset) {
         var c = cards.filter(function (x) { return x.id === activeId; })[0];
         if (!c) return;
-        var minPmt = minPaymentFor(c);
         var sl = document.getElementById("ps-slider");
-        var val;
-        if (preset === "min") val = minPmt;
-        else if (preset === "rec") val = Math.max(minPmt * 3, c.balance * 0.1);
-        else if (preset === "half") val = c.balance * 0.5;
-        else if (preset === "full") val = c.balance;
-        else val = minPmt;
-        val = Math.min(parseFloat(sl.max), Math.max(parseFloat(sl.min), Math.round(val)));
+        var val = SerendibCore.payoffPreset(c, preset);
+        psExact = val;
         sl.value = val;
         if (App._updateSliderFill) App._updateSliderFill(sl);
         runPayoffSim(c, val);
@@ -10380,7 +11380,7 @@ var checkSnowball = document.getElementById('check-snowball');
          if (!c) return;
          var sl = document.getElementById("ps-slider");
          if (!sl) return;
-         SerendibCore.setTargetPayment(c, parseFloat(sl.value));
+         SerendibCore.setTargetPayment(c, psExact !== null ? psExact : parseFloat(sl.value));
          saveCards();
          
          var btn = document.getElementById("btn-save-target");
@@ -10404,18 +11404,15 @@ var checkSnowball = document.getElementById('check-snowball');
         document.getElementById("ca-empty").classList.add("hidden");
         
         var c = cards.filter(function (x) { return x.id === activeId; })[0];
-        var fee = cardFee(c, raw);
+        var sim = SerendibCore.cardAdvanceSim(c, raw); // packages/core/src/simulators.js
 
-        document.getElementById("ca-principal").textContent = fmtLKR(raw, 2);
-        document.getElementById("ca-fee").textContent = fmtLKR(fee, 2);
-        [15, 30, 60].forEach(function (d) {
-          var r = calcCashAdvance(raw, d, c);
-          document.getElementById("ca-" + d).textContent = fmtLKR(r.total, 2);
-          document.getElementById("ca-" + d + "-fee").textContent = "+" + fmtLKR(r.interest + r.advanceFee, 2) + " cost";
+        document.getElementById("ca-principal").textContent = fmtLKR(sim.principal, 2);
+        document.getElementById("ca-fee").textContent = fmtLKR(sim.fee, 2);
+        sim.rows.forEach(function (r) {
+          document.getElementById("ca-" + r.days).textContent = fmtLKR(r.total, 2);
+          document.getElementById("ca-" + r.days + "-fee").textContent = "+" + fmtLKR(r.cost, 2) + " cost";
         });
-        var r60 = calcCashAdvance(raw, 60, c);
-        var effRate = ((r60.total / raw) - 1) * (365 / 60) * 100;
-        document.getElementById("ca-eff-rate").textContent = fmtPct(effRate, 1) + " p.a.";
+        document.getElementById("ca-eff-rate").textContent = sim.effRate;
       }
 
       function setSCTenure(n) {
@@ -10881,14 +11878,14 @@ var checkSnowball = document.getElementById('check-snowball');
               return;
           }
           
-          // Same calculation as the card page's 0% surcharge calculator
-          const sur = calcSurchargeAPR(cashPrice, surchargeRate / 100, months);
-          const hiddenCost = sur.surchargeAmt;
-          const totalOutflow = sur.totalPay;
-          const effectiveApr = sur.apr;
-          
+          // Numbers and wording from the shared core (packages/core/src/simulators.js)
+          const sim = SerendibCore.simulateSurcharge(cashPrice, surchargeRate, months);
+          const hiddenCost = sim.hidden;
+          const totalOutflow = sim.total;
+          const effectiveApr = sim.apr;
+
           const formatLKR = (num) => 'LKR ' + new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(num);
-          
+
           const elHidden = document.getElementById('sim-surcharge-out-hidden');
           if (elHidden) elHidden.textContent = formatLKR(hiddenCost);
           
@@ -10899,14 +11896,10 @@ var checkSnowball = document.getElementById('check-snowball');
           if (elApr) elApr.textContent = effectiveApr.toFixed(1) + '%';
           
           const elSubMid = document.getElementById('sim-surcharge-out-subtext-mid');
-          if (elSubMid) {
-              elSubMid.textContent = `For an LKR ${new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(cashPrice)} item`;
-          }
-          
+          if (elSubMid) elSubMid.textContent = sim.sub;
+
           const elSubBot = document.getElementById('sim-surcharge-out-subtext-bot');
-          if (elSubBot) {
-              elSubBot.textContent = `+${surchargeRate.toFixed(1)}% total cost`;
-          }
+          if (elSubBot) elSubBot.textContent = sim.insight;
       };
 
       function runSimulatorMath() {
@@ -10916,12 +11909,10 @@ var checkSnowball = document.getElementById('check-snowball');
           // Use the selected card's APR (0% plans included); custom scenarios use the CBSL ceiling
           const simSource = document.getElementById('sim-data-source');
           const simOpt = simSource && simSource.value !== 'custom' ? simSource.options[simSource.selectedIndex] : null;
-          const simApr = simOpt && simOpt.dataset.apr !== undefined ? parseFloat(simOpt.dataset.apr) : NaN;
-          const apr = isFinite(simApr) ? simApr : 28.0;
           const simCard = simOpt ? findCard(simOpt.value) : null;
-          const simRule = cardMinRule(simCard);
-          safeSetText('sim-min-apr', apr.toFixed(1) + '%');
-          safeSetText('sim-min-apr-note', !simCard ? 'CBSL Statutory Ceiling' : (simCard.isZeroPercent ? '0% plan rate' : 'This card\u2019s rate'));
+          const simHead = SerendibCore.simulateMinimum(0, simCard);
+          safeSetText('sim-min-apr', simHead.apr.toFixed(1) + '%');
+          safeSetText('sim-min-apr-note', simHead.aprNote);
                     
           if (cleanBalance <= 0) {
               safeSetText('sim-min-time', '--');
@@ -10946,65 +11937,36 @@ var checkSnowball = document.getElementById('check-snowball');
               return;
           }
 
-          const monthlyRate = (apr / 100) / 12;
-          
-          const calcResults = window.calculateCBSLAmortization(cleanBalance, apr, simRule.pct, simRule.floor);
-          if (!calcResults) return;
-
-          const minMonths = calcResults.minMonths;
-          const minTotalInterest = calcResults.minTotalInterest;
-          const fixedMonths = calcResults.fixedMonths;
-          const fixedTotalInterest = calcResults.fixedTotalInterest;
-          const targetFixedPayment = calcResults.targetFixedPayment;
-
-          // --- FORMATTERS ---
+          // Numbers and wording from the shared core (packages/core/src/simulators.js)
+          const sim = SerendibCore.simulateMinimum(cleanBalance, simCard);
+          if (sim.empty) return;
           const fmtLKR = (num) => new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(num);
-          const fmtTime = (m) => {
-              const y = Math.floor(m / 12);
-              const rem = m % 12;
-              if (y === 0) return `${rem} Mo`;
-              if (rem === 0) return `${y} Yr${y > 1 ? 's' : ''}`;
-              return `${y} Yr${y > 1 ? 's' : ''} ${rem} Mo`;
-          };
-
 
           // --- DOM UPDATES ---
           // Update Red Box
-          safeSetText('sim-min-time', minMonths >= 600 ? 'Never clears' : fmtTime(minMonths));
-          safeSetText('sim-min-interest', `Interest: LKR ${fmtLKR(minTotalInterest)}`);
-          
-          if (minMonths > 120) safeSetText('sim-min-warning', "Payoff takes over a decade");
-          else if (minMonths > 60) safeSetText('sim-min-warning', "Heavy compounding interest");
-          else safeSetText('sim-min-warning', "Costly long-term debt");
+          safeSetText('sim-min-time', sim.minTime);
+          safeSetText('sim-min-interest', `Interest: LKR ${fmtLKR(sim.minInterest)}`);
+          safeSetText('sim-min-warning', sim.minWarning);
 
           // Update Green Box
-          safeSetText('sim-fixed-title', `IF PAYING FIXED LKR ${fmtLKR(targetFixedPayment)}`);
-          safeSetText('sim-fixed-time', fmtTime(fixedMonths));
-          
-          const savings = Math.max(0, minTotalInterest - fixedTotalInterest);
-          safeSetText('sim-fixed-save', `Save LKR ${fmtLKR(savings)}`);
-          
-          const speedRatio = (minMonths / fixedMonths).toFixed(1);
-          safeSetText('sim-fixed-insight', `${speedRatio}x faster payoff pace`);
-          
-          // --- VELOCITY BAR ---
-          // Of this month's minimum, the part that goes to interest is the interest the rest then carries
-          const firstMonthPayment = Math.min(cleanBalance, Math.max(cleanBalance * simRule.pct, simRule.floor));
-          const firstMonthInterest = Math.min(firstMonthPayment, (cleanBalance - firstMonthPayment) * monthlyRate);
-          const principalPortion = firstMonthPayment - firstMonthInterest;
-          const interestPortion = firstMonthInterest;
+          safeSetText('sim-fixed-title', sim.fixedTitle);
+          safeSetText('sim-fixed-time', sim.fixedTime);
+          safeSetText('sim-fixed-save', `Save LKR ${fmtLKR(sim.savings)}`);
+          safeSetText('sim-fixed-insight', sim.speed);
 
-          const principalPct = Math.round((principalPortion / firstMonthPayment) * 100);
-          const interestPct = 100 - principalPct;
-          
+          // --- VELOCITY BAR ---
+          const principalPortion = sim.principal;
+          const interestPortion = sim.interest;
+          const principalPct = sim.principalPct;
+          const interestPct = sim.interestPct;
+
           const barPrincipal = document.getElementById('sim-bar-principal');
           const barInterest = document.getElementById('sim-bar-interest');
           if (barPrincipal && barInterest) {
-              // Force reflow for animation if needed, but transition handles it on style change
               barPrincipal.style.width = principalPct + '%';
               barInterest.style.width = interestPct + '%';
           }
-          
+
           safeSetText('sim-text-principal-pct', `${principalPct}% Principal`);
           safeSetText('sim-text-principal-val', `Principal: LKR ${fmtLKR(principalPortion)}`);
           safeSetText('sim-text-interest-val', `Interest: LKR ${fmtLKR(interestPortion)}`);
@@ -11039,42 +12001,53 @@ var checkSnowball = document.getElementById('check-snowball');
               return;
           }
 
-          const rawDays = parseFloat(document.getElementById('sim-adv-input-days')?.value);
-          const days = isFinite(rawDays) && rawDays >= 0 ? Math.round(rawDays) : 30;
-          let result, usedApr;
-          if (!isCustom) {
-              const opt = dataSource.options[dataSource.selectedIndex];
-              const advCard = findCard(opt.value);
-              usedApr = cashAdvanceApr(advCard);
-              result = calcCashAdvance(cleanBalance, days, advCard);
-          } else {
-              // Custom scenario: the user's own fee % (min LKR 500) and APR
-              const customPct = Math.max(0, parseFloat(document.getElementById('sim-adv-input-fee')?.value) || 0);
-              usedApr = parseFloat(document.getElementById('sim-adv-input-apr')?.value) || 28;
-              result = calcCashAdvance(cleanBalance, days, null, {
-                  fee: computeAdvanceFee({ type: 'greater', percent: customPct, fixed: 500 }, cleanBalance),
-                  apr: usedApr
-              });
-          }
-          safeSetText('sim-adv-label-daily', `Daily rate ${(usedApr / 365).toFixed(3)}%`);
-          const feeCost = result.advanceFee;
-          const interestCost = result.interest;
+          // Numbers and wording from the shared core (packages/core/src/simulators.js)
+          const advCard = isCustom ? null : findCard(dataSource.options[dataSource.selectedIndex].value);
+          const sim = SerendibCore.simulateCashAdvance(cleanBalance, document.getElementById('sim-adv-input-days')?.value, advCard, {
+              feePct: document.getElementById('sim-adv-input-fee')?.value,
+              apr: document.getElementById('sim-adv-input-apr')?.value
+          });
+          safeSetText('sim-adv-label-daily', sim.daily);
+          const feeCost = sim.fee;
+          const interestCost = sim.interest;
+          const hiddenCosts = sim.hidden;
+          const totalOwed = sim.total;
 
-          const hiddenCosts = feeCost + interestCost;
-          const totalOwed = cleanBalance + hiddenCosts;
-          
           const fmtLKR = (num) => new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(num);
-          
+
           safeSetText('sim-adv-hidden-costs', `LKR ${fmtLKR(hiddenCosts)}`);
           safeSetText('sim-adv-res-fee', `Fee: LKR ${fmtLKR(feeCost)}`);
           safeSetText('sim-adv-res-interest', `Interest: LKR ${fmtLKR(interestCost)}`);
           
           safeSetText('sim-adv-res-total', `LKR ${fmtLKR(totalOwed)}`);
-          safeSetText('sim-adv-res-sub1', `For an LKR ${fmtLKR(cleanBalance)} withdrawal`);
-          safeSetText('sim-adv-res-sub2', `Settled in ${days} day${days === 1 ? '' : 's'}`);
-          
-          const pctCost = ((hiddenCosts / cleanBalance) * 100).toFixed(1);
-          safeSetText('sim-adv-insight', `+${pctCost}% total cost`);
+          safeSetText('sim-adv-res-sub1', sim.sub1);
+          safeSetText('sim-adv-res-sub2', sim.sub2);
+          safeSetText('sim-adv-insight', sim.insight);
+      }
+
+      // "Adopt Fixed Repayment Plan": the loaded card's monthly goal becomes the simulator's fixed payment
+      function adoptFixedPlan() {
+          var src = document.getElementById('sim-data-source');
+          var card = src && src.value !== 'custom' ? findCard(src.value) : null;
+          if (!card) { window.showToast('Load one of your cards above to adopt this plan.', 'info'); return; }
+          // The balance shown in the simulator (the card's, unless it was edited)
+          var bal = parseFloat(((document.getElementById('sim-input-balance') || {}).value || '0').replace(/[^0-9.]/g, '')) || 0;
+          var sim = SerendibCore.simulateMinimum(bal, card);
+          if (sim.empty) return;
+          SerendibCore.setTargetPayment(card, sim.fixedPayment);
+          saveCards();
+          window.renderDashboard();
+          window.showToast('Monthly goal set: ' + fmtLKR(sim.fixedPayment) + ' on ' + cardName(card) + '. Your plan always pays at least this.', 'calendar', { card: card });
+      }
+      // "Negotiate Cash Discount": copy a message asking for the cash price, with the plan's real cost
+      function copyCashPriceRequest() {
+          var price = parseFloat(((document.getElementById('input-surcharge-price') || {}).value || '0').replace(/[^0-9.]/g, '')) || 0;
+          var fee = parseFloat((document.getElementById('input-surcharge-fee') || {}).value || '0') || 0;
+          var months = parseInt((document.getElementById('input-surcharge-duration') || {}).value || '12', 10) || 12;
+          var text = SerendibCore.cashPriceRequest(price, SerendibCore.simulateSurcharge(price, fee, months));
+          if (!text) { window.showToast('Enter the item\u2019s cash price first.', 'info'); return; }
+          copyText(text).then(function () { window.showToast('Copied. Show it to the shop or paste it into a message.', 'percent'); },
+            function () { window.showToast('Couldn\u2019t copy. Select the text and copy it instead.', 'info'); });
       }
 
       window.switchSimulator = function(targetSimulator) {
@@ -11208,18 +12181,10 @@ renderSpaces();
             incomeInput.value = incomeStr;
           }
 
-          var income = parseFloat(incomeStr);
-          if (isNaN(income)) income = 0;
-
-          var totalMin = 0;
-          cards.forEach(function (c) {
-            if (c.balance > 0) {
-                totalMin += minPaymentFor(c);
-            }
-          });
-
-          var dti = income > 0 ? ((totalMin / income) * 100).toFixed(1) : 0;
-          var dtiVal = parseFloat(dti);
+          // The reading and its bands come from the shared core (packages/core/src/screen-rules.js)
+          var reading = SerendibCore.debtToIncome(cards, incomeStr);
+          var dti = reading.pct;
+          var dtiVal = reading.value;
           var container = document.getElementById("profile-dti-container");
           if (!container) return; // profile screen not in DOM yet
 
@@ -11545,6 +12510,7 @@ renderSpaces();
           el.style.setProperty("--track-fill", pct.toFixed(1) + "%");
         }
         sl.addEventListener("input", function (e) {
+          psExact = null; // dragged: the slider's value is what's saved
           var c = cards.filter(function (x) { return x.id === activeId; })[0];
           if (c) { runPayoffSim(c, parseFloat(e.target.value)); updateSliderFill(e.target); }
         });
@@ -11709,6 +12675,9 @@ renderSpaces();
       };
 
       window.renderDashboard = function() {
+          // The Avalanche card's chip: interest it saves compared with Snowball (packages/core/src/plan.js)
+          var avChip = document.getElementById('avalanche-savings');
+          if (avChip) avChip.textContent = SerendibCore.strategySavings(cards).label;
           if (typeof renderList === 'function') renderList();
           if (typeof renderHomeDashboard === 'function') renderHomeDashboard();
           if (typeof renderCardsOverview === 'function') renderCardsOverview();
@@ -12310,6 +13279,7 @@ renderSpaces();
         openRemedial: function () { if (activeId !== null) openRemedialSheet(activeId); },
         logPlanPayment: function () { if (overviewPlanTarget) openLogSheet({ cardId: overviewPlanTarget.id, type: 'payment', prefill: overviewPlanTarget.amount }); },
         openShare: function () { if (activeId !== null) openShareSheet(activeId); },
+        adoptFixedPlan: adoptFixedPlan, copyCashPriceRequest: copyCashPriceRequest,
         openSpace: openSpaceSheet, openSpacesSummary: openSpacesSummary, openSpaceWithdraw: openSpaceWithdraw, openSpacePay: openSpacePay,
         buildBackup: buildBackup, restoreFile: openRestoreFile,
         logDuePayment: function () { var c = findCard(activeId); if (c) openLogSheet({ cardId: c.id, type: 'payment', prefill: amountDueNow(c) }); }, closeSpendSheet: closeSpendSheet, runRecurring: runRecurring, ledgerCsv: function (id) { var c = findCard(id); return c ? ledgerCsv(c) : ''; },
@@ -12328,155 +13298,8 @@ renderSpaces();
     //  Usage: InfoSheet.open('billing' | 'apr' | 'payoff')
     // ================================================================
     var InfoSheet = (function () {
-      var CONTENT = {
-        spaces_info: {
-          icon: "savings",
-          iconBg: "bg-emerald-50",
-          iconColor: "text-emerald-600",
-          title: "Sinking Funds",
-          subtitle: "Why they matter for debt management",
-          body: [
-            { type: "p", text: "Spaces allow you to ring-fence money ahead of time for upcoming bills or unexpected expenses." },
-            {
-              type: "rule", items: [
-                { icon: "shield", label: "Debt Buffer", value: "Protects you from using credit cards for emergencies", color: "text-emerald-600" },
-                { icon: "account_balance_wallet", label: "Repayment Fund", value: "Accumulate cash to pay off high-interest cards", color: "text-emerald-600" }
-              ]
-            },
-            {
-              type: "highlight", bg: "bg-emerald-50", border: "border-emerald-200", icon: "lightbulb", iconColor: "text-emerald-600",
-              text: "Building sinking funds parallel to your debt payoff helps you permanently break the credit reliance cycle."
-            }
-          ]
-        },
-        billing: {
-          icon: "calendar_month",
-          iconBg: "bg-blue-50",
-          iconColor: "text-blue-600",
-          title: "Billing Cycle",
-          subtitle: "How your monthly statement works",
-          body: [
-            { type: "p", text: "Your billing cycle is a fixed 30\u2013day period after which your bank generates a statement with the total amount owed." },
-            {
-              type: "rule", items: [
-                { icon: "event", label: "Statement date", value: "28th of each month (typical)", color: "text-blue-600" },
-                { icon: "schedule", label: "Payment due", value: "~21 days after statement date", color: "text-amber-600" },
-                { icon: "percent", label: "Grace period", value: "Interest-free if full balance paid by due date", color: "text-primary" }
-              ]
-            },
-            {
-              type: "highlight", bg: "bg-blue-50", border: "border-blue-200", icon: "lightbulb", iconColor: "text-blue-600",
-              text: "Pay your full statement balance by the due date each month to enjoy a completely interest-free credit line."
-            }
-          ]
-        },
-        apr: {
-          icon: "account_balance",
-          iconBg: "bg-amber-50",
-          iconColor: "text-amber-700",
-          title: "28% APR \u2014 CBSL Ceiling Rate",
-          subtitle: "Central Bank of Sri Lanka regulation",
-          body: [
-            { type: "p", text: "The Central Bank of Sri Lanka (CBSL) caps credit card interest at 28% per annum. All Sri Lankan banks must apply this rate or lower." },
-            {
-              type: "rule", items: [
-                { icon: "percent", label: "Annual rate (APR)", value: "28.00%", color: "text-amber-700" },
-                { icon: "calendar_month", label: "Monthly rate", value: "2.333%", color: "text-amber-700" },
-                { icon: "today", label: "Daily rate", value: "0.0767%", color: "text-amber-700" },
-                { icon: "trending_up", label: "Compounding method", value: "Monthly on unpaid balance", color: "text-secondary" }
-              ]
-            },
-            {
-              type: "highlight", bg: "bg-rose-50", border: "border-rose-200", icon: "warning", iconColor: "text-error",
-              text: "Interest is charged on your entire outstanding balance if even Rs. 1 remains unpaid after the due date \u2014 not just the unpaid portion."
-            },
-            { type: "p", text: "Source: CBSL Direction No. 3 of 2021 on Maximum Interest Rates applicable to Credit Cards." }
-          ]
-        },
-        payoff: {
-          icon: "warning",
-          iconBg: "bg-rose-50",
-          iconColor: "text-rose-600",
-          title: "The Minimum Payment Trap",
-          subtitle: "Why paying only the minimum is dangerous",
-          body: [
-            { type: "p", text: "Banks require only 4% of your outstanding balance (minimum Rs. 1,000) as a monthly payment. While this feels affordable, it is designed to keep you in debt longer." },
-            {
-              type: "rule", items: [
-                { icon: "remove_circle", label: "Minimum payment", value: "4% of balance (min Rs. 1,000)", color: "text-error" },
-                { icon: "percent", label: "Interest accrues", value: "28% APR on remaining balance", color: "text-error" },
-                { icon: "hourglass_bottom", label: "Result", value: "Most of your payment covers interest, not principal", color: "text-secondary" }
-              ]
-            },
-            {
-              type: "example",
-              title: "Example: Rs. 100,000 balance",
-              rows: [
-                { label: "Minimum payment/mo", value: "Rs. 4,000", bold: false },
-                { label: "Interest charged/mo", value: "Rs. 2,333", bold: false },
-                { label: "Actual principal paid", value: "Rs. 1,667", bold: false },
-                { label: "Years to pay off", value: "~12 years", bold: true },
-                { label: "Total interest paid", value: "~Rs. 93,000", bold: true }
-              ]
-            },
-            {
-              type: "highlight", bg: "bg-emerald-50", border: "border-emerald-200", icon: "bolt", iconColor: "text-primary",
-              text: "Paying just Rs. 8,000/month (2\u00d7 the minimum) on the same balance would clear it in ~14 months and save over Rs. 75,000 in interest."
-            }
-          ]
-        },
-        apr_profile: {
-          icon: "account_balance",
-          iconBg: "bg-amber-50",
-          iconColor: "text-amber-700",
-          title: "Maximum APR Cap",
-          subtitle: "Central Bank of Sri Lanka regulation",
-          body: [
-            { type: "p", text: "The Central Bank of Sri Lanka (CBSL) enforces a maximum interest rate cap of 28% per annum on all credit card advances under the Monetary Law Act to regulate consumer lending." }
-          ]
-        },
-        strategy_acceleration: {
-          icon: "speed",
-          iconBg: "bg-teal-50",
-          iconColor: "text-teal-600",
-          title: "Target Repayment Pace",
-          subtitle: "Automated Strategy Allocation",
-          body: [
-            { type: "p", text: "This bar tracks your total monthly commitment across all cards. It dynamically scales based on the \"Simulate monthly payment\" values you save for individual cards." },
-            { type: "p", text: "By increasing your target payment above the bank minimums, you aggressively accelerate your debt-free date and minimize compounding interest." }
-          ]
-        },
-        min_pmt_profile: {
-          icon: "warning",
-          iconBg: "bg-rose-50",
-          iconColor: "text-rose-600",
-          title: "Minimum Payment Trap",
-          subtitle: "CBSL Statutory Minimum",
-          body: [
-            { type: "p", text: "CBSL mandates that banks accept a minimum payment of 4% of the balance. While this prevents default and late fees, paying only this amount retroactively voids your grace period and maximizes the compound interest paid to the bank." }
-          ]
-        },
-        crib: {
-          icon: "warning",
-          iconBg: "bg-error-container",
-          iconColor: "text-error",
-          title: "CRIB Default Classification",
-          subtitle: "Central Bank of Sri Lanka",
-          body: [
-            { type: "p", text: "The Central Bank of Sri Lanka (CBSL) classifies credit facilities past due for more than 90 days as Non-Performing Credit Facilities (NPCF). This severely restricts future borrowing across the banking sector." }
-          ]
-        },
-        surcharge_rules: {
-          icon: "gavel",
-          iconBg: "bg-amber-50",
-          iconColor: "text-amber-700",
-          title: "Merchant Surcharge Rules",
-          subtitle: "Visa, Mastercard & CBSL Guidelines",
-          body: [
-            { type: "p", text: "Under standard Visa and Mastercard network rules, merchants are generally prohibited from passing the Merchant Discount Rate (swipe fee) directly to the consumer as a line-item credit card surcharge. Knowing this true cost helps you negotiate better cash prices or identify unfair point-of-sale penalties." }
-          ]
-        }
-      };
+      // Help texts come from the shared core (packages/core/src/help-texts.js)
+      var CONTENT = SerendibCore.HELP_TEXTS;
 
       function buildBody(key) {
         var data = CONTENT[key];
@@ -12725,6 +13548,7 @@ renderSpaces();
     <button type="button" role="menuitem" class="am-item" data-am="backup"><span class="material-symbols-outlined" aria-hidden="true">download</span>Download a backup</button>
     <button type="button" role="menuitem" class="am-item desk-only" data-am="shortcuts"><span class="material-symbols-outlined" aria-hidden="true">keyboard</span>Keyboard shortcuts<span class="am-kbd">?</span></button>
     <button type="button" role="menuitem" class="am-item" data-am="guide"><span class="material-symbols-outlined" aria-hidden="true">explore</span>Replay app guide</button>
+    <button type="button" role="menuitem" class="am-item desk-beta" data-am="desktop"><span class="material-symbols-outlined" aria-hidden="true">desktop_windows</span>Try the new desktop app<span class="am-kbd">Beta</span></button>
     <div class="am-sep"></div>
     <button type="button" role="menuitem" class="am-item am-danger" data-am="reset"><span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span>Reset my card data</button>
     <button type="button" role="menuitem" class="am-item am-danger" data-am="signout"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Sign out</button>
@@ -13637,18 +14461,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     };
 
     /* ── Mainframe / Enterprise Password Rules Validator ── */
-    window.checkPasswordRules = function(password, confirm) {
-        password = password || "";
-        confirm = confirm || "";
-        const len = password.length >= 8;
-        const upper = /[A-Z]/.test(password);
-        const lower = /[a-z]/.test(password);
-        const num = /[0-9]/.test(password);
-        const special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password);
-        const match = password.length > 0 && password === confirm;
-        const isValid = len && upper && lower && num && special && match;
-        return { len, upper, lower, num, special, match, isValid };
-    };
+    window.checkPasswordRules = SerendibCore.checkPasswordRules; // packages/core/src/auth-rules.js
 
     window.updatePasswordRequirementsUI = function() {
         const pwdInput = document.getElementById('signup-password');
@@ -13755,22 +14568,22 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         ]
       };
 
-      var ITEMS = [
-        { key: 'income', label: 'Set your monthly income', hint: 'Sizes your monthly repayment budget', icon: 'payments',
-          done: function (o) { return !!o.incomeSet; }, go: function () { goProfile('profile-income-input', true); } },
-        { key: 'strategy', label: 'Choose a payoff strategy', hint: 'Avalanche or Snowball', icon: 'route',
-          done: function (o) { return !!o.strategyChosen; }, go: function () { goProfile('section-payoff-method', false); } },
-        { key: 'card', label: 'Link your first card', hint: 'Limit and current balance', icon: 'credit_card',
-          done: function (o, st) { return st.cards.length > 0; }, go: function () { goAddCard(); } },
-        { key: 'billing', label: 'Set a billing cycle', hint: 'Turns on due-date alerts', icon: 'event',
-          done: function (o, st) { return st.cards.some(function (c) { return isValidDay(c.statementDay) && isValidDay(c.dueDay); }); },
-          go: function () { goBilling(); } },
-        { key: 'sim', label: 'Try a simulator', hint: 'See what minimum payments really cost', icon: 'calculate',
-          done: function (o) { return !!o.simulatorTried; },
-          go: function () { _suppressTipsOnce = true; window.navigateTo('screen-simulators', 'btn-nav-simulators'); } },
-        { key: 'buffer', label: 'Create an emergency buffer', hint: 'A savings space for surprises', icon: 'savings',
-          done: function (o, st) { return st.spaces.length > 0; }, go: function () { goBuffer(); } }
-      ];
+      // The steps and when each is done come from the shared core (packages/core/src/onboarding.js);
+      // where each step takes you stays here
+      var GO = {
+        income: function () { goProfile('profile-income-input', true); },
+        strategy: function () { goProfile('section-payoff-method', false); },
+        card: function () { goAddCard(); },
+        billing: function () { goBilling(); },
+        sim: function () { _suppressTipsOnce = true; window.navigateTo('screen-simulators', 'btn-nav-simulators'); },
+        buffer: function () { goBuffer(); }
+      };
+      var ITEMS = SerendibCore.CHECKLIST.map(function (it) {
+        return Object.assign({}, it, {
+          done: function (o, st) { return SerendibCore.checklistDone(it.key, o, st.cards, st.spaces); },
+          go: GO[it.key]
+        });
+      });
 
       var SLIDES = 3;
       var _slide = 0;
@@ -13824,20 +14637,12 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       }
 
       // Users who used the app before this onboarding existed skip the welcome and tips
-      function migrate(o) {
-        if (o.version) return false;
-        var d = window.currentUserData || {};
+      function legacyTourDone() {
         var email = window.currentUser && window.currentUser.email ? window.currentUser.email.toLowerCase().trim() : '';
-        var legacyDone = false;
-        try { legacyDone = !!email && localStorage.getItem('stitch_tour_completed_' + email) === 'true'; } catch (e) {}
-        if (d.hasCompletedTour === true || legacyDone || appState().cards.length > 0) {
-          o.welcomeDone = true;
-          o.incomeSet = true;
-          o.strategyChosen = true;
-          Object.keys(TIPS).forEach(function (s) { o.tipsSeen[s] = true; });
-        }
-        o.version = 2;
-        return true;
+        try { return !!email && localStorage.getItem('stitch_tour_completed_' + email) === 'true'; } catch (e) { return false; }
+      }
+      function migrate(o) {
+        return SerendibCore.migrateOnboarding(o, window.currentUserData || {}, appState().cards, legacyTourDone());
       }
 
       /* ── Entry point after sign-in; safe to call more than once ── */
@@ -13916,16 +14721,15 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         var o = state();
         if (!o) { closeWelcome(); return; }
         var incEl = el('ob-income');
-        var raw = incEl ? incEl.value.trim() : '';
-        if (raw !== '') {
-          var inc = parseFloat(raw);
-          if (isNaN(inc) || inc <= 0) {
-            var err = el('ob-error');
-            if (err) { err.textContent = 'Enter your monthly income in LKR, or leave it blank to add it later.'; err.classList.remove('hidden'); }
-            if (incEl) incEl.focus();
-            return;
-          }
-          var val = String(Math.round(inc));
+        var check = SerendibCore.welcomeIncome(incEl ? incEl.value : '');
+        if (check.error) {
+          var err = el('ob-error');
+          if (err) { err.textContent = check.error; err.classList.remove('hidden'); }
+          if (incEl) incEl.focus();
+          return;
+        }
+        if (check.income !== '') {
+          var val = check.income;
           // saveUserData reads income from the Profile field, so write it there first
           var pin = el('profile-income-input');
           if (pin) pin.value = val;
@@ -14048,7 +14852,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         o.checklistDismissed = true;
         persist();
         renderChecklist();
-        if (typeof window.showToast === 'function') window.showToast('Checklist hidden. You can replay the guide from Profile.', 'info');
+        if (typeof window.showToast === 'function') window.showToast(SerendibCore.CHECKLIST_HIDDEN_TOAST, 'info');
       }
 
       /* ── 3. First-visit spotlight tips ── */
@@ -14258,12 +15062,8 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       function replay() {
         var o = state();
         if (!o) return;
-        migrate(o);
-        // Explicit false (not {}): Firestore merge writes would keep old true values otherwise
-        Object.keys(TIPS).forEach(function (s) { o.tipsSeen[s] = false; });
         var st = appState();
-        var allDone = ITEMS.every(function (it) { return it.done(o, st); });
-        if (!allDone) { o.checklistDismissed = false; o.checklistCompleted = false; }
+        SerendibCore.replayOnboarding(o, st.cards, st.spaces, legacyTourDone(), window.currentUserData || {});
         persist();
         renderChecklist();
         openWelcome();
@@ -14345,34 +15145,8 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     })();
 
     /* ── Auth helpers: friendly errors, busy buttons, session length ── */
-    function authErrorMessage(err, providerName) {
-      var name = providerName || "This";
-      switch ((err && err.code) || "") {
-        case "auth/invalid-credential":
-        case "auth/invalid-login-credentials":
-        case "auth/wrong-password":
-        case "auth/user-not-found":
-          return "Incorrect email or password.";
-        case "auth/invalid-email": return "Enter a valid email address.";
-        case "auth/missing-password": return "Enter your password.";
-        case "auth/email-already-in-use": return "This email already has an account. Log in instead.";
-        case "auth/weak-password":
-        case "auth/password-does-not-meet-requirements":
-          return "Choose a stronger password that meets the requirements below.";
-        case "auth/too-many-requests": return "Too many attempts. Wait a few minutes and try again.";
-        case "auth/network-request-failed": return "Can't reach the server. Check your connection and try again.";
-        case "auth/user-disabled": return "This account has been disabled.";
-        case "auth/operation-not-allowed":
-        case "auth/configuration-not-found":
-        case "auth/invalid-oauth-provider":
-          return name + " sign-in isn't available yet. Use Google or email instead.";
-        case "auth/account-exists-with-different-credential":
-          return "This email already has an account. Log in with the method you used before.";
-        case "auth/unauthorized-domain": return "Sign-in isn't allowed from this web address.";
-        case "auth/popup-blocked": return "Your browser blocked the sign-in window. Allow pop-ups and try again.";
-        default: return "Something went wrong. Please try again.";
-      }
-    }
+    // Messages come from the shared core (packages/core/src/auth-rules.js)
+    function authErrorMessage(err, providerName) { return SerendibCore.authErrorMessage(err, providerName); }
 
     function visibleAuthView() {
       var signup = document.getElementById("view-signup");
@@ -14503,15 +15277,9 @@ This action cannot be undone. The spending history, recurring payments, budgets 
 
       const rules = window.checkPasswordRules(password, confirm);
       if (!rules.isValid) {
-          const missing = [];
-          if (!rules.len) missing.push("at least 8 characters");
-          if (!rules.upper) missing.push("an uppercase letter");
-          if (!rules.lower) missing.push("a lowercase letter");
-          if (!rules.num) missing.push("a number");
-          if (!rules.special) missing.push("a symbol");
           const box = document.getElementById('pwd-requirements-box');
           if (box) box.classList.remove('hidden');
-          showAuthError('signup', "Your password needs " + missing.join(", ") + ".");
+          showAuthError('signup', SerendibCore.passwordNeedsText(rules));
           const pwdInput = document.getElementById('signup-password');
           if (pwdInput) pwdInput.focus();
           return;
@@ -14567,15 +15335,10 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     };
 
     /* ── Email verification (soft) and account details ── */
-    var PROVIDER_LABELS = { 'password': 'Email & password', 'google.com': 'Google', 'apple.com': 'Apple', 'twitter.com': 'X' };
-    function primaryProvider(u) {
-      var ids = ((u && u.providerData) || []).map(function (pd) { return pd.providerId; });
-      if (ids.indexOf('password') !== -1) return 'password';
-      return ids[0] || 'password';
-    }
-    function needsEmailVerification(u) {
-      return !!(u && !u.emailVerified && primaryProvider(u) === 'password');
-    }
+    // Sign-in method labels and who needs to verify come from the shared core (packages/core/src/auth-rules.js)
+    var PROVIDER_LABELS = SerendibCore.PROVIDER_LABELS;
+    function primaryProvider(u) { return SerendibCore.primaryProvider(u); }
+    function needsEmailVerification(u) { return SerendibCore.needsEmailVerification(u); }
     window.renderAuthStatus = function () {
       var u = auth.currentUser;
       var needsVerify = needsEmailVerification(u);
@@ -14729,14 +15492,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         window.closeDeleteAccountModal();
         if (typeof window.showToast === 'function') window.showToast('Your account has been deleted.', 'info');
       } catch (e) {
-        var code = e && e.code;
-        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-          fail('Confirm with ' + (PROVIDER_LABELS[prov] || 'your sign-in method') + ' to delete your account.');
-        } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') {
-          fail('Incorrect password.');
-        } else {
-          fail(authErrorMessage(e));
-        }
+        fail(SerendibCore.deleteAccountError(e, prov));
         // The account still exists, so let saves resume
         if (auth.currentUser && typeof App !== 'undefined' && App.setCloudReady) App.setCloudReady(true);
       } finally {
@@ -15056,6 +15812,10 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         else if (act === 'reset') { var r = document.getElementById('btn-reset-data'); if (r) r.click(); }
         else if (act === 'shortcuts') document.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
         else if (act === 'guide') { if (window.Onboarding) window.Onboarding.replay(); }
+        else if (act === 'desktop') {
+          try { localStorage.setItem('serendib_desktop_beta', 'on'); } catch (e) {}
+          location.assign('/desktop/');
+        }
         else if (act === 'signout') { if (typeof window.signOutUser === 'function') window.signOutUser(); }
       }
       document.addEventListener('DOMContentLoaded', function () {

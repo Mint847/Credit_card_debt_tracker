@@ -33,3 +33,5 @@ __pycache__/
 node_modules/
 packages/*/dist/
 apps/*/dist/
+# Built desktop app (npm run build:desktop; rebuilt before every deploy)
+stitch_fintech_credit_debt_manager/desktop/

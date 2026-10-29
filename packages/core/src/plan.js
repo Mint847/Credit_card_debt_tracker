@@ -1,6 +1,6 @@
 // The home screen's payoff plan: how long the monthly budget takes to clear every card, and the
 // interest it saves compared with paying only minimums. Moved from renderHomeDashboard in index.html.
-import { calculateCBSLAmortization, cardMinRule, cardApr, minPaymentFor } from './domain.js';
+import { calculateCBSLAmortization, cardMinRule, cardApr, minPaymentFor, computeMonthlyBudget, fmtLKR } from './domain.js';
 
 // Returns { baselineMonths, baselineInterest, months, interest, curve }.
 //   Baseline: each card on its own minimum rule (Infinity when one never clears).
@@ -66,4 +66,16 @@ export function projectPlan(cards, strategy, budget) {
   }
   if (months >= safetyLimit) months = Infinity;
   return { baselineMonths: baselineMonths, baselineInterest: baselineInterest, months: months, interest: interest, curve: curve };
+}
+
+// The Avalanche card's chip: how much interest Avalanche saves compared with Snowball on your
+// cards (the same month-by-month plan as the home screen). Rounded to the nearest LKR 100.
+export function strategySavings(cards) {
+  var active = cards.filter(function (c) { return c.balance > 0; });
+  if (!active.length) return { amount: 0, label: 'Saves the most interest' };
+  var budget = computeMonthlyBudget(cards);
+  var av = projectPlan(cards, 'avalanche', budget), sn = projectPlan(cards, 'snowball', budget);
+  if (av.months === Infinity || sn.months === Infinity) return { amount: 0, label: 'Saves the most interest' };
+  var saved = Math.round(Math.max(0, sn.interest - av.interest) / 100) * 100;
+  return saved > 0 ? { amount: saved, label: 'Save ~' + fmtLKR(saved) } : { amount: 0, label: 'Same as Snowball' };
 }

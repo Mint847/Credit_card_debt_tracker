@@ -69,9 +69,9 @@ export function Tip({ label, children, side = 'top' }: { label: ReactNode; child
   );
 }
 
-export function Panel({ title, action, children, className = '', bodyClass = 'px-5 pb-5' }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClass?: string }) {
+export function Panel({ title, action, children, className = '', bodyClass = 'px-5 pb-5', tip }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClass?: string; tip?: string }) {
   return (
-    <section className={'panel ' + className}>
+    <section className={'panel ' + className} data-tip={tip}>
       {(title || action) && (
         <div className="panel-head">
           <h2 className="panel-title">{title}</h2>

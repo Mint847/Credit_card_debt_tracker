@@ -1,7 +1,7 @@
 // Spending ledger actions: log, edit, delete and undo entries, and payments made from a space.
 // Moved from the App closure in index.html (Phase 1). These only change data and report back;
 // each UI shows its own messages, toasts and sheets.
-import { uid, ymd, isRealYmd, applyLedgerEffect, billingPeriod, periodSummary, spendCategory, ensureSpaceHistory, fmtLKR } from './domain.js';
+import { uid, ymd, isRealYmd, applyLedgerEffect, billingPeriod, periodSummary, spendCategory, ensureSpaceHistory, fmtLKR, suggestNorm, parseBankSms } from './domain.js';
 
 function fmtAmt(n) { return fmtLKR(n, Math.round(n * 100) % 100 ? 2 : 0); }
 
@@ -162,4 +162,83 @@ export function saveEntry(card, spaces, input) {
     }
   }
   return { entry: entry, editing: !!input.editingId, warn: warn, merchant: merchant };
+}
+
+/* The log sheet's helpers (shared so both apps suggest and warn the same way) */
+// Merchants from your history, newest first, this card's first; recurring charges and payments left out
+export function merchantItems(cards, cardId) {
+  var seen = {}, items = [];
+  var ordered = cards.slice().sort(function (a, b) { return (String(b.id) === String(cardId)) - (String(a.id) === String(cardId)); });
+  ordered.forEach(function (c) {
+    sortedLedger(c).forEach(function (e) {
+      if (!e.merchant || e.type === 'payment' || e.source === 'recurring') return;
+      var k = suggestNorm(e.merchant);
+      if (!k || seen[k]) return;
+      seen[k] = true;
+      items.push({ label: e.merchant, hint: spendCategory(e.category).label, category: e.category });
+    });
+  });
+  return items;
+}
+// The category of the last purchase you logged (Groceries when there's none)
+export function defaultCategory(cards) {
+  var last = null;
+  cards.forEach(function (c) {
+    (c.ledger || []).forEach(function (e) {
+      if (e.type === 'purchase' && e.source !== 'recurring' && e.category && (!last || (e.createdAt || 0) > (last.createdAt || 0))) last = e;
+    });
+  });
+  return last ? last.category : 'groceries';
+}
+// A merchant you've used before brings its category with it (or null)
+export function categoryForMerchant(cards, cardId, name) {
+  var k = suggestNorm(name);
+  var hit = merchantItems(cards, cardId).filter(function (m) { return suggestNorm(m.label) === k; })[0];
+  return hit && hit.category ? hit.category : null;
+}
+// Shown while typing a purchase that would take the card over its limit
+export function overLimitWarning(card, type, amount, editing) {
+  if (!(card && card.limit > 0 && type === 'purchase' && amount > 0)) return '';
+  var base = (Number(card.balance) || 0) - (editing ? (Number(editing.applied) || 0) : 0);
+  return base + amount > card.limit ? 'This takes the card over its ' + fmtAmt(card.limit) + ' limit.' : '';
+}
+// Payment shortcuts: due now, this month's plan, the full balance (duplicates and zeros left out)
+export function paymentShortcuts(card, dueNow, plan) {
+  if (!card || !(card.balance > 0)) return [];
+  var seen = {};
+  return [['Due now', dueNow], ['Plan', plan], ['Full balance', card.balance]].filter(function (x) {
+    var v = Math.round(x[1] * 100) / 100;
+    if (!(v > 0) || seen[v]) return false;
+    seen[v] = true;
+    return true;
+  }).map(function (x) { return { label: x[0], value: Math.round(x[1] * 100) / 100 }; });
+}
+export var LOG_CARD_KEY = 'serendib_last_log_card';
+
+// Reading a pasted bank SMS into the log form. Returns what to fill and the status line under the box
+// (tone 'ok' | 'warn' | 'hint'). type is always set; amount/merchant/date/cardId only when read.
+export var SMS_HINT = 'We only read it to fill the form. Nothing is saved until you tap Save.';
+export function smsFill(text, cards, todayStr) {
+  if (!String(text || '').trim()) return { empty: true, fromSms: false, status: { text: SMS_HINT, tone: 'hint' } };
+  var r = parseBankSms(text, todayStr), filled = [], note = '', out = { type: r.type, clearAmount: false };
+  if (r.amount) { out.amount = r.amount; filled.push('amount'); }
+  else if (r.foreign) out.clearAmount = true;
+  if (r.merchant) { out.merchant = r.merchant; filled.push('merchant'); }
+  if (r.date) { out.date = r.date; filled.push('date'); }
+  if (r.last4) {
+    var match = cards.filter(function (c) { return c.last4 === r.last4; })[0];
+    if (match) { out.cardId = match.id; filled.push('card'); }
+    else note = ' This SMS is for a card ending ' + r.last4 + '. Add those digits in Edit Card to match it next time.';
+  }
+  out.fromSms = filled.length > 0;
+  out.status = r.foreign ? { text: 'This SMS is in ' + r.foreign + '. Enter the LKR amount from your statement.' + note, tone: 'warn' }
+    : filled.length ? { text: 'Filled ' + filled.join(', ') + '. Check the details, then tap Save.' + note, tone: 'ok' }
+    : { text: 'We couldn\u2019t read this SMS. Please fill in the details below.', tone: 'warn' };
+  return out;
+}
+// The toast after saving an entry
+export function logSavedText(type, amount, merchant, editing, warn) {
+  var what = type === 'payment' ? 'Payment of ' + fmtAmt(amount) + ' logged' : type === 'refund' ? 'Refund of ' + fmtAmt(amount) + ' logged'
+    : type === 'adjustment' ? 'Adjustment saved' : 'Logged ' + fmtAmt(amount) + (merchant ? ' at ' + merchant : '');
+  return (editing ? 'Entry updated' : what) + (warn ? '. ' + warn : '');
 }

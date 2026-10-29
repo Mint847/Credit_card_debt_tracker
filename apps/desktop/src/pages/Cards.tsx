@@ -6,8 +6,9 @@ import { daysBetween, isValidDay } from '@serendib/core';
 import { useApp } from '../lib/store';
 import { amountDueNow, cardApr, cardCycle, cardName, cardPayoff, cardTheme, minPaymentFor, today, util } from '../lib/derive';
 import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
-import { CardTile, Chip, Icon, Tip, UtilBar, type Tone } from '../components/ui';
+import { CardTile, Chip, Icon, UtilBar, type Tone } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
+import { useCardDialogs } from '../components/CardDialogs';
 import type { Card } from '../lib/types';
 
 interface Row {
@@ -45,6 +46,7 @@ export function Cards() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(app.cards[0]?.id || null);
+  const openDialog = useCardDialogs();
 
   const rows = useMemo<Row[]>(() => app.cards.map((c) => {
     const s = statusOf(c);
@@ -118,11 +120,11 @@ export function Cards() {
               <Icon name="filter_list" size={18} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
               <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter cards" className="field w-56 pl-9" />
             </div>
-            <Tip label="Add card (built in Phase 3)"><button type="button" className="btn-primary"><Icon name="add" size={18} />Add card</button></Tip>
+            <button type="button" className="btn-primary" data-tip="add-card" onClick={() => openDialog({ kind: 'add' })}><Icon name="add" size={18} />Add card</button>
           </div>
         </div>
 
-        <div className="panel overflow-x-auto">
+        <div className="panel overflow-x-auto" data-tip="cards-table">
           <table className="w-full whitespace-nowrap text-[13px]">
             <thead>
               {table.getHeaderGroups().map((hg) => (

@@ -1,22 +1,24 @@
 // One card's workspace: header with the card and its numbers, then Overview, Activity, Recurring,
 // Budgets, Calculators and Billing & statements as tabs
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
-import { createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type SortingState } from '@tanstack/react-table';
 import {
-  SPEND_CATEGORIES, spendCategory, entryLabel, sortedLedger, activeRecurring, monthlyRecurringTotal, recurringNextDue, isCancelled,
-  calcCashAdvance, calcSurchargeAPR, cardFee, cashAdvanceApr, cardMinRule, daysBetween
+  SPEND_CATEGORIES, spendCategory, activeRecurring, monthlyRecurringTotal, recurringNextDue, isCancelled,
+  calcSurchargeAPR, cardFee, cashAdvanceApr, cardMinRule, daysBetween, payoffStart, payoffPreset, cardPayoffSim, cardAdvanceSim,
+  CARD_SURCHARGE_TENURES, fmtLKR, fmtPct
 } from '@serendib/core';
-import { useApp, deleteEntry, togglePaused } from '../lib/store';
-import { amountDueNow, cardApr, cardCycle, cardName, cardPayoff, cardPeriod, minPaymentFor, today, util } from '../lib/derive';
+import { useApp, togglePaused, saveTarget } from '../lib/store';
+import { useCardDialogs } from '../components/CardDialogs';
+import { ActivityTable } from '../components/ActivityTable';
+import { amountDueNow, cardApr, cardCycle, cardPayoff, cardPeriod, minPaymentFor, today, util } from '../lib/derive';
 import { fmtAmt, fmtShort, longDate, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
-import { Chip, Empty, Icon, Panel, Segmented, Tip, UtilBar, useToast } from '../components/ui';
+import { Chip, Empty, Icon, Panel, UtilBar, useToast } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { CardFace } from './Cards';
-import type { Card, Entry, Recurring } from '../lib/types';
+import type { Card, Recurring } from '../lib/types';
 
 const TABS = [
   { value: 'overview', label: 'Overview' },
@@ -39,18 +41,18 @@ export function CardWorkspace() {
     <div className="mx-auto max-w-[1440px] px-8 py-7">
       <Header card={card} />
       <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} className="mt-6">
-        <Tabs.List className="flex gap-1 border-b border-line" aria-label="Card sections">
+        <Tabs.List className="flex gap-1 border-b border-line" aria-label="Card sections" data-tip="card-tabs">
           {TABS.map((t) => (
             <Tabs.Trigger key={t.value} value={t.value}
               className="-mb-px border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] font-semibold text-faint transition-colors hover:text-ink data-[state=active]:border-brand data-[state=active]:text-ink">
               {t.label}
-              {t.value === 'activity' && <span className="num ml-1.5 text-[11px] font-medium text-faint">{card.ledger.length}</span>}
+              {t.value === 'activity' && <span className="num ml-1.5 text-[11px] font-medium text-faint">{(card.ledger || []).length}</span>}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
         <div className="pt-5">
           <Tabs.Content value="overview"><OverviewTab card={card} /></Tabs.Content>
-          <Tabs.Content value="activity"><ActivityTab card={card} focusSearch={params.get('search') === '1'} /></Tabs.Content>
+          <Tabs.Content value="activity"><ActivityTable cards={[card]} single focusSearch={params.get('search') === '1'} /></Tabs.Content>
           <Tabs.Content value="recurring"><RecurringTab card={card} /></Tabs.Content>
           <Tabs.Content value="budgets"><BudgetsTab card={card} /></Tabs.Content>
           <Tabs.Content value="calculators"><CalculatorsTab card={card} /></Tabs.Content>
@@ -65,6 +67,7 @@ export function CardWorkspace() {
 function Header({ card }: { card: Card }) {
   const p = usePlan();
   const { openLog } = useWorkspace();
+  const openDialog = useCardDialogs();
   const u = util(card);
   const st = cardCycle(card);
   const due = amountDueNow(card);
@@ -82,23 +85,29 @@ function Header({ card }: { card: Card }) {
               {card.statementDay && <Chip icon="description">Statement day {card.statementDay}</Chip>}
               {card.dueDay && <Chip icon="event">Due day {card.dueDay}</Chip>}
               {rank === 0 && <Chip tone="info" icon="flag">Pay first</Chip>}
-              {st?.overdue && <Chip tone="danger" icon="error">Overdue {st.overdue.days} days</Chip>}
+              {st?.overdue && (
+                <button type="button" onClick={() => openDialog({ kind: 'catchup', cardId: card.id })} className="inline-flex items-center gap-1.5">
+                  <Chip tone="danger" icon="error">Overdue {st.overdue.days} days</Chip>
+                  <span className="text-[12px] font-semibold text-danger hover:underline">Catch up</span>
+                </button>
+              )}
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <button type="button" className="btn-outline" onClick={() => openLog({ type: 'purchase', cardId: card.id })}><Icon name="shopping_bag" size={18} />Log spend</button>
+            <button type="button" className="btn-outline" data-tip="card-log" onClick={() => openLog({ type: 'purchase', cardId: card.id })}><Icon name="shopping_bag" size={18} />Log spend</button>
             <button type="button" className="btn-primary" onClick={() => openLog({ type: 'payment', cardId: card.id, prefill: due || undefined })}><Icon name="payments" size={18} />Log payment</button>
             <Dropdown.Root>
-              <Dropdown.Trigger className="btn-outline w-9 justify-center px-0" aria-label="More actions"><Icon name="more_horiz" /></Dropdown.Trigger>
+              <Dropdown.Trigger className="btn-outline w-9 justify-center px-0" aria-label="More actions" data-tip="card-menu"><Icon name="more_horiz" /></Dropdown.Trigger>
               <Dropdown.Portal>
                 <Dropdown.Content align="end" sideOffset={6} className="z-50 w-56 rounded-xl border border-line bg-panel p-1.5 shadow-pop">
-                  {[
-                    ['edit', 'Edit card'], ['event_repeat', 'Billing cycle'], ['fact_check', 'Match my statement'], ['ios_share', 'Share progress'],
-                    ['done_all', 'Clear balance'], ['delete', 'Delete card']
-                  ].map(([icon, label]) => (
-                    <Dropdown.Item key={label} className={'flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none data-[highlighted]:bg-sunken ' + (icon === 'delete' ? 'text-danger' : '')}>
+                  {([
+                    ['edit', 'Edit card', 'edit'], ['event_repeat', 'Billing cycle', 'billing'], ['fact_check', 'Match my statement', 'match'],
+                    ['savings', 'Category budgets', 'budgets'], ['ios_share', 'Share progress', 'share'],
+                    ...(card.balance > 0 ? [['done_all', 'Clear balance', 'settle']] : []), ['delete', 'Delete card', 'delete']
+                  ] as [string, string, 'edit' | 'billing' | 'match' | 'budgets' | 'share' | 'settle' | 'delete'][]).map(([icon, label, kind]) => (
+                    <Dropdown.Item key={label} onSelect={() => openDialog({ kind, cardId: card.id })}
+                      className={'flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none data-[highlighted]:bg-sunken ' + (icon === 'delete' ? 'text-danger' : '')}>
                       <Icon name={icon} size={18} className={icon === 'delete' ? '' : 'text-faint'} />{label}
-                      <span className="ml-auto text-[10px] text-faint">Phase 3</span>
                     </Dropdown.Item>
                   ))}
                 </Dropdown.Content>
@@ -221,143 +230,17 @@ function OverviewTab({ card }: { card: Card }) {
   );
 }
 
-const ecol = createColumnHelper<Entry>();
-type TypeFilter = 'all' | 'purchase' | 'payment' | 'refund' | 'adjustment';
-
-function ActivityTab({ card, focusSearch }: { card: Card; focusSearch: boolean }) {
-  const { openLog } = useWorkspace();
-  const toast = useToast();
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }]);
-  const [q, setQ] = useState('');
-  const [type, setType] = useState<TypeFilter>('all');
-  const [cat, setCat] = useState('all');
-  const search = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (focusSearch) search.current?.focus(); }, [focusSearch]);
-
-  const data = useMemo(() => sortedLedger(card).filter((e: Entry) =>
-    (type === 'all' || e.type === type) && (cat === 'all' || e.category === cat) &&
-    (!q || (entryLabel(e) + ' ' + (e.note || '') + ' ' + e.amount).toLowerCase().includes(q.toLowerCase()))
-  ), [card, card.ledger.length, card.balance, type, cat, q]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const columns = useMemo(() => [
-    ecol.accessor('date', { header: 'Date', cell: (i) => <span className="num text-faint">{shortDate(i.getValue())}</span> }),
-    ecol.accessor((e) => entryLabel(e), {
-      id: 'desc', header: 'Description',
-      cell: (i) => (
-        <span className="flex items-center gap-2">
-          <span className="font-medium">{i.getValue()}</span>
-          {i.row.original.source === 'sms' && <Chip>SMS</Chip>}
-          {i.row.original.source === 'recurring' && <Chip icon="autorenew">Recurring</Chip>}
-          {i.row.original.note && <span className="truncate text-[12px] text-faint">{i.row.original.note}</span>}
-        </span>
-      )
-    }),
-    ecol.accessor((e) => e.category || '', {
-      id: 'category', header: 'Category',
-      cell: (i) => i.getValue()
-        ? <span className="flex items-center gap-1.5 text-muted"><span className="h-2 w-2 rounded-sm" style={{ background: categoryHex(i.getValue()) }} />{spendCategory(i.getValue()).label}</span>
-        : <span className="capitalize text-faint">{i.row.original.type}</span>
-    }),
-    ecol.accessor((e) => (e.type === 'purchase' ? 1 : e.type === 'adjustment' ? Math.sign(e.amount) : -1) * Math.abs(e.amount), {
-      id: 'amount', header: 'Amount', meta: { right: true },
-      cell: (i) => {
-        const v = i.getValue() as number;
-        return <span className={'num font-semibold ' + (v < 0 ? 'text-ok' : '')}>{v < 0 ? '−' : ''}{fmtAmt(Math.abs(v))}</span>;
-      }
-    }),
-    ecol.display({
-      id: 'actions', header: '',
-      cell: (i) => (
-        <span className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          <Tip label="Edit"><button type="button" className="btn-ghost h-7 w-7 justify-center px-0" aria-label="Edit entry"
-            onClick={(ev) => { ev.stopPropagation(); openLog({ editing: { id: i.row.original.id, cardId: card.id } }); }}><Icon name="edit" size={16} /></button></Tip>
-          <Tip label="Delete"><button type="button" className="btn-ghost h-7 w-7 justify-center px-0 hover:text-danger" aria-label="Delete entry"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              const undo = deleteEntry(card.id, i.row.original.id);
-              if (undo) toast('Entry deleted. The balance was updated.', { action: { label: 'Undo', run: undo } });
-            }}><Icon name="delete" size={16} /></button></Tip>
-        </span>
-      )
-    })
-  ], [card.id, openLog, toast]);
-
-  const table = useReactTable({ data, columns, state: { sorting }, onSortingChange: setSorting, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getFilteredRowModel: getFilteredRowModel() });
-
-  function exportCsv() {
-    const rows = [['Date', 'Type', 'Description', 'Category', 'Amount (LKR)', 'Note']].concat(
-      data.map((e: Entry) => [e.date, e.type, entryLabel(e), e.category ? spendCategory(e.category).label : '', String(e.amount), e.note || '']));
-    const csv = rows.map((r) => r.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = cardName(card).trim().replace(/\s+/g, '-') + '-history.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  return (
-    <div className="panel overflow-hidden">
-      <div className="flex items-center gap-3 border-b border-line px-4 py-3">
-        <div className="relative w-72">
-          <Icon name="search" size={18} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
-          <input ref={search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this card’s history" className="field pl-9" />
-        </div>
-        <Segmented size="sm" value={type} onChange={setType}
-          options={[{ value: 'all', label: 'All' }, { value: 'purchase', label: 'Spending' }, { value: 'payment', label: 'Payments' }, { value: 'refund', label: 'Refunds' }, { value: 'adjustment', label: 'Adjustments' }]} />
-        <select value={cat} onChange={(e) => setCat(e.target.value)} className="field w-44">
-          <option value="all">All categories</option>
-          {SPEND_CATEGORIES.map((c: { key: string; label: string }) => <option key={c.key} value={c.key}>{c.label}</option>)}
-        </select>
-        <span className="ml-auto text-[12px] text-faint">{data.length} entries</span>
-        <button type="button" className="btn-outline h-8" onClick={exportCsv}><Icon name="download" size={16} />CSV</button>
-      </div>
-      {data.length === 0 ? <Empty icon="receipt_long" title="No entries match" body="Try a different search or filter." /> : (
-        <table className="w-full text-[13px]">
-          <thead>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className="border-b border-line bg-sunken/60">
-                {hg.headers.map((h) => {
-                  const right = (h.column.columnDef.meta as { right?: boolean } | undefined)?.right;
-                  const sorted = h.column.getIsSorted();
-                  return (
-                    <th key={h.id} className={'px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-faint ' + (right ? 'text-right' : 'text-left')}>
-                      {h.column.getCanSort() && h.id !== 'actions' ? (
-                        <button type="button" onClick={h.column.getToggleSortingHandler()} className={'inline-flex items-center gap-1 hover:text-ink ' + (sorted ? 'text-ink' : '')}>
-                          {flexRender(h.column.columnDef.header, h.getContext())}
-                          {sorted && <Icon name={sorted === 'asc' ? 'arrow_upward' : 'arrow_downward'} size={14} />}
-                        </button>
-                      ) : flexRender(h.column.columnDef.header, h.getContext())}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((r) => (
-              <tr key={r.id} className="group cursor-pointer border-b border-line last:border-0 hover:bg-sunken" onClick={() => openLog({ editing: { id: r.original.id, cardId: card.id } })}>
-                {r.getVisibleCells().map((cell) => {
-                  const right = (cell.column.columnDef.meta as { right?: boolean } | undefined)?.right;
-                  return <td key={cell.id} className={'px-4 py-2.5 ' + (right ? 'text-right' : '') + (cell.column.id === 'actions' ? ' w-20' : '')}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>;
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
-
 function RecurringTab({ card }: { card: Card }) {
   const t = today();
+  const openDialog = useCardDialogs();
+  const toast = useToast();
   const items = card.recurring || [];
   return (
     <div className="grid grid-cols-3 gap-5">
       <div className="panel col-span-2 overflow-hidden">
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <p className="panel-title">Recurring payments</p>
-          <Tip label="Built in Phase 3"><button type="button" className="btn-outline h-8"><Icon name="add" size={16} />Add recurring</button></Tip>
+          <button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'recurring', cardId: card.id })}><Icon name="add" size={16} />Add recurring</button>
         </div>
         {items.length === 0 ? <Empty icon="autorenew" title="No recurring payments" body="Subscriptions and bills charged every month are logged for you on their day." /> : (
           <table className="w-full text-[13px]">
@@ -371,7 +254,7 @@ function RecurringTab({ card }: { card: Card }) {
                 const cancelled = isCancelled(r, t);
                 const next = !cancelled && !r.paused ? recurringNextDue(r, t) : null;
                 return (
-                  <tr key={r.id} className="border-b border-line last:border-0">
+                  <tr key={r.id} className="cursor-pointer border-b border-line last:border-0 hover:bg-sunken" onClick={() => openDialog({ kind: 'recurring', cardId: card.id, itemId: r.id })}>
                     <td className="px-5 py-3 font-medium">{r.name}</td>
                     <td className="py-3 text-muted"><span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm" style={{ background: categoryHex(r.category) }} />{spendCategory(r.category).label}</span></td>
                     <td className="num py-3 text-muted">Day {r.day}</td>
@@ -379,7 +262,11 @@ function RecurringTab({ card }: { card: Card }) {
                     <td className="num py-3 text-right font-semibold">{fmtAmt(r.amount)}</td>
                     <td className="px-5 py-3 text-right">
                       {cancelled ? <Chip>Cancelled</Chip> : (
-                        <button type="button" onClick={() => togglePaused(card.id, r.id)} className="group inline-flex items-center gap-2">
+                        <button type="button" onClick={(e) => {
+                          e.stopPropagation();
+                          const d = togglePaused(card.id, r.id);
+                          if (d.text) toast(d.text, { action: d.undo ? { label: 'Undo', run: d.undo } : undefined });
+                        }} className="group inline-flex items-center gap-2">
                           <Chip tone={r.paused ? 'warn' : 'ok'}>{r.paused ? 'Paused' : 'Active'}</Chip>
                           <span className="text-[12px] font-semibold text-brand-ink opacity-0 transition-opacity group-hover:opacity-100">{r.paused ? 'Resume' : 'Pause'}</span>
                         </button>
@@ -402,6 +289,7 @@ function RecurringTab({ card }: { card: Card }) {
 
 function BudgetsTab({ card }: { card: Card }) {
   const { period, summary } = cardPeriod(card);
+  const openDialog = useCardDialogs();
   const budgets = card.budgets || {};
   const keys = SPEND_CATEGORIES.map((c: { key: string }) => c.key);
   const set = keys.filter((k: string) => budgets[k]);
@@ -409,7 +297,7 @@ function BudgetsTab({ card }: { card: Card }) {
   return (
     <div className="grid grid-cols-3 gap-5">
       <Panel className="col-span-2" title={'Budgets · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
-        action={<Tip label="Built in Phase 3"><button type="button" className="btn-outline h-8"><Icon name="tune" size={16} />Set budgets</button></Tip>}>
+        action={<button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'budgets', cardId: card.id })}><Icon name="tune" size={16} />Set budgets</button>}>
         {set.length === 0 ? <Empty icon="savings" title="No budgets yet" body="Set a monthly limit per category and you’ll be warned before you go over." /> : (
           <ul className="space-y-4">
             {set.map((k: string) => {
@@ -465,58 +353,101 @@ function ResultRow({ label, value, strong }: { label: string; value: string; str
   );
 }
 
-// The card page's three calculators, side by side instead of swiped
+// The card page's three calculators, side by side instead of swiped. Numbers and wording come
+// from the shared core (simulators.js), as on the phone's card page.
 function CalculatorsTab({ card }: { card: Card }) {
-  const p = usePlan();
-  const [pay, setPay] = useState(String(Math.round(p.alloc[card.id] || minPaymentFor(card) || 0)));
-  const [cash, setCash] = useState('50000');
-  const [days, setDays] = useState('30');
-  const [price, setPrice] = useState('150000');
-  const [sur, setSur] = useState('6');
-  const [tenure, setTenure] = useState('12');
+  const toast = useToast();
+  const start = payoffStart(card);
+  const [pay, setPay] = useState(start.value);
+  const [cash, setCash] = useState('');
+  const [price, setPrice] = useState('');
+  const [sur, setSur] = useState('3');
+  const [tenure, setTenure] = useState(6);
+  useEffect(() => { setPay(payoffStart(card).value); }, [card.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const po = cardPayoff(card, parseFloat(pay) || 0);
-  const ca = calcCashAdvance(parseFloat(cash) || 0, parseInt(days, 10) || 0, card);
-  const sa = calcSurchargeAPR(parseFloat(price) || 0, (parseFloat(sur) || 0) / 100, parseInt(tenure, 10) || 1);
-  const months = (m: number) => (m === Infinity ? 'Never' : m + (m === 1 ? ' month' : ' months'));
+  const sim = cardPayoffSim(card, pay);
+  const adv = cardAdvanceSim(card, parseFloat(cash));
+  const amt = parseFloat(price), pct = parseFloat(sur) / 100;
+  const sc = amt >= 1 && !isNaN(pct) && pct >= 0 ? calcSurchargeAPR(amt, pct, tenure) : null;
+  const fill = start.max > start.min ? ((pay - start.min) / (start.max - start.min)) * 100 : 0;
 
   return (
     <div className="grid grid-cols-3 gap-5">
-      <Panel title="Payoff">
-        <p className="-mt-1 mb-4 text-[12px] text-faint">How long {fmtAmt(card.balance)} takes at {cardApr(card)}% APR.</p>
-        <NumField label="Monthly payment" value={pay} onChange={setPay} suffix="LKR" />
-        <div className="mt-4 divide-y divide-line border-t border-line pt-2">
-          <ResultRow label="Paid off in" value={months(po.plan.months)} strong />
-          <ResultRow label="Total interest" value={po.plan.totalInterest === Infinity ? '—' : fmtAmt(po.plan.totalInterest)} />
-          <ResultRow label="On minimums" value={months(po.min.months)} />
-          <ResultRow label="Interest on minimums" value={po.min.totalInterest === Infinity ? '—' : fmtAmt(po.min.totalInterest)} />
-        </div>
-      </Panel>
-      <Panel title="Cash advance">
-        <p className="-mt-1 mb-4 text-[12px] text-faint">Fee {fmtAmt(cardFee(card, parseFloat(cash) || 0))} plus {cashAdvanceApr(card)}% APR from day one.</p>
+      <Panel title="Payoff simulator" action={sim.tag ? <Chip tone="ok">{sim.tag}</Chip> : undefined}>
         <div className="grid grid-cols-2 gap-3">
-          <NumField label="Amount" value={cash} onChange={setCash} suffix="LKR" />
-          <NumField label="Days until repaid" value={days} onChange={setDays} suffix="days" />
+          <div className="rounded-xl border border-danger/20 bg-danger/[0.04] p-3">
+            <p className="label">Minimum only</p>
+            <p className="mt-1 text-[15px] font-bold text-danger">{sim.minDuration}</p>
+            <p className="num text-[12px] text-muted">{sim.minInterest} interest</p>
+          </div>
+          <div className="rounded-xl border border-ok/20 bg-ok/[0.05] p-3">
+            <p className="label">Fixed plan</p>
+            <p className="mt-1 text-[15px] font-bold text-ok">{sim.planDuration}</p>
+            <p className="num text-[12px] text-muted">{sim.planInterest} interest</p>
+          </div>
         </div>
-        <div className="mt-4 divide-y divide-line border-t border-line pt-2">
-          <ResultRow label="Advance fee" value={fmtAmt(ca.advanceFee)} />
-          <ResultRow label="Interest" value={fmtAmt(ca.interest)} />
-          <ResultRow label="Total to repay" value={fmtAmt(ca.total)} strong />
+        <div className="mt-4 flex items-baseline justify-between">
+          <span className="label">Simulate monthly payment</span>
+          <span className="num text-[15px] font-bold">{sim.payment}</span>
         </div>
+        <input type="range" aria-label="Monthly payment" min={start.min} max={start.max} step={500} value={pay} disabled={sim.paidOff}
+          onChange={(e) => setPay(parseFloat(e.target.value))} className="mt-2 w-full accent-[rgb(var(--brand))]"
+          style={{ background: 'linear-gradient(to right, rgb(var(--brand)) ' + fill + '%, rgb(var(--sunken)) ' + fill + '%)' }} />
+        <div className="mt-1 flex justify-between text-[11px] font-semibold text-faint">
+          {([['min', 'Min'], ['rec', 'Recommended'], ['half', '50%'], ['full', 'Full']] as const).map(([k, l]) => (
+            <button key={k} type="button" disabled={sim.paidOff} onClick={() => setPay(payoffPreset(card, k))} className={'hover:text-ink ' + (k === 'rec' ? 'text-brand-ink' : '')}>{l}</button>
+          ))}
+        </div>
+        <p className="mt-3 rounded-lg bg-sunken px-3 py-2 text-[12px] text-muted">{sim.headline}</p>
+        <button type="button" className="btn-primary mt-3 w-full justify-center" disabled={sim.paidOff}
+          onClick={() => toast(saveTarget(card.id, pay).text || '')}><Icon name="add" size={18} />Set automated monthly repayment goal</button>
+        <p className="mt-2 text-center text-[11px] text-faint">{card.targetPayment ? 'Saved goal ' + fmtAmt(card.targetPayment) + ' a month. Your plan always pays at least this.' : 'Consistent monthly payments dramatically suppress the CBSL 28% compounding interest cycle.'}</p>
       </Panel>
+
+      <Panel title="Cash advance">
+        <p className="-mt-1 mb-4 text-[12px] text-faint">Fee {fmtAmt(cardFee(card, parseFloat(cash) || 0))} plus {cashAdvanceApr(card)}% APR from the day you withdraw.</p>
+        <NumField label="Amount to withdraw" value={cash} onChange={setCash} suffix="LKR" />
+        {!adv ? <p className="mt-6 text-center text-[12px] text-faint">Enter an amount to see what it costs.</p> : (
+          <div className="mt-4 space-y-3">
+            <div className="divide-y divide-line border-y border-line">
+              <ResultRow label="Withdrawal" value={fmtLKR(adv.principal, 2)} />
+              <ResultRow label="Upfront fee" value={fmtLKR(adv.fee, 2)} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {adv.rows.map((r: { days: number; total: number; cost: number }) => (
+                <div key={r.days} className="rounded-xl border border-line p-3 text-center">
+                  <p className="text-[11px] font-semibold text-faint">Repaid in {r.days} days</p>
+                  <p className="num mt-1 text-[13px] font-bold">{fmtLKR(r.total, 2)}</p>
+                  <p className="num text-[11px] text-danger">+{fmtLKR(r.cost, 2)} cost</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[12px] text-faint">Effective rate over 60 days: <strong className="num text-ink">{adv.effRate}</strong></p>
+          </div>
+        )}
+      </Panel>
+
       <Panel title="0% surcharge">
-        <p className="-mt-1 mb-4 text-[12px] text-faint">The interest hidden in a “0%” plan’s handling fee.</p>
+        <p className="-mt-1 mb-4 text-[12px] text-faint">The interest hidden in a “0%” plan’s upfront fee.</p>
         <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-3"><NumField label="Price" value={price} onChange={setPrice} suffix="LKR" /></div>
-          <div className="col-span-2"><NumField label="Handling fee" value={sur} onChange={setSur} suffix="%" /></div>
-          <NumField label="Months" value={tenure} onChange={setTenure} />
+          <div className="col-span-2"><NumField label="Purchase amount" value={price} onChange={setPrice} suffix="LKR" /></div>
+          <NumField label="Surcharge" value={sur} onChange={setSur} suffix="%" />
         </div>
-        <div className="mt-4 divide-y divide-line border-t border-line pt-2">
-          <ResultRow label="Monthly instalment" value={fmtAmt(sa.monthly)} />
-          <ResultRow label="Fee" value={fmtAmt(sa.surchargeAmt)} />
-          <ResultRow label="Real yearly rate" value={pct(sa.apr, 1)} strong />
-          <ResultRow label="Compounded (effective)" value={pct(sa.effectiveAPR, 1)} />
+        <div role="radiogroup" aria-label="Instalment months" className="mt-3 flex gap-2">
+          {CARD_SURCHARGE_TENURES.map((n: number) => (
+            <button key={n} type="button" role="radio" aria-checked={tenure === n} onClick={() => setTenure(n)}
+              className={'flex-1 rounded-lg border py-1.5 text-[12px] font-semibold ' + (tenure === n ? 'border-brand bg-brand/10 text-brand-ink' : 'border-line text-muted hover:bg-sunken')}>{n} months</button>
+          ))}
         </div>
+        {!sc ? <p className="mt-6 text-center text-[12px] text-faint">Enter a purchase amount to see its true cost.</p> : (
+          <div className="mt-4 divide-y divide-line border-t border-line pt-2">
+            <ResultRow label="True yearly rate" value={fmtPct(sc.apr, 1)} strong />
+            <ResultRow label="Purchase" value={fmtLKR(amt, 2)} />
+            <ResultRow label="Surcharge" value={fmtLKR(sc.surchargeAmt, 2)} />
+            <ResultRow label="Total you pay" value={fmtLKR(sc.totalPay, 2)} />
+            <ResultRow label={'Monthly over ' + tenure + ' months'} value={fmtLKR(sc.monthly, 2)} />
+          </div>
+        )}
       </Panel>
     </div>
   );
@@ -524,9 +455,10 @@ function CalculatorsTab({ card }: { card: Card }) {
 
 function BillingTab({ card }: { card: Card }) {
   const st = cardCycle(card);
+  const openDialog = useCardDialogs();
   return (
     <div className="grid grid-cols-3 gap-5">
-      <Panel title="Billing cycle" action={<Tip label="Built in Phase 3"><button type="button" className="btn-outline h-8"><Icon name="edit" size={16} />Change</button></Tip>}>
+      <Panel title="Billing cycle" action={<button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'billing', cardId: card.id })}><Icon name="edit" size={16} />Change</button>}>
         <div className="space-y-3 text-[13px]">
           <div className="flex justify-between"><span className="text-faint">Statement day</span><span className="font-semibold">{card.statementDay ? 'Day ' + card.statementDay : 'Not set'}</span></div>
           <div className="flex justify-between"><span className="text-faint">Payment due day</span><span className="font-semibold">{card.dueDay ? 'Day ' + card.dueDay : 'Not set'}</span></div>
@@ -564,4 +496,3 @@ function BillingTab({ card }: { card: Card }) {
     </div>
   );
 }
-

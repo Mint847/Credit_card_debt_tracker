@@ -8,10 +8,18 @@
       "firebase.json",
       "firestore.rules",
       "serve.py",
+      "index.with-google.html",
       "**/.*",
       "**/node_modules/**"
     ],
+    "predeploy": [
+      "npm --prefix .. run build:desktop"
+    ],
     "rewrites": [
+      {
+        "source": "/desktop/**",
+        "destination": "/desktop/index.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"

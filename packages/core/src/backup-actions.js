@@ -51,3 +51,26 @@ export function safetyCopyToBackup(c) {
     profile: { firstName: c.data.firstName, lastName: c.data.lastName, income: c.data.income, strategy: c.data.strategy },
     cards: c.data.cards, spaces: c.data.spaces };
 }
+
+/* The restore screen's wording and checks (shared so both apps say the same) */
+export var BACKUP_MAX_BYTES = 2 * 1024 * 1024;
+export function backupFileName(todayStr) { return 'serendib-backup-' + todayStr + '.json'; }
+function when(v) {
+  var d = new Date(v);
+  return isNaN(d) ? null : d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+export function backupWhen(exportedAt) { return (exportedAt && when(exportedAt)) || 'an unknown date'; }
+export function safetyCopyWhen(at) { return when(at) || ''; }
+// "Add what's missing": what it would add, or that there's nothing to add
+export function restoreMergeLine(newCards, newSpaces) {
+  if (!newCards.length && !newSpaces.length) return 'Everything in this backup is already here.';
+  return 'Adds ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces') + ' you don’t have. Nothing else changes.';
+}
+export function restoreReplaceWarning(cards, spaces) {
+  return 'This replaces your ' + countsText(cards, spaces) + '. You can undo straight after.';
+}
+export function restoreDoneText(mode, newCards, newSpaces) {
+  return mode === 'merge'
+    ? 'Added ' + newCards.length + (newCards.length === 1 ? ' card' : ' cards') + ' and ' + newSpaces.length + (newSpaces.length === 1 ? ' space' : ' spaces')
+    : 'Backup restored';
+}

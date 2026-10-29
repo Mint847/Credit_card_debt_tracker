@@ -55,10 +55,11 @@ export interface Card {
   targetPayment?: number;
   last4?: string;
   cycleTrackedFrom?: string;
-  ledger: Entry[];
-  recurring: Recurring[];
+  ledger?: Entry[];
+  recurring?: Recurring[];
   budgets?: Record<string, number>;
   statements?: Statement[];
+  ledgerArchive?: Record<string, { spent: number; payments: number; byCategory?: Record<string, number> }>;
 }
 
 export interface SpaceItem {

@@ -124,6 +124,7 @@ Three sandboxes. Load one of your cards, or try your own numbers:
   - Download a backup
   - Replay app guide
   - Keyboard shortcuts (desktop only)
+  - Try the new desktop app (beta; computers with a mouse or trackpad, 1280 px and up)
   - Reset my card data, which asks before doing anything
   - Sign out
 
@@ -158,6 +159,8 @@ Three sandboxes. Load one of your cards, or try your own numbers:
   - **Utilisation by card:** each card's balance against its limit, with the 30% line
   - **Recent activity:** the latest entries across all cards; click any row to open that card
 - **Account menu:** opens from the profile row at the bottom of the sidebar.
+
+**New desktop app (beta):** pick **Try the new desktop app** in the account menu to switch to the new desktop app at `/desktop/`. The choice is remembered on that computer, so opening the app goes straight there. **Back to classic view** in its account menu (or **Use the classic view instead** on its sign-in page) switches back. Phones and iPads always open the classic app.
 - **Keyboard shortcuts:**
 
   | Key | Action |
@@ -205,8 +208,8 @@ Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, 
 | Path | What it is |
 |---|---|
 | `stitch_fintech_credit_debt_manager/index.html` | The app: one HTML file with all screens and styles, plus the built shared core inlined between `CORE:START` and `CORE:END` |
-| `apps/desktop/` | The new desktop app (React, TypeScript, Tailwind), in development. Uses the shared core; served from `/desktop/` |
-| `packages/core/` | The shared core: calculations, data rules, actions, saving, sync and sign-in start-up, with Vitest tests. Built into the app by `npm run build:core` |
+| `apps/desktop/` | The new desktop app (React, TypeScript, Tailwind): every screen of the phone app, laid out for a computer. Uses the shared core and the same account; served from `/desktop/` |
+| `packages/core/` | The shared core: calculations, data rules, every action, saving, sync, sign-in rules, alerts, simulators, offers, backup and onboarding rules, and the help texts, with Vitest tests. Both apps use it. Built into the phone app by `npm run build:core` |
 | `stitch_fintech_credit_debt_manager/firestore.rules` | Firestore security rules (own data only; offers public to read, admin to write) |
 | `stitch_fintech_credit_debt_manager/firebase.json`, `.firebaserc` | Firebase Hosting and project settings |
 | `stitch_fintech_credit_debt_manager/serve.py` | Local development server with no-cache headers (port 8080) |
@@ -218,6 +221,7 @@ Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, 
 ## Technical architecture
 - **Front end:** a single-page app in one HTML file.
 - **Shared core:** the logic lives in `packages/core` (plain JavaScript modules, built with Vite). The build writes it into `index.html`, so the deployed app is still one file. Edit the core in `packages/core/src`, never between the `CORE` markers.
+- **Desktop app:** `apps/desktop` is a separate React app for computers, with the same features. It imports the core directly, signs in to the same Firebase project and reads and writes the same account document, so the two apps stay in sync. `?demo` opens it with a sample account and no sign-in.
 - **Styling:**
   - Tailwind CSS via the Play CDN (forms and container-queries plugins)
   - every colour is a CSS variable, so dark mode swaps values without touching the markup
@@ -248,11 +252,11 @@ npm install            # once, from the repository root
 npm run test:core      # unit tests for the shared core
 npm run build:core     # rebuild the core and write it into index.html
 npm run dev:desktop    # run the desktop app locally (http://localhost:5174/desktop/)
-npm run build:desktop  # type-check and build the desktop app into apps/desktop/dist
+npm run build:desktop  # type-check and build the desktop app into stitch_fintech_credit_debt_manager/desktop
 ```
 
 ## Deployment
-Run `npm run build:core` first if anything in `packages/core` changed.
+Run `npm run build:core` first if anything in `packages/core` changed. Deploying hosting rebuilds the desktop app first (the `predeploy` step in `firebase.json`), so run `npm install` from the repository root once.
 ```bash
 npm install -g firebase-tools
 cd stitch_fintech_credit_debt_manager
@@ -267,6 +271,8 @@ firebase deploy --only firestore:rules   # security rules, when they change
 
 | Date | Change |
 |---|---|
+| 29 Oct 2026 | **Desktop app beta:** "Try the new desktop app" in the account menu on computers, remembered per device, with "Back to classic view". Fixed: the Avalanche card shows what it really saves compared with Snowball (it said LKR 34,200 for everyone); "Adopt Fixed Repayment Plan" sets the card's monthly goal and "Negotiate Cash Discount" copies a cash-price request (the unused "Compare Alternatives" button is gone); payoff presets such as Full save the exact amount, not the slider's rounded one |
+| 28 Oct 2026 | **Desktop app, all screens:** real sign-in and sync, card actions, Activity, Plan, Simulators, Spaces, Offers and admin review, Settings and guided setup. More of the phone app's rules moved into the shared core. Fixed: Replay app guide now resets the tips and checklist across devices |
 | 26 Oct 2026 | **Desktop app prototype:** a new React desktop app (Overview, Cards, card workspace, command palette) on sample data, for review. The home screen's payoff plan moved into the shared core |
 | 25 Oct 2026 | **Shared core:** the app's logic moved into `packages/core` with unit tests, ready for the new desktop app. No visible change |
 | 25 Oct 2026 | **Account menu everywhere:** tapping your profile picture opens the account menu on phone and iPad too. It replaces the hamburger side menu, and all of that menu's options moved into it |

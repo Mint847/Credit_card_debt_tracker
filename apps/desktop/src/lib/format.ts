@@ -1,4 +1,4 @@
-import { fmtLKR, parseYmd } from '@serendib/core';
+import { fmtLKR, parseYmd, shortDate as shortDateCore } from '@serendib/core';
 
 // Whole rupees unless there are cents, as the phone app shows amounts
 export function fmtAmt(n: number): string {
@@ -12,14 +12,12 @@ export function fmtShort(n: number): string {
   return 'LKR ' + Math.round(n);
 }
 
-// "24 Oct"
-export function shortDate(s: string): string {
-  return parseYmd(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-}
+// "24 Oct", as the phone app shows dates (shared core)
+export { shortDate } from '@serendib/core';
 
 // "Fri, 24 Oct 2026"
 export function longDate(s: string): string {
-  return parseYmd(s).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return parseYmd(s).toLocaleDateString('en-US', { weekday: 'short' }) + ', ' + shortDateCore(s) + ' ' + s.slice(0, 4);
 }
 
 export function pct(n: number, dec = 0): string {

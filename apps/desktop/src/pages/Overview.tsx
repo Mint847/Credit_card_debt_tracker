@@ -4,11 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { daysBetween, sortedLedger, entryLabel, spendCategory } from '@serendib/core';
 import { useApp } from '../lib/store';
-import { alerts, cardName, projection, spendingByCategory, today, upcomingEvents, util } from '../lib/derive';
+import { cardName, projection, spendingByCategory, today, upcomingEvents, util } from '../lib/derive';
 import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
 import { CardDot, Chip, Empty, Icon, Panel, UtilBar } from '../components/ui';
 import { token, useIsDark } from '../lib/theme';
+import { VerifyBanner } from '../components/VerifyBanner';
+import { AlertList, attentionCount, useAlerts } from '../components/Alerts';
+import { Checklist } from '../components/Onboarding';
 import { usePlan, useWorkspace } from '../components/Shell';
 import type { Card, Entry } from '../lib/types';
 
@@ -36,7 +39,7 @@ export function Overview() {
   const t = today();
   const totalUtil = p.totalLimit > 0 ? (p.totalDebt / p.totalLimit) * 100 : 0;
   const pj = useMemo(() => projection(app.cards, app.strategy), [app]);
-  const alertList = useMemo(() => alerts(app.cards), [app]);
+  const count = attentionCount(useAlerts());
   const upcoming = useMemo(() => upcomingEvents(app.cards, 35), [app]);
   const spend = useMemo(() => spendingByCategory(app.cards), [app]);
   const recent = useMemo(() => {
@@ -50,6 +53,8 @@ export function Overview() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7">
+      <VerifyBanner />
+      <Checklist />
       <div className="flex items-end justify-between">
         <div>
           <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">{greeting()}, {app.profile.firstName}</h1>
@@ -67,11 +72,15 @@ export function Overview() {
       </div>
 
       {/* KPI strip */}
-      <section className="panel grid grid-cols-5 divide-x divide-line">
+      <section className="panel grid grid-cols-5 divide-x divide-line" data-tip="kpis">
         <Kpi label="Total debt" value={fmtAmt(p.totalDebt)} sub={'of ' + fmtAmt(p.totalLimit) + ' total limit'} />
-        <Kpi label="Utilisation" value={pct(totalUtil)}>
-          <UtilBar value={totalUtil} className="mt-2" />
-          <p className="mt-1.5 text-[12px] text-faint">Aim for under 30%</p>
+        <Kpi label="Utilisation" value={pct(totalUtil, 1)}>
+          <div className="relative mt-2">
+            <UtilBar value={totalUtil} />
+            {/* The 30% line: the phone app's safe limit */}
+            <span className="absolute -top-1 h-3.5 w-0.5 rounded bg-ink/60" style={{ left: '30%' }} title="30% target" />
+          </div>
+          <p className="mt-1.5 text-[12px] text-faint">Safe Limit: {fmtAmt(p.totalLimit * 0.3)} · Target &lt;30%</p>
         </Kpi>
         <Kpi label="Monthly commitment" value={fmtAmt(p.commitment)} sub="Your plan for this month" />
         <Kpi label="Interest bleed" value={fmtAmt(p.interestMonth)} sub="Per month at today’s balances" />
@@ -82,7 +91,7 @@ export function Overview() {
 
       <div className="grid grid-cols-3 gap-5">
         {/* Payoff pace */}
-        <Panel className="col-span-2" title="Payoff pace"
+        <Panel tip="payoff" className="col-span-2" title="Payoff pace"
           action={<div className="flex items-center gap-4 text-[12px] text-faint">
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-brand" />Your plan</span>
             <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-faint" />Minimums only</span>
@@ -115,26 +124,9 @@ export function Overview() {
           </div>
         </Panel>
 
-        {/* Alerts */}
-        <Panel title="Needs attention" action={<Chip tone={alertList.some((a) => a.tone === 'danger') ? 'danger' : 'neutral'}>{alertList.length}</Chip>} bodyClass="px-2 pb-2">
-          {alertList.length === 0 && <Empty icon="task_alt" title="All clear" body="No payments due soon and every card is in good shape." />}
-          <div className="space-y-1">
-            {alertList.slice(0, 5).map((a) => (
-              <div key={a.id} className="flex gap-3 rounded-lg px-3 py-2.5 hover:bg-sunken">
-                <span className={'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ' + (a.tone === 'danger' ? 'bg-danger/10 text-danger' : a.tone === 'warn' ? 'bg-warn/10 text-warn' : 'bg-brand/10 text-brand-ink')}>
-                  <Icon name={a.icon} size={16} fill />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold">{a.title}</p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-muted">{a.body}</p>
-                  <div className="mt-1.5 flex items-center gap-3">
-                    {a.card && <Link to={'/cards/' + a.card.id} className="flex items-center gap-1.5 text-[11px] text-faint hover:text-ink"><CardDot card={a.card} size={7} />{cardName(a.card)}</Link>}
-                    {a.action && <button type="button" className="text-[12px] font-semibold text-brand-ink hover:underline" onClick={() => openLog({ type: 'payment', cardId: a.card?.id, prefill: a.action!.amount })}>{a.action.label}</button>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Alerts: the phone app's, from the shared core */}
+        <Panel tip="alerts" title="Needs attention" action={count > 0 ? <Chip tone="danger">{count} Attention</Chip> : undefined} bodyClass="px-2 pb-2">
+          <AlertList />
         </Panel>
       </div>
 

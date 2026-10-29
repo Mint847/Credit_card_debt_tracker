@@ -3,13 +3,18 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { NavLink, useLocation, useNavigate, useMatch } from 'react-router-dom';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
+import * as Popover from '@radix-ui/react-popover';
 import { Command } from 'cmdk';
-import { useApp, setStrategy } from '../lib/store';
-import { alerts as buildAlerts, cardName, plan, util } from '../lib/derive';
+import { useApp, setStrategy, signOut, downloadBackup, resetCardData, replayGuide } from '../lib/store';
+import { cardName, plan, util } from '../lib/derive';
 import { fmtAmt } from '../lib/format';
-import { CardDot, Icon, Tip } from './ui';
+import { CardDot, Icon, Tip, useToast } from './ui';
 import { LogDialog, type LogRequest } from './LogDialog';
+import { CardDialogsProvider, useCardDialogs } from './CardDialogs';
+import { AlertList, attentionCount, useAlerts } from './Alerts';
+import { Welcome, Tips } from './Onboarding';
 import { getTheme, setTheme, type ThemeMode } from '../lib/theme';
+import { backToClassic } from '../lib/beta';
 
 interface Workspace {
   openLog: (r?: LogRequest) => void;
@@ -52,6 +57,7 @@ function Sidebar() {
   const app = useApp();
   const navigate = useNavigate();
   const { openShortcuts } = useWorkspace();
+  const toast = useToast();
   const [theme, setThemeState] = useState<ThemeMode>(getTheme());
   const initials = (app.profile.firstName[0] || '') + (app.profile.lastName[0] || '');
   return (
@@ -80,7 +86,9 @@ function Sidebar() {
         <NavItem to="/settings" label="Settings" icon="settings" />
         <Dropdown.Root>
           <Dropdown.Trigger className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/15 text-[12px] font-bold text-brand-ink">{initials}</span>
+            {app.user?.photoURL
+              ? <img src={app.user.photoURL} alt="" referrerPolicy="no-referrer" className="h-8 w-8 rounded-full object-cover" />
+              : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/15 text-[12px] font-bold text-brand-ink">{initials}</span>}
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] font-semibold">{app.profile.firstName} {app.profile.lastName}</span>
               <span className="block truncate text-[11px] text-faint">{app.profile.email}</span>
@@ -91,7 +99,7 @@ function Sidebar() {
             <Dropdown.Content side="top" align="start" sideOffset={8} className="z-50 w-[248px] rounded-xl border border-line bg-panel p-1.5 shadow-pop">
               <MenuItem icon="person" label="Profile" onSelect={() => navigate('/settings')} />
               <MenuItem icon="flag" label="Strategy" onSelect={() => navigate('/plan')} />
-              <MenuItem icon="gavel" label="CBSL rules" onSelect={() => navigate('/settings')} />
+              <MenuItem icon="gavel" label="CBSL rules" onSelect={() => navigate('/settings#set-cbsl')} />
               <Dropdown.Separator className="my-1 h-px bg-line" />
               <p className="label px-2.5 pb-1 pt-1.5">Appearance</p>
               <div className="flex gap-1 px-1.5 pb-1.5">
@@ -101,12 +109,14 @@ function Sidebar() {
                 ))}
               </div>
               <Dropdown.Separator className="my-1 h-px bg-line" />
-              <MenuItem icon="backup" label="Backup and restore" onSelect={() => navigate('/settings')} />
+              <MenuItem icon="download" label="Download a backup" onSelect={() => { const d = downloadBackup(); if (d.text) toast(d.text); }} />
+              <MenuItem icon="backup" label="Backup and restore" onSelect={() => navigate('/settings#set-data')} />
+              <MenuItem icon="restart_alt" label="Reset my card data" onSelect={() => { const d = resetCardData(); if (d.text) toast(d.text); }} />
               <MenuItem icon="keyboard" label="Keyboard shortcuts" kbd="?" onSelect={openShortcuts} />
-              <MenuItem icon="school" label="Guide" onSelect={() => {}} />
-              <MenuItem icon="smartphone" label="Back to classic view" onSelect={() => { window.location.href = '/'; }} />
+              <MenuItem icon="school" label="Replay app guide" onSelect={() => { replayGuide(); navigate('/'); }} />
+              <MenuItem icon="smartphone" label="Back to classic view" onSelect={backToClassic} />
               <Dropdown.Separator className="my-1 h-px bg-line" />
-              <MenuItem icon="logout" label="Sign out" onSelect={() => {}} />
+              <MenuItem icon="logout" label="Sign out" onSelect={() => { signOut(); }} />
             </Dropdown.Content>
           </Dropdown.Portal>
         </Dropdown.Root>
@@ -128,7 +138,7 @@ function MenuItem({ icon, label, kbd, onSelect }: { icon: string; label: string;
 
 const TITLES: Record<string, string> = {
   '/': 'Overview', '/cards': 'Cards', '/activity': 'Activity', '/plan': 'Plan', '/simulators': 'Simulators',
-  '/spaces': 'Spaces', '/offers': 'Offers', '/settings': 'Settings'
+  '/spaces': 'Spaces', '/offers': 'Offers', '/offers/admin': 'Manage offers', '/settings': 'Settings'
 };
 
 function Topbar() {
@@ -137,8 +147,7 @@ function Topbar() {
   const loc = useLocation();
   const cardMatch = useMatch('/cards/:id');
   const card = cardMatch ? app.cards.find((c) => c.id === cardMatch.params.id) : undefined;
-  const list = useMemo(() => buildAlerts(app.cards), [app]);
-  const urgent = list.filter((a) => a.tone !== 'info').length;
+  const count = attentionCount(useAlerts());
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-line bg-canvas/85 px-6 backdrop-blur">
       <div className="flex min-w-0 items-center gap-2 text-[13px]">
@@ -153,7 +162,7 @@ function Topbar() {
           <span className="font-semibold">{TITLES[loc.pathname] || ''}</span>
         )}
       </div>
-      <button type="button" onClick={openPalette}
+      <button type="button" onClick={openPalette} data-tip="search"
         className="ml-auto flex h-9 w-[340px] items-center gap-2 rounded-lg border border-line bg-panel px-3 text-[13px] text-faint hover:border-line-strong">
         <Icon name="search" size={18} />
         <span className="flex-1 text-left">Search cards, entries and actions</span>
@@ -161,7 +170,7 @@ function Topbar() {
       </button>
       <Dropdown.Root>
         <Dropdown.Trigger asChild>
-          <button type="button" className="btn-primary"><Icon name="add" size={18} />Log<Icon name="expand_more" size={16} className="-mr-1 opacity-80" /></button>
+          <button type="button" className="btn-primary" data-tip="log"><Icon name="add" size={18} />Log<Icon name="expand_more" size={16} className="-mr-1 opacity-80" /></button>
         </Dropdown.Trigger>
         <Dropdown.Portal>
           <Dropdown.Content align="end" sideOffset={6} className="z-50 w-56 rounded-xl border border-line bg-panel p-1.5 shadow-pop">
@@ -172,33 +181,20 @@ function Topbar() {
           </Dropdown.Content>
         </Dropdown.Portal>
       </Dropdown.Root>
-      <Dropdown.Root>
+      <Popover.Root>
         <Tip label="Alerts" side="bottom">
-          <Dropdown.Trigger className="btn-ghost relative h-9 w-9 justify-center px-0" aria-label={'Alerts, ' + list.length}>
+          <Popover.Trigger className="btn-ghost relative h-9 w-9 justify-center px-0" aria-label={'Alerts, ' + count}>
             <Icon name="notifications" />
-            {urgent > 0 && <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white dark:text-canvas">{urgent}</span>}
-          </Dropdown.Trigger>
+            {count > 0 && <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white dark:text-canvas">{count}</span>}
+          </Popover.Trigger>
         </Tip>
-        <Dropdown.Portal>
-          <Dropdown.Content align="end" sideOffset={6} className="z-50 w-[380px] rounded-xl border border-line bg-panel shadow-pop">
-            <p className="border-b border-line px-4 py-3 text-[13px] font-semibold">Alerts</p>
-            <div className="scroll-thin max-h-[420px] overflow-y-auto p-1.5">
-              {list.length === 0 && <p className="px-3 py-6 text-center text-[13px] text-faint">You’re all caught up.</p>}
-              {list.map((a) => (
-                <Dropdown.Item key={a.id} onSelect={() => a.action && openLog({ type: 'payment', cardId: a.card?.id, prefill: a.action.amount })}
-                  className="flex cursor-pointer gap-3 rounded-lg px-2.5 py-2.5 outline-none data-[highlighted]:bg-sunken">
-                  <Icon name={a.icon} fill className={a.tone === 'danger' ? 'text-danger' : a.tone === 'warn' ? 'text-warn' : 'text-brand-ink'} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-semibold">{a.title}</span>
-                    <span className="mt-0.5 block text-[12px] text-muted">{a.body}</span>
-                    {a.card && <span className="mt-1 flex items-center gap-1.5 text-[11px] text-faint"><CardDot card={a.card} size={7} />{cardName(a.card)}</span>}
-                  </span>
-                </Dropdown.Item>
-              ))}
-            </div>
-          </Dropdown.Content>
-        </Dropdown.Portal>
-      </Dropdown.Root>
+        <Popover.Portal>
+          <Popover.Content align="end" sideOffset={6} className="z-50 w-[400px] rounded-xl border border-line bg-panel shadow-pop focus:outline-none">
+            <p className="border-b border-line px-4 py-3 text-[13px] font-semibold">Alerts{count > 0 ? ' · ' + count + ' Attention' : ''}</p>
+            <div className="scroll-thin max-h-[460px] overflow-y-auto p-1.5"><AlertList compact /></div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
     </header>
   );
 }
@@ -207,8 +203,9 @@ function Palette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bool
   const app = useApp();
   const navigate = useNavigate();
   const { openLog, openShortcuts } = useWorkspace();
+  const openDialog = useCardDialogs();
   const run = (fn: () => void) => { onOpenChange(false); setTimeout(fn, 0); };
-  const entries = useMemo(() => app.cards.flatMap((c) => c.ledger.slice(-40).map((e) => ({ c, e }))).reverse().slice(0, 120), [app]);
+  const entries = useMemo(() => app.cards.flatMap((c) => (c.ledger || []).slice(-40).map((e) => ({ c, e }))).reverse().slice(0, 120), [app]);
   const item = 'flex h-9 cursor-pointer items-center gap-3 rounded-lg px-3 text-[13px] text-ink data-[selected=true]:bg-sunken';
   const group = 'px-1.5 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-faint';
   return (
@@ -230,6 +227,7 @@ function Palette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bool
                 <Command.Item className={item} onSelect={() => run(() => openLog({ type: 'purchase' }))}><Icon name="shopping_bag" size={18} className="text-faint" />Log spending<span className="kbd ml-auto">L</span></Command.Item>
                 <Command.Item className={item} onSelect={() => run(() => openLog({ type: 'payment' }))}><Icon name="payments" size={18} className="text-faint" />Log a payment<span className="kbd ml-auto">P</span></Command.Item>
                 <Command.Item className={item} onSelect={() => run(() => openLog({ sms: true }))}><Icon name="sms" size={18} className="text-faint" />Paste a bank SMS</Command.Item>
+                <Command.Item className={item} onSelect={() => run(() => openDialog({ kind: 'add' }))}><Icon name="add_card" size={18} className="text-faint" />Add a card</Command.Item>
                 <Command.Item className={item} onSelect={() => run(() => setStrategy(app.strategy === 'avalanche' ? 'snowball' : 'avalanche'))}>
                   <Icon name="swap_vert" size={18} className="text-faint" />Switch to {app.strategy === 'avalanche' ? 'Snowball' : 'Avalanche'} strategy
                 </Command.Item>
@@ -336,6 +334,8 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={ws}>
+      <CardDialogsProvider onCardAdded={(id) => navigate('/cards/' + id)} onCardDeleted={(id) => { if (cardId === id) navigate('/cards'); }}
+        onLogPayment={(id, amount) => setLog({ type: 'payment', cardId: id, prefill: amount })}>
       <div className="flex h-full">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -346,6 +346,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <LogDialog request={log} onClose={() => setLog(null)} />
       <Palette open={palette} onOpenChange={setPalette} />
       <Shortcuts open={shortcuts} onOpenChange={setShortcuts} />
+      <Welcome />
+      <Tips />
+      </CardDialogsProvider>
     </Ctx.Provider>
   );
 }
