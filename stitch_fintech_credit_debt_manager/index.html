@@ -9603,6 +9603,8 @@ var checkSnowball = document.getElementById('check-snowball');
       }
 
       function renderList() {
+        // Sign-in can report back before the page has finished setting up; setup draws it then
+        if (!elFeed) return;
         elFeed.innerHTML = "";
         
         if (cards.length === 0) {
