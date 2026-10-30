@@ -2233,7 +2233,9 @@
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAhSu_ei7ZKFJuVG-Na4_usyEnPUFfJIXY",
-      authDomain: "stitch-debt-manager.firebaseapp.com",
+      // Sign-in runs on the app's own site: Safari (and the home-screen app) won't hand a sign-in
+      // finished on another domain back to this page. Local copies use the default domain.
+      authDomain: /^stitch-debt-manager\.(web\.app|firebaseapp\.com)$/.test(location.hostname) ? location.hostname : "stitch-debt-manager.firebaseapp.com",
       projectId: "stitch-debt-manager",
       storageBucket: "stitch-debt-manager.firebasestorage.app",
       messagingSenderId: "511673500830",
@@ -15210,16 +15212,31 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     }
 
     /* ── Social sign-in: one flow for log in and sign up ── */
+    var REDIRECT_KEY = "serendib_redirect_signin";
+    // Opened from the iPhone home screen, a pop-up opens outside the app and can't report back
+    function isHomeScreenApp() {
+      return window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    }
+    function redirectSignIn(provider, providerName) {
+      try { sessionStorage.setItem(REDIRECT_KEY, providerName); } catch (e) {}
+      return auth.signInWithRedirect(provider).catch(function (e2) {
+        try { sessionStorage.removeItem(REDIRECT_KEY); } catch (e) {}
+        showAuthError(null, authErrorMessage(e2, providerName));
+      });
+    }
     function socialSignIn(provider, providerName) {
       clearAuthErrors();
       return applyPersistence()
-        .then(function () { return auth.signInWithPopup(provider); })
+        .then(function () {
+          if (isHomeScreenApp()) return redirectSignIn(provider, providerName);
+          return auth.signInWithPopup(provider);
+        })
         .catch(function (err) {
           var code = err && err.code;
           if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return;
           // Some mobile browsers block pop-ups; a full-page redirect works there
           if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
-            return auth.signInWithRedirect(provider).catch(function (e2) { showAuthError(null, authErrorMessage(e2, providerName)); });
+            return redirectSignIn(provider, providerName);
           }
           showAuthError(null, authErrorMessage(err, providerName));
         });
@@ -15240,8 +15257,19 @@ This action cannot be undone. The spending history, recurring payments, budgets 
     window.loginWithTwitter = function () {
       return socialSignIn(new firebase.auth.TwitterAuthProvider(), "X");
     };
-    // Errors from a redirect sign-in (the pop-up fallback) show up when the page reloads
-    auth.getRedirectResult().catch(function (err) { showAuthError("login", authErrorMessage(err)); });
+    // Back from a redirect sign-in: show its error, or say so if it came back without signing in
+    // (instead of silently landing on the log-in page again)
+    auth.getRedirectResult().then(function (res) {
+      var pending = null;
+      try { pending = sessionStorage.getItem(REDIRECT_KEY); sessionStorage.removeItem(REDIRECT_KEY); } catch (e) {}
+      if (pending && !(res && res.user) && !auth.currentUser) {
+        showAuthError("login", pending + " sign-in didn\u2019t finish. Please try again.");
+      }
+    }).catch(function (err) {
+      var pending = null;
+      try { pending = sessionStorage.getItem(REDIRECT_KEY); sessionStorage.removeItem(REDIRECT_KEY); } catch (e) {}
+      showAuthError("login", authErrorMessage(err, pending || undefined));
+    });
 
     /* ── Email sign-up and log-in ── */
     window.signupWithEmail = function(e) {

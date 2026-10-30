@@ -4,10 +4,10 @@
 
 // The sign-in fix for iPhones (Safari and the home-screen app): sign-in runs on the app's own site, since
 // Safari won't hand a sign-in finished on another domain back to this page, and the home-screen app signs in
-// with a full-page redirect (a pop-up opens outside the app and can't report back). Turn on only once Google
-// accepts https://stitch-debt-manager.web.app/__/auth/handler as a redirect address; until then Google
-// blocks sign-in there. The phone app's working copy carries the same fix.
-export const OWN_DOMAIN_SIGN_IN = false;
+// with a full-page redirect (a pop-up opens outside the app and can't report back). Needs
+// https://stitch-debt-manager.web.app/__/auth/handler listed as a redirect address in the Google OAuth
+// client (added 31 Oct 2026); without it Google blocks sign-in there. The classic app carries the same fix.
+export const OWN_DOMAIN_SIGN_IN = true;
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAhSu_ei7ZKFJuVG-Na4_usyEnPUFfJIXY',
