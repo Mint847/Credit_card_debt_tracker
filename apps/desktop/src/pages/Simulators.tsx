@@ -70,9 +70,9 @@ function Result({ tone, eyebrow, value, lines, foot }: { tone: 'danger' | 'ok' |
   const c = tone === 'danger' ? 'border-danger/25 bg-danger/[0.05]' : tone === 'ok' ? 'border-ok/25 bg-ok/[0.06]' : 'border-line bg-sunken/60';
   const t = tone === 'danger' ? 'text-danger' : tone === 'ok' ? 'text-ok' : 'text-ink';
   return (
-    <div className={'rounded-xl border p-5 ' + c}>
+    <div className={'rounded-xl border p-5 phone:p-4 ' + c}>
       <p className="label">{eyebrow}</p>
-      <p className={'num mt-2 text-[26px] font-bold tracking-tight ' + t}>{value}</p>
+      <p className={'num mt-2 text-[26px] font-bold tracking-tight phone:mt-1 phone:text-[22px] ' + t}>{value}</p>
       <div className="mt-1 space-y-0.5 text-[12px] text-muted">{lines.map((l, i) => <p key={i}>{l}</p>)}</div>
       {foot && <p className={'mt-3 border-t border-current/10 pt-2 text-[11px] font-semibold ' + t}>{foot}</p>}
     </div>
@@ -112,8 +112,8 @@ function MinimumTrap({ cards }: { cards: Card[] }) {
     toast('Monthly goal set: ' + lkr(s.fixedPayment) + ' on ' + cardName(card) + '. Your plan always pays at least this.');
   };
   return (
-    <div className="grid grid-cols-12 gap-5">
-      <div className="panel col-span-5 space-y-5 p-6">
+    <div className="grid grid-cols-12 gap-5 compact:grid-cols-1 phone:gap-4">
+      <div className="panel col-span-5 space-y-5 p-6 compact:col-span-1 phone:p-4">
         <Header title="Minimum Payment Sandbox" sub="See the true cost of paying only the minimum." chip="CBSL Cap: 28% APR" />
         <Source value={source} onChange={setSource} cards={cards} />
         <Amount id="sim-balance" label="Simulated balance" value={balance} onChange={setCustom} presets={SIM_PRESETS} readOnly={!!card} />
@@ -122,8 +122,8 @@ function MinimumTrap({ cards }: { cards: Card[] }) {
           <span className="num text-[20px] font-bold">{s.apr.toFixed(1)}%</span>
         </div>
       </div>
-      <div className="col-span-7 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-7 space-y-4 compact:col-span-1">
+        <div className="grid grid-cols-2 gap-4 phone:grid-cols-1 phone:gap-3">
           <Result tone="danger" eyebrow="If paying minimum" value={s.empty ? '--' : s.minTime} lines={[s.empty ? 'Interest: --' : 'Interest: ' + lkr(s.minInterest)]} foot={s.empty ? undefined : s.minWarning} />
           <Result tone="ok" eyebrow={s.empty ? 'If paying fixed' : s.fixedTitle.replace('IF PAYING FIXED', 'If paying fixed')} value={s.empty ? '--' : s.fixedTime}
             lines={[s.empty ? 'Save --' : 'Save ' + lkr(s.savings)]} foot={s.empty ? undefined : s.speed} />
@@ -163,8 +163,8 @@ function CashAdvance({ cards }: { cards: Card[] }) {
   const s = simulateCashAdvance(simAmount(amount), days, card || null, { feePct: fee, apr });
   const shownApr = card ? cashAdvanceApr(card) : parseFloat(apr) || 28;
   return (
-    <div className="grid grid-cols-12 gap-5">
-      <div className="panel col-span-5 space-y-5 p-6">
+    <div className="grid grid-cols-12 gap-5 compact:grid-cols-1 phone:gap-4">
+      <div className="panel col-span-5 space-y-5 p-6 compact:col-span-1 phone:p-4">
         <Header title="Cash Advance Trap" sub="See the true cost of ATM credit withdrawals." chip="CBSL Cap: 28% APR" />
         <Source value={source} onChange={setSource} cards={cards} />
         <Amount id="adv-amount" label="Amount withdrawn" value={amount} onChange={setAmount} presets={SIM_PRESETS} />
@@ -179,8 +179,8 @@ function CashAdvance({ cards }: { cards: Card[] }) {
           </div>
         ) : <Small id="adv-apr" label="Interest rate (APR)" value={apr} onChange={setApr} suffix="%" hint="CBSL Statutory Ceiling: 28%" />}
       </div>
-      <div className="col-span-7 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="col-span-7 space-y-4 compact:col-span-1">
+        <div className="grid grid-cols-2 gap-4 phone:grid-cols-1 phone:gap-3">
           <Result tone="danger" eyebrow="Hidden costs" value={s.empty ? '--' : lkr(s.hidden!)} lines={[s.empty ? 'Fee: --' : 'Fee: ' + lkr(s.fee!), s.empty ? 'Interest: --' : 'Interest: ' + lkr(s.interest!)]} foot="Compounding surcharge" />
           <Result tone="neutral" eyebrow="Total owed" value={s.empty ? '--' : lkr(s.total!)} lines={[s.empty ? '--' : s.sub1!, s.empty ? '--' : s.sub2!]} foot={s.empty ? undefined : s.insight} />
         </div>
@@ -206,8 +206,8 @@ function Surcharge() {
     catch { toast('Couldn’t copy. Select the text and copy it instead.'); }
   };
   return (
-    <div className="grid grid-cols-12 gap-5">
-      <div className="panel col-span-5 space-y-5 p-6">
+    <div className="grid grid-cols-12 gap-5 compact:grid-cols-1 phone:gap-4">
+      <div className="panel col-span-5 space-y-5 p-6 compact:col-span-1 phone:p-4">
         <Header title="0% Surcharge Exposer" sub="Expose the true cost of hidden merchant fees." />
         <Amount id="sur-price" label="Item cash price" value={price} onChange={setPrice} presets={SURCHARGE_PRESETS} />
         <div className="grid grid-cols-2 gap-4">
@@ -215,8 +215,8 @@ function Surcharge() {
           <Small id="sur-months" label="Plan duration" value={months} onChange={setMonths} suffix="Months" hint="0% Installments" />
         </div>
       </div>
-      <div className="col-span-7 space-y-4">
-        <div className="grid grid-cols-3 gap-4">
+      <div className="col-span-7 space-y-4 compact:col-span-1">
+        <div className="grid grid-cols-3 gap-4 phone:grid-cols-1 phone:gap-3">
           <Result tone="danger" eyebrow="Effective interest (APR)" value={s.empty ? '--' : s.apr!.toFixed(1) + '%'} lines={['True cost of the fee']} />
           <Result tone="neutral" eyebrow="Hidden costs" value={s.empty ? '--' : lkr(s.hidden!)} lines={['Upfront fee', 'Paid immediately']} />
           <Result tone="neutral" eyebrow="Total outflow" value={s.empty ? '--' : lkr(s.total!)} lines={[s.empty ? '--' : s.sub!]} foot={s.empty ? undefined : s.insight} />
@@ -237,13 +237,13 @@ export function Simulators() {
   // Opening Simulators ticks the onboarding checklist's "try a simulator", as on the phone
   useEffect(() => { noteSimulatorVisit(); }, []);
   return (
-    <div className="mx-auto max-w-[1440px] px-8 py-7">
-      <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">Simulators</h1>
+    <div className="mx-auto max-w-[1440px] px-8 py-7 tablet:px-6 tablet:py-6 phone:px-4 phone:py-5">
+      <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">Simulators</h1>
       <p className="mt-1 text-[13px] text-faint">Try a saved card or your own numbers. Nothing here changes your cards.</p>
       <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'minimum' ? {} : { tab: v }, { replace: true })} className="mt-6">
-        <Tabs.List className="mb-5 inline-flex rounded-xl bg-sunken p-1" aria-label="Simulators" data-tip="sim-tabs">
+        <Tabs.List className="mb-5 inline-flex rounded-xl bg-sunken p-1 phone:mb-4 phone:flex phone:w-full" aria-label="Simulators" data-tip="sim-tabs">
           {[['minimum', 'Min Payment Trap', 'trending_down'], ['advance', 'Cash Advance', 'local_atm'], ['surcharge', '0% Surcharge', 'percent']].map(([v, l, i]) => (
-            <Tabs.Trigger key={v} value={v} className="flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold text-faint transition-colors hover:text-ink data-[state=active]:bg-panel data-[state=active]:text-ink data-[state=active]:shadow-card">
+            <Tabs.Trigger key={v} value={v} className="flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold phone:flex-1 phone:justify-center phone:px-1.5 phone:text-[12px] [&>.icon]:phone:hidden text-faint transition-colors hover:text-ink data-[state=active]:bg-panel data-[state=active]:text-ink data-[state=active]:shadow-card">
               <Icon name={i} size={18} />{l}
             </Tabs.Trigger>
           ))}

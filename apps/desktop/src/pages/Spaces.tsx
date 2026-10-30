@@ -10,6 +10,8 @@ import { fmtAmt, shortDate } from '../lib/format';
 import { Modal, Label, ErrorLine, Actions, Money, ColourPicker, colourName } from '../components/CardDialogs';
 import { CardDot, Empty, Icon, useToast } from '../components/ui';
 import type { Card, Space } from '../lib/types';
+import { layoutNow, useLayout } from '../lib/layout';
+import { Sheet } from '../components/Sheet';
 
 type Dlg = { kind: 'create' } | { kind: 'edit' | 'delete' | 'add' | 'withdraw' | 'pay'; id: string };
 
@@ -164,7 +166,7 @@ function Detail({ space, cards, open }: { space: Space; cards: Card[]; open: (d:
     open({ kind: 'pay', id: space.id });
   };
   return (
-    <aside className="scroll-thin w-[380px] shrink-0 overflow-y-auto border-l border-line bg-panel" aria-label={space.name}>
+    <aside className="scroll-thin w-[380px] shrink-0 overflow-y-auto border-l border-line bg-panel compact:w-full compact:border-l-0" aria-label={space.name}>
       <div className="flex items-start justify-between px-5 pb-3 pt-5">
         <div className="min-w-0">
           <p className="truncate text-[17px] font-semibold">{space.name}</p>
@@ -210,13 +212,16 @@ const TITLES: Record<Dlg['kind'], string> = {
 export function Spaces() {
   const app = useApp();
   const toast = useToast();
-  const [sel, setSel] = useState<string | null>(app.spaces[0]?.id || null);
+  const [sel, setSel] = useState<string | null>(layoutNow() === 'desktop' ? app.spaces[0]?.id || null : null);
   const [dlg, setDlg] = useState<Dlg | null>(null);
   const today = ymd(new Date());
   // The setup checklist's "Create an emergency buffer" opens the new space form
   const [params, setParams] = useSearchParams();
   useEffect(() => { if (params.get('create') === '1') { setDlg({ kind: 'create' }); setParams({}, { replace: true }); } }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
-  const selected = (sel && app.spaces.find((s) => s.id === sel)) || app.spaces[0] || null;
+  const layout = useLayout();
+  const compact = layout !== 'desktop';
+  // Desktop shows the first space beside the list; phones and iPads open one when it's tapped
+  const selected = (sel && app.spaces.find((s) => s.id === sel)) || (compact ? null : app.spaces[0]) || null;
   const totalCur = app.spaces.reduce((n, s) => n + (Number(s.currentLKR) || 0), 0);
   const totalTarget = app.spaces.reduce((n, s) => n + (Number(s.targetLKR) || 0), 0);
   // The phone app's Spaces summary: the latest ten movements across all spaces
@@ -248,16 +253,16 @@ export function Spaces() {
 
   return (
     <div className="flex h-full">
-      <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
-        <div className="mb-5 flex items-end justify-between">
+      <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7 tablet:px-6 tablet:py-6 phone:px-4 phone:py-5">
+        <div className="mb-5 flex items-end justify-between phone:mb-4">
           <div>
-            <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">Spaces</h1>
+            <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">Spaces</h1>
             <p className="mt-1 text-[13px] text-faint">{app.spaces.length} Active Repayment Buffer{app.spaces.length === 1 ? '' : 's'}</p>
           </div>
           <button type="button" className="btn-primary" data-tip="add-space" onClick={() => setDlg({ kind: 'create' })}><Icon name="add" size={18} />Add space</button>
         </div>
         {app.spaces.length > 0 && (
-          <section className="panel mb-5 flex items-center gap-6 px-5 py-4">
+          <section className="panel mb-5 flex items-center gap-6 px-5 py-4 phone:mb-4 phone:flex-wrap phone:gap-x-4 phone:gap-y-3 phone:px-4 [&>div.flex-1]:phone:order-last [&>div.flex-1]:phone:basis-full">
             <div>
               <p className="label">Total saved</p>
               <p className="num mt-1 text-[22px] font-bold">{fmtAmt(totalCur)} <span className="text-[13px] font-medium text-faint">/ {fmtAmt(totalTarget)}</span></p>
@@ -271,7 +276,7 @@ export function Spaces() {
         {app.spaces.length === 0 ? (
           <div className="panel"><Empty icon="savings" title="No Spaces Found" body="Create a space to start allocating money for upcoming bills and emergencies." /></div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3">
             {app.spaces.map((s) => {
               const st = spaceStatusLine(s, today, fmtAmt);
               const on = selected && s.id === selected.id;
@@ -301,15 +306,15 @@ export function Spaces() {
         {recent.length > 0 && (
           <section className="panel mt-5">
             <div className="panel-head"><h2 className="panel-title">Recent activity</h2></div>
-            <ul className="divide-y divide-line px-5 pb-3">
+            <ul className="divide-y divide-line px-5 pb-3 phone:px-4">
               {recent.map(({ h, s: sp }) => {
                 const l = spaceHistoryLabel(h);
                 return (
                   <li key={sp.id + h.id} className="flex items-center gap-3 py-2.5 text-[13px]">
                     <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: hexOf(sp) }} />
-                    <span className="w-40 truncate text-faint">{sp.name}</span>
-                    <span className="flex-1 truncate font-medium">{l.label}</span>
-                    <span className="num w-16 text-faint">{shortDate(h.date)}</span>
+                    <span className="w-40 truncate text-faint phone:hidden">{sp.name}</span>
+                    <span className="flex-1 truncate font-medium">{l.label}<span className="hidden text-[12px] font-normal text-faint phone:block">{sp.name} · {shortDate(h.date)}</span></span>
+                    <span className="num w-16 text-faint phone:hidden">{shortDate(h.date)}</span>
                     <span className={'num w-28 text-right font-semibold ' + (l.out ? '' : 'text-ok')}>{l.out ? '− ' : '+ '}{fmtAmt(Number(h.amount) || 0)}</span>
                   </li>
                 );
@@ -318,7 +323,12 @@ export function Spaces() {
           </section>
         )}
       </div>
-      {selected && <Detail space={selected} cards={app.cards} open={setDlg} />}
+      {selected && !compact && <Detail space={selected} cards={app.cards} open={setDlg} />}
+      {compact && (
+        <Sheet bare open={!!selected && !dlg} onClose={() => setSel(null)} title={selected ? selected.name : 'Space'}>
+          {selected && <Detail space={selected} cards={app.cards} open={setDlg} />}
+        </Sheet>
+      )}
       <Modal open={!!dlg && !!body} onClose={close} title={dlg ? (dlg.kind === 'pay' && dSpace ? 'Pay a card from ' + dSpace.name : TITLES[dlg.kind]) : ''} width={dlg?.kind === 'create' || dlg?.kind === 'edit' ? 560 : 460}>{body}</Modal>
     </div>
   );

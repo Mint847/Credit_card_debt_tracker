@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <!-- Added to a home screen, it opens full screen like the phone app did -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Serendib" />
     <title>Serendib</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23008374%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Georgia%27 font-size=%2720%27 fill=%27white%27 text-anchor=%27middle%27%3ES%3C/text%3E%3C/svg%3E" />
     <meta name="description" content="Track, plan and pay off your Sri Lankan credit card debt." />
@@ -14,18 +19,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-    <script>
-      // This app is for computers: phones and iPads go to the phone and iPad app at /. The same test as in
-      // that app's index.html (which sends computers here), so the two never bounce.
-      (function () {
-        try {
-          var iPad = /iPad|Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
-          var computer = !iPad && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
-            Math.max(screen.width, screen.height) >= 1280;
-          if (!computer) location.replace('/');
-        } catch (e) {}
-      })();
-    </script>
     <script>
       // Same theme choice as the phone app (shared on this device), applied before the first paint
       (function () {

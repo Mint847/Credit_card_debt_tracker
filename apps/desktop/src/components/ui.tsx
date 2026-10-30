@@ -69,7 +69,49 @@ export function Tip({ label, children, side = 'top' }: { label: ReactNode; child
   );
 }
 
-export function Panel({ title, action, children, className = '', bodyClass = 'px-5 pb-5', tip }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClass?: string; tip?: string }) {
+// Phone sections the user has folded away, remembered on this device
+const FOLD_KEY = 'serendib_folded';
+function foldedNow(): string[] {
+  try { return JSON.parse(localStorage.getItem(FOLD_KEY) || '[]'); } catch (e) { return []; }
+}
+function useFold(id: string | undefined) {
+  const [shut, setShut] = useState(() => !!id && foldedNow().includes(id));
+  const toggle = useCallback(() => {
+    if (!id) return;
+    setShut((s) => {
+      const rest = foldedNow().filter((x) => x !== id);
+      try { localStorage.setItem(FOLD_KEY, JSON.stringify(s ? rest : [...rest, id])); } catch (e) { /* storage blocked */ }
+      return !s;
+    });
+  }, [id]);
+  return [shut, toggle] as const;
+}
+
+// fold: the header collapses and expands the panel (the summary shows while it's folded)
+export function Panel({ title, action, children, className = '', bodyClass = 'px-5 pb-5', tip, fold, summary }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClass?: string; tip?: string; fold?: string; summary?: ReactNode }) {
+  const [shut, toggle] = useFold(fold);
+  if (fold) {
+    const bodyId = 'fold-' + fold;
+    // Folded panels in a grid row keep to their header instead of stretching to the row's height
+    return (
+      <section className={'panel ' + className + (shut ? ' self-start' : '')} data-tip={tip} data-fold={fold}>
+        <div className={'panel-head gap-3 ' + (shut ? 'pb-4' : '')}>
+          <button type="button" onClick={toggle} aria-expanded={!shut} aria-controls={bodyId}
+            className="group -my-2.5 -ml-1.5 flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-1.5 text-left">
+            <Icon name="expand_more" size={20} className={'shrink-0 text-faint transition-transform duration-200 group-hover:text-ink ' + (shut ? '-rotate-90' : '')} />
+            <h2 className="panel-title truncate">{title}</h2>
+            {shut && summary && <span className="ml-auto shrink-0 text-[12px] text-faint">{summary}</span>}
+          </button>
+          {!shut && action}
+        </div>
+        <div id={bodyId} className={'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ' + (shut ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}>
+          <div className={'min-h-0 overflow-hidden transition-[visibility] duration-200 ' + (shut ? 'invisible' : 'visible')}>
+            <div className={bodyClass}>{children}</div>
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className={'panel ' + className} data-tip={tip}>
       {(title || action) && (
@@ -109,7 +151,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastCtx.Provider value={show}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex w-[360px] flex-col gap-2" role="status" aria-live="polite">
+      <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex w-[360px] flex-col gap-2 phone:inset-x-3 phone:bottom-[calc(84px+env(safe-area-inset-bottom))] phone:w-auto" role="status" aria-live="polite">
         {items.map((t) => (
           <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-[13px] text-ink shadow-pop">
             <Icon name={t.tone === 'warn' ? 'warning' : 'check_circle'} className={t.tone === 'warn' ? 'text-warn' : 'text-brand-ink'} fill />

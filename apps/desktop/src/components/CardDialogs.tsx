@@ -16,6 +16,7 @@ import {
 import { fmtAmt, shortDate } from '../lib/format';
 import { cardName } from '../lib/derive';
 import { CardDot, Icon, useToast } from './ui';
+import { dialogFrame, useLayout } from '../lib/layout';
 import type { Card } from '../lib/types';
 
 export type CardDialog =
@@ -29,17 +30,19 @@ export const useCardDialogs = () => useContext(Ctx);
 
 /* Building blocks */
 export function Modal({ open, onClose, title, width = 480, children }: { open: boolean; onClose: () => void; title: string; width?: number; children: ReactNode }) {
+  const layout = useLayout();
+  const frame = dialogFrame(layout, width);
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
-        <Dialog.Content style={{ width }} className="fixed left-1/2 top-[8vh] z-50 max-h-[84vh] -translate-x-1/2 overflow-y-auto rounded-2xl border border-line bg-panel shadow-pop focus:outline-none scroll-thin">
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4">
+        <Dialog.Content style={frame.style} className={frame.className}>
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:px-5 phone:pt-5">
             <Dialog.Title className="text-[15px] font-semibold">{title}</Dialog.Title>
             <Dialog.Close className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Close"><Icon name="close" /></Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">{title}</Dialog.Description>
-          <div className="px-6 py-5">{children}</div>
+          <div className="px-6 py-5 phone:px-5">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

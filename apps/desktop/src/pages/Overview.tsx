@@ -9,6 +9,8 @@ import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
 import { CardDot, Chip, Empty, Icon, Panel, UtilBar } from '../components/ui';
 import { token, useIsDark } from '../lib/theme';
+import { useLayout } from '../lib/layout';
+import { EntryList } from '../components/EntryList';
 import { VerifyBanner } from '../components/VerifyBanner';
 import { AlertList, attentionCount, useAlerts } from '../components/Alerts';
 import { Checklist } from '../components/Onboarding';
@@ -20,9 +22,9 @@ function greeting() {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-function Kpi({ label, value, sub, children }: { label: string; value: string; sub?: React.ReactNode; children?: React.ReactNode }) {
+function Kpi({ label, value, sub, children, className = '' }: { label: string; value: string; sub?: React.ReactNode; children?: React.ReactNode; className?: string }) {
   return (
-    <div className="min-w-0 px-5 py-4">
+    <div className={'min-w-0 px-5 py-4 compact:bg-panel phone:px-4 phone:py-3.5 ' + className}>
       <p className="label">{label}</p>
       <p className="num mt-1.5 truncate text-[22px] font-bold tracking-tight">{value}</p>
       {children}
@@ -48,33 +50,35 @@ export function Overview() {
     return all.sort((a, b) => (a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : 0)).slice(0, 8);
   }, [app]);
   const nextDue = upcoming.find((u) => u.kind === 'due');
+  const layout = useLayout();
   useIsDark();
   const c = { brand: token('brand'), faint: token('faint'), line: token('line'), panel: token('panel'), ink: token('ink') };
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7">
+    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7 tablet:px-6 tablet:py-6 phone:space-y-4 phone:px-4 phone:py-5">
       <VerifyBanner />
       <Checklist />
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between phone:flex-col phone:items-stretch phone:gap-4">
         <div>
-          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">{greeting()}, {app.profile.firstName}</h1>
+          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">{greeting()}, {app.profile.firstName}</h1>
           <p className="mt-1 text-[13px] text-faint">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · {app.cards.length} cards ·{' '}
             {app.strategy === 'avalanche' ? 'Avalanche' : 'Snowball'} plan
           </p>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="btn-outline" onClick={() => openLog({ sms: true })}><Icon name="sms" size={18} />Paste SMS</button>
-          <button type="button" className="btn-primary" onClick={() => openLog({ type: 'payment', cardId: p.order[0]?.id, prefill: p.order[0] ? p.alloc[p.order[0].id] : undefined })}>
+          <button type="button" className="btn-outline phone:hidden" onClick={() => openLog({ sms: true })}><Icon name="sms" size={18} />Paste SMS</button>
+          <button type="button" className="btn-primary phone:h-11 phone:flex-1 phone:justify-center" onClick={() => openLog({ type: 'payment', cardId: p.order[0]?.id, prefill: p.order[0] ? p.alloc[p.order[0].id] : undefined })}>
             <Icon name="payments" size={18} />Log this month’s payment
           </button>
         </div>
       </div>
 
       {/* KPI strip */}
-      <section className="panel grid grid-cols-5 divide-x divide-line" data-tip="kpis">
-        <Kpi label="Total debt" value={fmtAmt(p.totalDebt)} sub={'of ' + fmtAmt(p.totalLimit) + ' total limit'} />
-        <Kpi label="Utilisation" value={pct(totalUtil, 1)}>
+      {/* Phone and iPad: a grid with hairlines between cells (the line colour shows through 1px gaps) */}
+      <section className="panel grid grid-cols-5 divide-x divide-line compact:gap-px compact:divide-x-0 compact:overflow-hidden compact:bg-line tablet:grid-cols-3 phone:grid-cols-2" data-tip="kpis">
+        <Kpi label="Total debt" value={fmtAmt(p.totalDebt)} sub={'of ' + fmtAmt(p.totalLimit) + ' total limit'} className="phone:col-span-2" />
+        <Kpi label="Utilisation" value={pct(totalUtil, 1)} className="phone:col-span-2">
           <div className="relative mt-2">
             <UtilBar value={totalUtil} />
             {/* The 30% line: the phone app's safe limit */}
@@ -84,19 +88,20 @@ export function Overview() {
         </Kpi>
         <Kpi label="Monthly commitment" value={fmtAmt(p.commitment)} sub="Your plan for this month" />
         <Kpi label="Interest bleed" value={fmtAmt(p.interestMonth)} sub="Per month at today’s balances" />
-        <Kpi label="Debt-free"
+        <Kpi label="Debt-free" className="tablet:col-span-2 phone:col-span-2"
           value={pj.debtFree ? pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : app.cards.some((c) => c.balance > 0) ? 'Never' : '--'}
           sub={pj.debtFree ? pj.months + (pj.months === 1 ? ' month' : ' months') + (pj.speedUp >= 1 ? ' · ' + pj.speedUp.toFixed(1) + 'x faster than minimums' : '') : 'The budget doesn’t cover the minimums'} />
       </section>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
         {/* Payoff pace */}
-        <Panel tip="payoff" className="col-span-2" title="Payoff pace"
-          action={<div className="flex items-center gap-4 text-[12px] text-faint">
+        <Panel tip="payoff" className="col-span-2 compact:col-span-1" title="Payoff pace" fold="payoff"
+          summary={pj.debtFree ? 'Debt-free ' + pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : undefined}
+          action={<div className="flex items-center gap-4 text-[12px] text-faint phone:gap-2.5 phone:text-[11px]">
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-brand" />Your plan</span>
             <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-faint" />Minimums only</span>
           </div>}>
-          <div className="h-[248px]">
+          <div className="h-[248px] phone:-mx-2 phone:h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={pj.rows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
                 <defs>
@@ -117,7 +122,7 @@ export function Overview() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-4 border-t border-line pt-4 text-[12px]">
+          <div className="mt-3 grid grid-cols-3 gap-4 border-t border-line pt-4 text-[12px] phone:grid-cols-1 phone:gap-2 phone:text-[13px] phone:[&>div]:flex phone:[&>div]:items-baseline phone:[&>div]:justify-between">
             <div><p className="text-faint">Interest on your plan</p><p className="num mt-0.5 text-[14px] font-semibold">{pj.months === Infinity ? '—' : fmtAmt(pj.interest)}</p></div>
             <div><p className="text-faint">Interest paying minimums</p><p className="num mt-0.5 text-[14px] font-semibold">{pj.baselineMonths === Infinity ? 'Never paid off' : fmtAmt(pj.baselineInterest)}</p></div>
             <div><p className="text-faint">Your plan saves</p><p className="num mt-0.5 text-[14px] font-semibold text-ok">{pj.saved === null ? 'Massive amounts' : fmtAmt(pj.saved)}</p></div>
@@ -125,14 +130,14 @@ export function Overview() {
         </Panel>
 
         {/* Alerts: the phone app's, from the shared core */}
-        <Panel tip="alerts" title="Needs attention" action={count > 0 ? <Chip tone="danger">{count} Attention</Chip> : undefined} bodyClass="px-2 pb-2">
+        <Panel tip="alerts" title="Needs attention" fold="alerts" summary={count > 0 ? <Chip tone="danger">{count} Attention</Chip> : 'All clear'} action={count > 0 ? <Chip tone="danger">{count} Attention</Chip> : undefined} bodyClass="px-2 pb-2">
           <AlertList />
         </Panel>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-3 gap-5 tablet:grid-cols-2 phone:grid-cols-1 phone:gap-4">
         {/* Upcoming */}
-        <Panel title="Next 5 weeks" action={nextDue && <span className="text-[12px] text-faint">Next due {shortDate(nextDue.date)}</span>} bodyClass="px-2 pb-3">
+        <Panel title="Next 5 weeks" fold="upcoming" summary={nextDue ? 'Next due ' + shortDate(nextDue.date) : upcoming.length ? upcoming.length + ' coming up' : 'Nothing scheduled'} action={nextDue && <span className="text-[12px] text-faint">Next due {shortDate(nextDue.date)}</span>} bodyClass="px-2 pb-3">
           {upcoming.length === 0 && <Empty icon="event_available" title="Nothing scheduled" body="Add billing cycles to your cards to see statements and due dates here." />}
           <ol className="scroll-thin max-h-[300px] overflow-y-auto">
             {upcoming.slice(0, 12).map((u, i) => {
@@ -160,7 +165,7 @@ export function Overview() {
         </Panel>
 
         {/* Spending by category */}
-        <Panel title="Spending this cycle" action={<span className="num text-[12px] font-semibold">{fmtAmt(spend.total)}</span>}>
+        <Panel title="Spending this cycle" fold="spending" summary={<span className="num font-semibold text-ink">{fmtAmt(spend.total)}</span>} action={<span className="num text-[12px] font-semibold">{fmtAmt(spend.total)}</span>}>
           {spend.rows.length === 0 && <Empty icon="shopping_bag" title="No spending yet" body="Spending logged in each card’s current billing period shows here." />}
           {spend.rows.length > 0 && (
             <>
@@ -182,7 +187,7 @@ export function Overview() {
         </Panel>
 
         {/* Pay-first order */}
-        <Panel title="This month’s plan" action={<Link to="/plan" className="text-[12px] font-semibold text-brand-ink hover:underline">Open plan</Link>} bodyClass="px-2 pb-3">
+        <Panel className="tablet:col-span-2" title="This month’s plan" fold="plan" summary={<span className="num font-semibold text-ink">{fmtAmt(p.commitment)}</span>} action={<Link to="/plan" className="text-[12px] font-semibold text-brand-ink hover:underline">Open plan</Link>} bodyClass="px-2 pb-3">
           <ol>
             {p.order.map((c, i) => (
               <li key={c.id}>
@@ -205,7 +210,8 @@ export function Overview() {
       </div>
 
       {/* Recent activity */}
-      <Panel title="Recent activity" action={<Link to="/activity" className="text-[12px] font-semibold text-brand-ink hover:underline">View all</Link>} bodyClass="pb-2">
+      <Panel title="Recent activity" fold="recent" summary={recent.length ? 'Latest ' + shortDate(recent[0].e.date) : 'No entries yet'} action={<Link to="/activity" className="text-[12px] font-semibold text-brand-ink hover:underline">View all</Link>} bodyClass="pb-2">
+        {layout === 'phone' ? <EntryList rows={recent} onOpen={(c, e) => openLog({ editing: { id: e.id, cardId: c.id } })} /> : (
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-y border-line text-left text-[11px] font-semibold uppercase tracking-wider text-faint">
@@ -230,7 +236,9 @@ export function Overview() {
             })}
           </tbody>
         </table>
+        )}
       </Panel>
     </div>
   );
 }
+

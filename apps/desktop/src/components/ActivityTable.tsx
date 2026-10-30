@@ -10,6 +10,8 @@ import { fmtAmt, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
 import { CardDot, Chip, Empty, Icon, Segmented, Tip, useToast } from './ui';
 import { useWorkspace } from './Shell';
+import { EntryList } from './EntryList';
+import { useLayout, useWidth } from '../lib/layout';
 import type { Card, Entry } from '../lib/types';
 
 interface Row { e: Entry; card: Card }
@@ -22,6 +24,9 @@ function signed(e: Entry) { return (e.type === 'purchase' ? 1 : e.type === 'adju
 export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; single?: boolean; focusSearch?: boolean }) {
   const { openLog } = useWorkspace();
   const toast = useToast();
+  const layout = useLayout();
+  const width = useWidth();
+  const listView = layout === 'phone' || (layout === 'tablet' && width < 1024);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }]);
   const [q, setQ] = useState('');
   const [type, setType] = useState<TypeFilter>('all');
@@ -119,34 +124,37 @@ export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; s
 
   return (
     <div className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
-        <div className="relative w-64">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 phone:gap-2.5">
+        <div className="relative w-64 phone:w-full">
           <Icon name="search" size={18} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
           <input ref={search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search merchant or note" aria-label="Search" className="field pl-9" />
         </div>
         {!single && (
-          <select value={cardId} onChange={(e) => setCardId(e.target.value)} className="field w-48" aria-label="Card">
+          <select value={cardId} onChange={(e) => setCardId(e.target.value)} className="field w-48 phone:w-[calc(50%-5px)]" aria-label="Card">
             <option value="all">All cards</option>
             {cards.map((c) => <option key={c.id} value={c.id}>{cardName(c)}</option>)}
           </select>
         )}
-        <Segmented size="sm" value={type} onChange={setType}
-          options={[{ value: 'all', label: 'All' }, { value: 'purchase', label: 'Purchases' }, { value: 'payment', label: 'Payments' }, { value: 'refund', label: 'Refunds' }, { value: 'adjustment', label: 'Adjustments' }]} />
-        <select value={cat} onChange={(e) => setCat(e.target.value)} className="field w-44" aria-label="Category">
+        <div className="phone:-mx-4 phone:w-[calc(100%+32px)] phone:overflow-x-auto phone:px-4 phone:order-first phone:[scrollbar-width:none]"><Segmented size="sm" value={type} onChange={setType}
+          options={[{ value: 'all', label: 'All' }, { value: 'purchase', label: 'Purchases' }, { value: 'payment', label: 'Payments' }, { value: 'refund', label: 'Refunds' }, { value: 'adjustment', label: 'Adjustments' }]} /></div>
+        <select value={cat} onChange={(e) => setCat(e.target.value)} className={'field w-44 ' + (single ? 'phone:w-full' : 'phone:w-[calc(50%-5px)]')} aria-label="Category">
           <option value="all">All categories</option>
           {SPEND_CATEGORIES.map((c: { key: string; label: string }) => <option key={c.key} value={c.key}>{c.label}</option>)}
         </select>
-        <div className="flex items-center gap-1.5 text-[12px] text-faint">
+        <div className="flex items-center gap-1.5 text-[12px] text-faint phone:w-full [&>input]:phone:flex-1">
           <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className="field h-9 w-36" aria-label="From date" />
           to
           <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className="field h-9 w-36" aria-label="To date" />
         </div>
-        <span className="ml-auto text-[12px] text-faint">{rows.length} {rows.length === 1 ? 'entry' : 'entries'}</span>
+        <span className="ml-auto text-[12px] text-faint phone:ml-0 phone:flex-1">{rows.length} {rows.length === 1 ? 'entry' : 'entries'}</span>
         <Tip label={csvCard ? 'Download ' + cardName(csvCard) + '’s history' : 'Pick one card to export its history'}>
           <span><button type="button" className="btn-outline h-8" disabled={!csvCard} onClick={exportCsv}><Icon name="download" size={16} />Export CSV</button></span>
         </Tip>
       </div>
-      {rows.length === 0 ? <Empty icon="receipt_long" title={total ? 'No entries match.' : single ? 'Nothing logged on this card yet.' : 'Nothing logged yet.'} body={total ? 'Try a different search or filter.' : undefined} /> : (
+      {rows.length === 0 ? <Empty icon="receipt_long" title={total ? 'No entries match.' : single ? 'Nothing logged on this card yet.' : 'Nothing logged yet.'} body={total ? 'Try a different search or filter.' : undefined} /> : listView ? (
+        <div className="-mt-px"><EntryList rows={table.getRowModel().rows.map((r) => ({ c: r.original.card, e: r.original.e }))} showCard={!single}
+          onOpen={(c, e) => openLog({ editing: { id: e.id, cardId: c.id } })} /></div>
+      ) : (
         <table className="w-full table-fixed text-[13px]">
           <colgroup>
             <col className="w-24" /><col /><col className="w-44" />{!single && <col className="w-48" />}<col className="w-32" /><col className="w-20" />
@@ -187,7 +195,7 @@ export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; s
       {archive.length > 0 && csvCard && (
         <div className="border-t border-line px-4 py-3">
           <p className="mb-1.5 text-[12px] font-semibold">Older months (totals only)</p>
-          <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-[12px]">
+          <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-[12px] compact:grid-cols-1">
             {archive.map((m) => {
               const a = (csvCard.ledgerArchive || {})[m];
               return (

@@ -10,6 +10,7 @@ import { CardTile, Chip, Icon, UtilBar, type Tone } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { useCardDialogs } from '../components/CardDialogs';
 import type { Card } from '../lib/types';
+import { useLayout } from '../lib/layout';
 
 interface Row {
   card: Card;
@@ -45,7 +46,9 @@ export function Cards() {
   const navigate = useNavigate();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filter, setFilter] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(app.cards[0]?.id || null);
+  const layout = useLayout();
+  const compact = layout !== 'desktop';
+  const [selectedId, setSelectedId] = useState<string | null>(compact ? null : app.cards[0]?.id || null);
   const openDialog = useCardDialogs();
 
   const rows = useMemo<Row[]>(() => app.cards.map((c) => {
@@ -107,16 +110,17 @@ export function Cards() {
 
   const selected = app.cards.find((c) => c.id === selectedId) || null;
 
+  if (compact) return <CardList rows={rows} onAdd={() => openDialog({ kind: 'add' })} />;
   return (
     <div className="flex h-full">
-      <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
+      <div className="min-w-0 flex-1 overflow-y-auto px-8 py-7 tablet:px-6 tablet:py-6">
         <div className="mb-5 flex items-end justify-between">
           <div>
             <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">Cards</h1>
             <p className="mt-1 text-[13px] text-faint">{app.cards.length} cards · {fmtAmt(p.totalDebt)} owed of {fmtAmt(p.totalLimit)}</p>
           </div>
           <div className="flex gap-2">
-            <div className="relative">
+            <div className="relative tablet:hidden">
               <Icon name="filter_list" size={18} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
               <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter cards" className="field w-56 pl-9" />
             </div>
@@ -149,7 +153,7 @@ export function Cards() {
                 const isSel = r.original.card.id === selectedId;
                 return (
                   <tr key={r.id} tabIndex={0} aria-selected={isSel}
-                    onClick={() => setSelectedId(r.original.card.id)}
+                    onClick={() => compact ? navigate('/cards/' + r.original.card.id) : setSelectedId(r.original.card.id)}
                     onDoubleClick={() => navigate('/cards/' + r.original.card.id)}
                     onKeyDown={(e) => { if (e.key === 'Enter') navigate('/cards/' + r.original.card.id); if (e.key === ' ') { e.preventDefault(); setSelectedId(r.original.card.id); } }}
                     className={'cursor-pointer border-b border-line last:border-0 outline-none focus-visible:bg-sunken ' + (isSel ? 'bg-brand/5' : 'hover:bg-sunken')}>
@@ -175,9 +179,68 @@ export function Cards() {
             </tfoot>
           </table>
         </div>
-        <p className="mt-3 text-[12px] text-faint">Click a row to inspect it, double-click or press Enter to open the card.</p>
+        <p className="mt-3 text-[12px] text-faint">{compact ? 'Tap a card to open it.' : 'Click a row to inspect it, double-click or press Enter to open the card.'}</p>
       </div>
       {selected && <Inspector card={selected} plan={p.alloc[selected.id] || 0} rank={p.order.findIndex((c) => c.id === selected.id)} onClose={() => setSelectedId(null)} />}
+    </div>
+  );
+}
+
+// Phones and iPads: each card as a tile with its balance, this month's plan and utilisation
+function CardList({ rows, onAdd }: { rows: Row[]; onAdd: () => void }) {
+  const app = useApp();
+  const p = usePlan();
+  const navigate = useNavigate();
+  const totalUtil = p.totalLimit ? (p.totalDebt / p.totalLimit) * 100 : 0;
+  return (
+    <div className="space-y-4 px-4 py-5 tablet:space-y-5 tablet:px-6 tablet:py-6">
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="font-serif text-[27px] font-medium leading-tight tracking-tight tablet:text-[30px]">Cards</h1>
+          <p className="mt-1 text-[13px] text-faint">{app.cards.length} cards · {pct(totalUtil)} used</p>
+        </div>
+        <button type="button" className="btn-primary" data-tip="add-card" onClick={onAdd}><Icon name="add" size={18} />Add card</button>
+      </div>
+      <div className="panel grid grid-cols-2 gap-px overflow-hidden bg-line tablet:grid-cols-4">
+        <div className="bg-panel px-4 py-3"><p className="label">Total owed</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(p.totalDebt)}</p></div>
+        <div className="bg-panel px-4 py-3"><p className="label">This month</p><p className="num mt-1 text-[19px] font-bold text-brand-ink">{fmtAmt(p.commitment)}</p></div>
+        <div className="hidden bg-panel px-4 py-3 tablet:block"><p className="label">Total limit</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(p.totalLimit)}</p></div>
+        <div className="hidden bg-panel px-4 py-3 tablet:block"><p className="label">Available</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(Math.max(0, p.totalLimit - p.totalDebt))}</p></div>
+      </div>
+      <ul className="space-y-3 tablet:grid tablet:grid-cols-2 tablet:gap-4 tablet:space-y-0" data-tip="cards-table">
+        {rows.map((r) => {
+          const c = r.card;
+          const rank = p.order.findIndex((x) => x.id === c.id);
+          return (
+            <li key={c.id}>
+              <button type="button" onClick={() => navigate('/cards/' + c.id)} className="panel block w-full p-4 text-left active:bg-sunken">
+                <div className="flex items-center gap-3">
+                  <CardTile card={c} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold">{cardName(c)}</p>
+                    <p className="truncate text-[12px] text-faint">{c.bank}{c.last4 ? ' ·· ' + c.last4 : ''}</p>
+                  </div>
+                  <Chip tone={r.status.tone}>{r.status.label}</Chip>
+                </div>
+                <div className="mt-3.5 flex items-end justify-between">
+                  <div><p className="label">Balance</p><p className="num mt-0.5 text-[21px] font-bold tracking-tight">{fmtAmt(c.balance)}</p></div>
+                  {c.balance > 0 && (
+                    <div className="text-right">
+                      <p className="text-[11px] font-semibold text-faint">{rank === 0 ? 'Pay first · ' : ''}This month</p>
+                      <p className="num mt-0.5 text-[15px] font-semibold text-brand-ink">{fmtAmt(r.plan)}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2.5 flex items-center gap-2.5">
+                  <UtilBar value={r.util} />
+                  <span className={'num shrink-0 text-[12px] font-semibold ' + (r.util >= 75 ? 'text-danger' : r.util >= 30 ? 'text-warn' : 'text-ok')}>{pct(r.util)}</span>
+                  <span className="num shrink-0 text-[12px] text-faint">of {fmtShort(c.limit).replace('LKR ', '')}</span>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

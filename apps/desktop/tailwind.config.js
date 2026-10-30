@@ -32,5 +32,12 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [
+    // Phone and iPad designs (lib/layout.ts sets <html data-layout>): phone:, tablet:, and compact: for both
+    function ({ addVariant }) {
+      addVariant('phone', '[data-layout=phone] &');
+      addVariant('tablet', '[data-layout=tablet] &');
+      addVariant('compact', ':is([data-layout=phone], [data-layout=tablet]) &');
+    }
+  ]
 };

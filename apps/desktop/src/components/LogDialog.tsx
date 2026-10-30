@@ -3,6 +3,7 @@
 // saving goes through the core's saveEntry.
 import { useEffect, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { dialogFrame, useLayout } from '../lib/layout';
 import {
   SPEND_CATEGORIES, ymd, merchantItems, defaultCategory, categoryForMerchant, overLimitWarning, paymentShortcuts, smsFill,
   logSavedText, parseAmountInput, planAllocationFor, LOG_CARD_KEY, SMS_HINT
@@ -130,12 +131,13 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
     if (undo) toast('Entry deleted', { action: { label: 'Undo', run: undo } });
   }
 
+  const frame = dialogFrame(useLayout(), 540, '7vh', '86vh');
   const statusTone = smsStatus.tone === 'ok' ? 'font-semibold text-ok' : smsStatus.tone === 'warn' ? 'font-semibold text-warn' : 'text-faint';
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
-        <Dialog.Content className="scroll-thin fixed left-1/2 top-[7vh] z-50 max-h-[86vh] w-[540px] -translate-x-1/2 overflow-y-auto rounded-2xl border border-line bg-panel shadow-pop focus:outline-none"
+        <Dialog.Content style={frame.style} className={frame.className}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save(false); }}>
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4">
             <Dialog.Title className="text-[15px] font-semibold">{request?.editing ? 'Edit entry' : 'Log spending'}</Dialog.Title>
@@ -233,7 +235,7 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
             {error && <p role="alert" className="text-[12px] font-semibold text-danger">{error}</p>}
 
             <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-[11px] text-faint"><span className="kbd">Ctrl</span> <span className="kbd">Enter</span> to save</span>
+              <span className="text-[11px] text-faint compact:invisible"><span className="kbd">Ctrl</span> <span className="kbd">Enter</span> to save</span>
               <div className="flex gap-2">
                 {request?.editing ? (
                   <>

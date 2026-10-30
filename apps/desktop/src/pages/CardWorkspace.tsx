@@ -19,6 +19,7 @@ import { Chip, Empty, Icon, Panel, UtilBar, useToast } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { CardFace } from './Cards';
 import type { Card, Recurring } from '../lib/types';
+import { useLayout } from '../lib/layout';
 
 const TABS = [
   { value: 'overview', label: 'Overview' },
@@ -38,19 +39,19 @@ export function CardWorkspace() {
   const tab = params.get('tab') || 'overview';
   if (!card) return <Empty icon="credit_card_off" title="Card not found" body="It may have been removed on another device." />;
   return (
-    <div className="mx-auto max-w-[1440px] px-8 py-7">
+    <div className="mx-auto max-w-[1440px] px-8 py-7 tablet:px-6 tablet:py-6 phone:px-4 phone:py-4">
       <Header card={card} />
-      <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} className="mt-6">
-        <Tabs.List className="flex gap-1 border-b border-line" aria-label="Card sections" data-tip="card-tabs">
+      <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} className="mt-6 phone:mt-5">
+        <Tabs.List className="flex gap-1 border-b border-line phone:-mx-4 phone:overflow-x-auto phone:px-3 phone:[scrollbar-width:none]" aria-label="Card sections" data-tip="card-tabs">
           {TABS.map((t) => (
             <Tabs.Trigger key={t.value} value={t.value}
-              className="-mb-px border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] font-semibold text-faint transition-colors hover:text-ink data-[state=active]:border-brand data-[state=active]:text-ink">
+              className="-mb-px border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] font-semibold phone:shrink-0 phone:whitespace-nowrap phone:text-[14px] text-faint transition-colors hover:text-ink data-[state=active]:border-brand data-[state=active]:text-ink">
               {t.label}
               {t.value === 'activity' && <span className="num ml-1.5 text-[11px] font-medium text-faint">{(card.ledger || []).length}</span>}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
-        <div className="pt-5">
+        <div className="pt-5 phone:pt-4">
           <Tabs.Content value="overview"><OverviewTab card={card} /></Tabs.Content>
           <Tabs.Content value="activity"><ActivityTable cards={[card]} single focusSearch={params.get('search') === '1'} /></Tabs.Content>
           <Tabs.Content value="recurring"><RecurringTab card={card} /></Tabs.Content>
@@ -73,12 +74,12 @@ function Header({ card }: { card: Card }) {
   const due = amountDueNow(card);
   const rank = p.order.findIndex((c) => c.id === card.id);
   return (
-    <div className="flex gap-7">
-      <CardFace card={card} className="w-[280px] shrink-0" />
+    <div className="flex gap-7 tablet:gap-6 phone:flex-col phone:gap-4">
+      <CardFace card={card} className="w-[280px] shrink-0 tablet:w-[230px] tablet:self-start phone:mx-auto phone:w-full phone:max-w-[340px]" />
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 tablet:flex-col tablet:gap-3 phone:flex-col phone:gap-3.5">
           <div className="min-w-0">
-            <h1 className="truncate font-serif text-[30px] font-medium leading-tight tracking-tight">{card.bank} {card.nick}</h1>
+            <h1 className="truncate font-serif text-[30px] font-medium leading-tight tracking-tight tablet:text-[26px] phone:whitespace-normal phone:text-[24px]">{card.bank} {card.nick}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Chip>{cardApr(card)}% APR</Chip>
               <Chip>Min {Math.round(cardMinRule(card).pct * 100)}% or {fmtAmt(cardMinRule(card).floor)}</Chip>
@@ -93,7 +94,7 @@ function Header({ card }: { card: Card }) {
               )}
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 gap-2 phone:w-full [&>button:not(:last-child)]:phone:flex-1 [&>button]:phone:justify-center">
             <button type="button" className="btn-outline" data-tip="card-log" onClick={() => openLog({ type: 'purchase', cardId: card.id })}><Icon name="shopping_bag" size={18} />Log spend</button>
             <button type="button" className="btn-primary" onClick={() => openLog({ type: 'payment', cardId: card.id, prefill: due || undefined })}><Icon name="payments" size={18} />Log payment</button>
             <Dropdown.Root>
@@ -115,7 +116,7 @@ function Header({ card }: { card: Card }) {
             </Dropdown.Root>
           </div>
         </div>
-        <div className="mt-auto grid grid-cols-4 gap-6 pt-5">
+        <div className="mt-auto grid grid-cols-4 gap-6 pt-5 tablet:grid-cols-2 tablet:gap-x-6 tablet:gap-y-4 phone:grid-cols-2 phone:gap-x-4 phone:gap-y-4 phone:pt-4 [&_p.num]:phone:text-[20px]">
           <div><p className="label">Balance</p><p className="num mt-1 text-[24px] font-bold tracking-tight">{fmtAmt(card.balance)}</p></div>
           <div>
             <p className="label">Utilisation</p>
@@ -141,11 +142,11 @@ function OverviewTab({ card }: { card: Card }) {
   const cats = Object.keys(summary.byCat).filter((k) => summary.byCat[k] > 0).sort((a, b) => summary.byCat[b] - summary.byCat[a]);
   const max = Math.max(1, ...cats.map((k) => summary.byCat[k]));
   return (
-    <div className="grid grid-cols-3 gap-5">
-      <div className="col-span-2 space-y-5">
+    <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
+      <div className="col-span-2 compact:col-span-1 space-y-5">
         <Panel title={'This cycle · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
           action={<span className="text-[12px] text-faint">{period.hasCycle ? daysBetween(today(), period.end) + ' days to statement' : 'Calendar month (no billing cycle set)'}</span>}>
-          <div className="grid grid-cols-3 gap-4 border-b border-line pb-4">
+          <div className="grid grid-cols-3 gap-4 border-b border-line pb-4 phone:gap-3 [&_p.num]:phone:text-[16px]">
             <div><p className="text-[12px] text-faint">Spent</p><p className="num text-[18px] font-bold">{fmtAmt(summary.spent)}</p></div>
             <div><p className="text-[12px] text-faint">Payments</p><p className="num text-[18px] font-bold text-ok">{fmtAmt(summary.payments)}</p></div>
             <div><p className="text-[12px] text-faint">Top merchant</p><p className="truncate text-[15px] font-semibold">{summary.topMerchants[0]?.name || '—'}</p></div>
@@ -155,7 +156,7 @@ function OverviewTab({ card }: { card: Card }) {
               {cats.map((k) => {
                 const b = (card.budgets || {})[k];
                 return (
-                  <li key={k} className="grid grid-cols-[150px_1fr_110px] items-center gap-4 text-[13px]">
+                  <li key={k} className="grid grid-cols-[150px_1fr_110px] items-center gap-4 text-[13px] phone:grid-cols-[104px_1fr_92px] phone:gap-3">
                     <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: categoryHex(k) }} />{spendCategory(k).label}</span>
                     <div className="relative h-2 rounded-full bg-sunken">
                       <div className="h-full rounded-full" style={{ width: (summary.byCat[k] / max) * 100 + '%', background: categoryHex(k) }} />
@@ -168,7 +169,7 @@ function OverviewTab({ card }: { card: Card }) {
           )}
         </Panel>
         <Panel title="Payoff">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 phone:grid-cols-1 phone:gap-3">
             {[
               { title: 'On your plan', amt: plan, r: po.plan, tone: 'text-brand-ink' },
               { title: 'Minimums only', amt: card.balance > 0 ? minPaymentFor(card) : 0, r: po.min, tone: 'text-muted' }
@@ -231,18 +232,41 @@ function OverviewTab({ card }: { card: Card }) {
 }
 
 function RecurringTab({ card }: { card: Card }) {
+  const layout = useLayout();
   const t = today();
   const openDialog = useCardDialogs();
   const toast = useToast();
   const items = card.recurring || [];
   return (
-    <div className="grid grid-cols-3 gap-5">
-      <div className="panel col-span-2 overflow-hidden">
+    <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
+      <div className="panel col-span-2 compact:col-span-1 overflow-hidden">
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
           <p className="panel-title">Recurring payments</p>
           <button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'recurring', cardId: card.id })}><Icon name="add" size={16} />Add recurring</button>
         </div>
-        {items.length === 0 ? <Empty icon="autorenew" title="No recurring payments" body="Subscriptions and bills charged every month are logged for you on their day." /> : (
+        {items.length === 0 ? <Empty icon="autorenew" title="No recurring payments" body="Subscriptions and bills charged every month are logged for you on their day." /> : layout === 'phone' ? (
+          <ul>
+            {items.map((r) => {
+              const cancelled = isCancelled(r, t);
+              const next = !cancelled && !r.paused ? recurringNextDue(r, t) : null;
+              return (
+                <li key={r.id} className="border-b border-line last:border-0">
+                  <button type="button" onClick={() => openDialog({ kind: 'recurring', cardId: card.id, itemId: r.id })} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-sunken">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sunken" style={{ color: categoryHex(r.category) }}><Icon name={spendCategory(r.category).icon} size={18} /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-medium">{r.name}</span>
+                      <span className="block truncate text-[12px] text-faint">Day {r.day}{next ? ' · next ' + shortDate(next) : ''}</span>
+                    </span>
+                    <span className="flex flex-col items-end gap-1">
+                      <span className="num text-[14px] font-semibold">{fmtAmt(r.amount)}</span>
+                      <Chip tone={cancelled ? 'neutral' : r.paused ? 'warn' : 'ok'}>{cancelled ? 'Cancelled' : r.paused ? 'Paused' : 'Active'}</Chip>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-line bg-sunken/60 text-left text-[11px] font-semibold uppercase tracking-wider text-faint">
@@ -295,8 +319,8 @@ function BudgetsTab({ card }: { card: Card }) {
   const set = keys.filter((k: string) => budgets[k]);
   const unset = keys.filter((k: string) => !budgets[k]);
   return (
-    <div className="grid grid-cols-3 gap-5">
-      <Panel className="col-span-2" title={'Budgets · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
+    <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
+      <Panel className="col-span-2 compact:col-span-1" title={'Budgets · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
         action={<button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'budgets', cardId: card.id })}><Icon name="tune" size={16} />Set budgets</button>}>
         {set.length === 0 ? <Empty icon="savings" title="No budgets yet" body="Set a monthly limit per category and you’ll be warned before you go over." /> : (
           <ul className="space-y-4">
@@ -372,7 +396,7 @@ function CalculatorsTab({ card }: { card: Card }) {
   const fill = start.max > start.min ? ((pay - start.min) / (start.max - start.min)) * 100 : 0;
 
   return (
-    <div className="grid grid-cols-3 gap-5">
+    <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
       <Panel title="Payoff simulator" action={sim.tag ? <Chip tone="ok">{sim.tag}</Chip> : undefined}>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-danger/20 bg-danger/[0.04] p-3">
@@ -454,10 +478,11 @@ function CalculatorsTab({ card }: { card: Card }) {
 }
 
 function BillingTab({ card }: { card: Card }) {
+  const layout = useLayout();
   const st = cardCycle(card);
   const openDialog = useCardDialogs();
   return (
-    <div className="grid grid-cols-3 gap-5">
+    <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
       <Panel title="Billing cycle" action={<button type="button" className="btn-outline h-8" onClick={() => openDialog({ kind: 'billing', cardId: card.id })}><Icon name="edit" size={16} />Change</button>}>
         <div className="space-y-3 text-[13px]">
           <div className="flex justify-between"><span className="text-faint">Statement day</span><span className="font-semibold">{card.statementDay ? 'Day ' + card.statementDay : 'Not set'}</span></div>
@@ -466,9 +491,25 @@ function BillingTab({ card }: { card: Card }) {
         </div>
         <p className="mt-4 border-t border-line pt-3 text-[12px] text-faint">Each statement’s minimum is recorded on its statement day. Payments logged after it count towards it, oldest first.</p>
       </Panel>
-      <div className="panel col-span-2 overflow-hidden">
+      <div className="panel col-span-2 compact:col-span-1 overflow-hidden">
         <p className="panel-title border-b border-line px-5 py-3">Statements</p>
-        {!st ? <Empty icon="description" title="No statements recorded yet" /> : (
+        {!st ? <Empty icon="description" title="No statements recorded yet" /> : layout === 'phone' ? (
+          <ul>
+            {st.rows.slice().reverse().map((r: { s: { date: string; due: string; balance: number; minDue: number }; paid: number; remaining: number }) => {
+              const done = r.remaining <= 0.5, late = !done && r.s.due < today();
+              return (
+                <li key={r.s.date} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="num text-[14px] font-medium">{longDate(r.s.date)}</p>
+                    <p className="num text-[12px] text-faint">Balance {fmtAmt(r.s.balance)} · min {fmtAmt(r.s.minDue)}</p>
+                    <p className="num text-[12px] text-faint">Paid {fmtAmt(r.paid)} · due {shortDate(r.s.due)}</p>
+                  </div>
+                  <Chip tone={done ? 'ok' : late ? 'danger' : 'warn'}>{done ? 'Paid' : late ? 'Overdue' : fmtAmt(r.remaining) + ' left'}</Chip>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-line bg-sunken/60 text-left text-[11px] font-semibold uppercase tracking-wider text-faint">

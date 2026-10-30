@@ -18,20 +18,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet">
   <script>
-    /* ── Computers open the desktop app at /desktop/; phones and iPads stay here. A computer: a mouse or trackpad
-       and a screen at least 1280 px wide, and not an iPad (which can report a trackpad and a Mac). The desktop
-       app uses the same test to send phones back here, so the two never bounce. ── */
+    /* ── Every device opens the new app at /desktop/ (computers, phones and iPads each get their own layout
+       there). This page stays as the classic app for support. ── */
     (function () {
-      var DESKTOP_APP = true; // false: computers use this app again
+      var NEW_APP = true; // false: every device uses this app again
       try {
-        if (!DESKTOP_APP || (location.pathname !== '/' && location.pathname !== '/index.html')) return;
+        if (!NEW_APP || (location.pathname !== '/' && location.pathname !== '/index.html')) return;
         // Support and tests: ?classic keeps this app for the rest of the tab's session
         if (/[?&]classic(=|&|$)/.test(location.search)) sessionStorage.setItem('serendib_classic', '1');
         if (sessionStorage.getItem('serendib_classic') === '1') return;
-        var iPad = /iPad|Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
-        var computer = !iPad && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
-          Math.max(screen.width, screen.height) >= 1280;
-        if (computer) location.replace('/desktop/');
+        location.replace('/desktop/' + location.hash);
       } catch (e) {}
     })();
   </script>

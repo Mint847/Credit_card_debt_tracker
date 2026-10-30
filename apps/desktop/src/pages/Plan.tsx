@@ -27,36 +27,36 @@ export function Plan() {
   const strat = STRATEGIES.find((s) => s.value === app.strategy) || STRATEGIES[0];
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7">
-      <div className="flex items-end justify-between">
+    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7 tablet:px-6 tablet:py-6 phone:space-y-4 phone:px-4 phone:py-5">
+      <div className="flex items-end justify-between phone:flex-col phone:items-stretch phone:gap-3">
         <div>
-          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight">Plan</h1>
+          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">Plan</h1>
           <p className="mt-1 text-[13px] text-faint">This month’s repayment strategy · {strat.title}</p>
         </div>
         {target && (
-          <button type="button" className="btn-primary" onClick={() => openLog({ type: 'payment', cardId: target.id, prefill: p.alloc[target.id] })}>
+          <button type="button" className="btn-primary phone:h-11 phone:justify-center" onClick={() => openLog({ type: 'payment', cardId: target.id, prefill: p.alloc[target.id] })}>
             <Icon name="payments" size={18} />Log this month’s payment
           </button>
         )}
       </div>
 
-      <section className="panel grid grid-cols-4 divide-x divide-line">
+      <section className="panel grid grid-cols-4 divide-x divide-line compact:gap-px compact:divide-x-0 compact:overflow-hidden compact:bg-line tablet:grid-cols-2 phone:grid-cols-2">
         {[
           ['Total aggregate debt', fmtAmt(p.totalDebt), 'Total available credit limit: ' + fmtAmt(p.totalLimit)],
           ['Total monthly commitment', app.cards.length ? fmtAmt(p.commitment) : '--', 'Budget ' + fmtAmt(p.budget) + ' (25% of income, or your targets)'],
           ['Total interest bleed', app.cards.length ? fmtAmt(p.interestMonth) : '--', 'Estimated interest this month at your cards’ rates'],
           ['Debt-free target', p.debtFreeLabel, 'At your current monthly plan']
         ].map(([label, value, sub], i) => (
-          <div key={label} className="px-5 py-4">
+          <div key={label} className="px-5 py-4 compact:bg-panel phone:px-4 phone:py-3.5">
             <p className="label">{label}</p>
-            <p className={'num mt-1.5 text-[22px] font-bold tracking-tight ' + (i === 2 && app.cards.length ? 'text-danger' : '')}>{value}</p>
+            <p className={'num mt-1.5 text-[22px] font-bold tracking-tight phone:text-[18px] ' + (i === 2 && app.cards.length ? 'text-danger' : '')}>{value}</p>
             <p className="mt-1 text-[12px] text-faint">{sub}</p>
           </div>
         ))}
       </section>
 
-      <div className="grid grid-cols-3 gap-5">
-        <Panel className="col-span-2" title={<span className="flex items-center gap-2"><Icon name="bolt" size={18} className="text-brand-ink" />Optimized allocation</span>}
+      <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
+        <Panel className="col-span-2 compact:col-span-1" title={<span className="flex items-center gap-2"><Icon name="bolt" size={18} className="text-brand-ink" />Optimized allocation</span>}
           action={<Chip tone="info">{strat.title}</Chip>} bodyClass="px-3 pb-3">
           <p className="mb-3 px-2 text-[13px] text-muted">{strat.desc}</p>
           {app.cards.length === 0 && <Empty icon="credit_card" title="No cards added" body="Add a card to see this month’s plan." />}
@@ -73,7 +73,7 @@ export function Plan() {
                     className={'flex w-full items-center gap-3 rounded-xl px-3 text-left transition-colors ' +
                       (isTarget ? 'border border-brand/20 bg-brand/[0.07] py-3 hover:bg-brand/10' : 'py-2.5 hover:bg-sunken') + (isSettled ? ' opacity-60' : '')}>
                     <span className={'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ' + (isTarget ? 'bg-brand text-white' : 'bg-sunken text-faint')}>{index + 1}</span>
-                    <CardTile card={card} size={34} />
+                    <span className="phone:hidden"><CardTile card={card} size={34} /></span>
                     <span className="min-w-0 flex-1">
                       {isTarget && <span className="mb-0.5 inline-block rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white">Pay first</span>}
                       <span className="block truncate text-[13px] font-semibold">{card.bank} {card.nick}</span>
@@ -101,7 +101,7 @@ export function Plan() {
           )}
         </Panel>
 
-        <div className="space-y-5">
+        <div className="space-y-5 tablet:grid tablet:grid-cols-2 tablet:gap-5 tablet:space-y-0 phone:space-y-4">
           <Panel title="Payoff strategy">
             <div role="radiogroup" aria-label="Payoff strategy" className="space-y-2.5">
               {STRATEGIES.map((s) => {

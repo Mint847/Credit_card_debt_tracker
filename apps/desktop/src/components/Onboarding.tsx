@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { checklistState, isValidDay } from '@serendib/core';
 import { useApp, onboarding, finishWelcome, skipWelcome, dismissChecklist, noteChecklistComplete, markTipsSeen, skipAllTips } from '../lib/store';
 import { Icon, useToast } from './ui';
+import { layoutNow } from '../lib/layout';
 import { useCardDialogs } from './CardDialogs';
 import type { Strategy } from '../lib/types';
 
@@ -39,8 +40,8 @@ export function Welcome() {
     <Dialog.Root open onOpenChange={(v) => { if (!v) skip(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[3px]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid w-[860px] -translate-x-1/2 -translate-y-1/2 grid-cols-[320px_1fr] overflow-hidden rounded-3xl border border-line bg-panel shadow-pop focus:outline-none">
-          <div className="relative flex flex-col justify-between overflow-hidden p-8 text-white" style={{ background: 'linear-gradient(160deg, #00473c 0%, #006b5c 55%, #008374 100%)' }}>
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid w-[860px] -translate-x-1/2 -translate-y-1/2 grid-cols-[320px_1fr] overflow-hidden rounded-3xl border border-line bg-panel shadow-pop focus:outline-none tablet:w-[min(860px,calc(100vw-48px))] tablet:grid-cols-[260px_1fr] phone:inset-x-0 phone:bottom-0 phone:left-0 phone:top-auto phone:max-h-[92vh] phone:w-full phone:translate-x-0 phone:translate-y-0 phone:grid-cols-1 phone:overflow-y-auto phone:rounded-b-none phone:pb-[env(safe-area-inset-bottom)]">
+          <div className="relative flex flex-col justify-between overflow-hidden p-8 text-white phone:hidden" style={{ background: 'linear-gradient(160deg, #00473c 0%, #006b5c 55%, #008374 100%)' }}>
             <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
             <div className="relative flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white font-serif text-[18px] font-semibold text-[#006b5c]">S</span>
@@ -52,8 +53,11 @@ export function Welcome() {
               <div className="mt-2 flex gap-1.5">{[0, 1, 2].map((i) => <span key={i} className={'h-1.5 rounded-full transition-all ' + (i === slide ? 'w-6 bg-white' : 'w-1.5 bg-white/40')} />)}</div>
             </div>
           </div>
-          <div className="flex min-h-[440px] flex-col p-8">
-            <div className="flex justify-end"><button type="button" onClick={skip} className="text-[12px] font-semibold text-faint hover:text-ink">Skip for now</button></div>
+          <div className="flex min-h-[440px] flex-col p-8 phone:min-h-0 phone:p-5">
+            <div className="flex items-center justify-end phone:justify-between">
+              <div className="hidden items-center gap-1.5 phone:flex" aria-label={'Step ' + (slide + 1) + ' of 3'}>{[0, 1, 2].map((i) => <span key={i} className={'h-1.5 rounded-full transition-all ' + (i === slide ? 'w-6 bg-brand' : 'w-1.5 bg-line-strong')} />)}</div>
+              <button type="button" onClick={skip} className="text-[12px] font-semibold text-faint hover:text-ink phone:py-2">Skip for now</button>
+            </div>
             <div className="flex-1">
               {slide === 0 && (
                 <>
@@ -103,7 +107,7 @@ export function Welcome() {
             </div>
             <div className="mt-6 flex items-center justify-between">
               <button type="button" onClick={() => setSlide(Math.max(0, slide - 1))} className={'btn-ghost ' + (slide === 0 ? 'invisible' : '')}>Back</button>
-              <button type="button" autoFocus className="btn-primary h-10 px-6" onClick={() => (slide < 2 ? setSlide(slide + 1) : finish())}>{slide === 2 ? 'Finish setup' : 'Next'}</button>
+              <button type="button" autoFocus className="btn-primary h-10 px-6 phone:h-11" onClick={() => (slide < 2 ? setSlide(slide + 1) : finish())}>{slide === 2 ? 'Finish setup' : 'Next'}</button>
             </div>
           </div>
         </Dialog.Content>
@@ -153,7 +157,7 @@ export function Checklist() {
         {!st.allDone && <button type="button" className="btn-ghost h-8 text-[12px]" onClick={() => toast(dismissChecklist())}>Hide</button>}
       </div>
       <div className="mx-5 h-1.5 overflow-hidden rounded-full bg-sunken"><div className="h-full rounded-full bg-ok transition-all" style={{ width: st.pct + '%' }} /></div>
-      <ul className="grid grid-cols-3 gap-1 p-3">
+      <ul className="grid grid-cols-3 gap-1 p-3 tablet:grid-cols-2 phone:grid-cols-1 phone:p-2">
         {st.items.map((it: any) => (
           <li key={it.key}>
             <button type="button" disabled={it.done} onClick={() => go(it.key)}
@@ -173,18 +177,22 @@ export function Checklist() {
 }
 
 /* ── 3. Spotlight tips ── */
-interface Tip { tip: string; title: string; body: ReactNode }
+// touch: the wording on phones and iPads, where it differs (no keyboard shortcuts, tap rather than click)
+interface Tip { tip: string; title: string; body: ReactNode; touch?: ReactNode }
 const TIPS: Record<string, Tip[]> = {
   'screen-home': [
     { tip: 'checklist', title: 'Your setup checklist', body: 'Finish these steps to build your repayment plan. Each one ticks itself off as you go.' },
     { tip: 'kpis', title: 'Your debt at a glance', body: 'Total debt and limit across every card, and how much of your limit you are using. Under 30% is healthy.' },
-    { tip: 'log', title: 'Log in one tap', body: 'Record a purchase, a payment or a refund, or paste a bank SMS. Every total updates straight away.' },
+    { tip: 'log', title: 'Log in one tap', body: 'Record a purchase, a payment or a refund, or paste a bank SMS. Every total updates straight away.',
+      touch: 'Tap + to record a purchase, a payment or a refund, or paste a bank SMS. Every total updates straight away.' },
     { tip: 'alerts', title: 'What needs you', body: 'Due dates, overdue payments, budgets you have gone over and charges due tomorrow show up here, each with a label saying what it is.' },
     { tip: 'payoff', title: 'Your payoff plan', body: 'Your debt-free date and the interest your strategy saves compared with paying minimums.' },
-    { tip: 'search', title: 'Search and shortcuts', body: 'Press Ctrl K to jump anywhere or run any action. Press ? to see every keyboard shortcut.' }
+    { tip: 'search', title: 'Search and shortcuts', body: 'Press Ctrl K to jump anywhere or run any action. Press ? to see every keyboard shortcut.',
+      touch: 'Search for any card, entry or page, or run an action, from here.' }
   ],
   'screen-list': [
-    { tip: 'cards-table', title: 'All your cards', body: 'Sort by any column. Click a card to see its details, or double-click to open it.' },
+    { tip: 'cards-table', title: 'All your cards', body: 'Sort by any column. Click a card to see its details, or double-click to open it.',
+      touch: 'Each card’s balance and how much of its limit you are using. Tap a card to open it.' },
     { tip: 'add-card', title: 'Link a card', body: 'Add each credit card with its limit and current balance. Everything else updates from here.' }
   ],
   'screen-detail': [
@@ -253,7 +261,7 @@ export function Tips() {
   if (!ready || !tip || !rect || document.querySelector('[role=dialog]:not([data-tips])')) return null;
   const close = () => { markTipsSeen(screen!); setList([]); };
   const next = () => (i < list.length - 1 ? setI(i + 1) : close());
-  const pad = 6, W = 320, below = rect.bottom + 12 + 170 < window.innerHeight;
+  const pad = 6, W = Math.min(320, window.innerWidth - 32), below = rect.bottom + 12 + 170 < window.innerHeight;
   const left = Math.max(16, Math.min(window.innerWidth - W - 16, rect.left));
   const top = below ? rect.bottom + 12 : Math.max(16, rect.top - 12 - 170);
   return (
@@ -264,7 +272,7 @@ export function Tips() {
       <div className="absolute rounded-2xl border border-line bg-panel p-4 shadow-pop" style={{ left, top, width: W }}>
         <p className="text-[11px] font-semibold text-faint">Tip {i + 1} of {list.length}</p>
         <p className="mt-1 text-[14px] font-semibold">{tip.title}</p>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted">{tip.body}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-muted">{layoutNow() !== 'desktop' && tip.touch ? tip.touch : tip.body}</p>
         <div className="mt-3 flex items-center justify-between">
           <button type="button" className="text-[12px] font-semibold text-faint hover:text-ink" onClick={() => { skipAllTips(); setList([]); }}>Skip tips</button>
           <button type="button" autoFocus className="btn-primary h-8" onClick={next}>{i < list.length - 1 ? 'Next' : 'Done'}</button>

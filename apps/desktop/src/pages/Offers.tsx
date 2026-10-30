@@ -71,10 +71,10 @@ export function Offers() {
   const t = terms ? offerTerms(terms) : null;
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7">
-      <div className="flex items-end justify-between">
+    <div className="mx-auto max-w-[1440px] space-y-5 px-8 py-7 tablet:px-6 tablet:py-6 phone:space-y-4 phone:px-4 phone:py-5">
+      <div className="flex items-end justify-between phone:flex-col phone:items-start phone:gap-3">
         <div>
-          <h1 className="flex items-center gap-3 font-serif text-[30px] font-medium leading-tight tracking-tight">
+          <h1 className="flex items-center gap-3 font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">
             Offers
             <span className={'rounded-full px-2.5 py-1 font-sans text-[12px] font-bold ' + (view.samples ? 'bg-sunken text-faint' : 'bg-ok/10 text-ok')}>{view.badge}</span>
           </h1>
@@ -118,7 +118,7 @@ export function Offers() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3">
           {view.shown.map((o: any) => <OfferCard key={o.id} offer={o} cards={view.userCards} onTerms={() => setTerms(o)} />)}
         </div>
       )}

@@ -1,5 +1,6 @@
 // Log in, sign up and reset a password: the phone app's options, rules and wording, laid out for a
-// desktop screen (brand panel on the left, the form on the right)
+// desktop screen (brand panel on the left, the form on the right). Phones and iPad portrait: the form alone,
+// under the logo
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { checkPasswordRules } from '@serendib/core';
 import { emailLogin, emailSignup, keepSignedIn, redirectError, sendReset, setKeepSignedIn, socialSignIn, type Provider } from '../lib/auth';
@@ -90,7 +91,7 @@ function Login({ go }: { go: (v: View) => void }) {
   }
   return (
     <>
-      <h1 className="font-serif text-[32px] font-medium tracking-tight">Log in to Serendib</h1>
+      <h1 className="font-serif text-[32px] font-medium tracking-tight phone:text-[28px]">Log in to Serendib</h1>
       <p className="mt-1 text-[14px] text-muted">Your debt-free journey starts here</p>
       <div className="mt-7"><Social onError={setError} /></div>
       <Divider />
@@ -133,7 +134,7 @@ function Signup({ go }: { go: (v: View) => void }) {
   );
   return (
     <>
-      <h1 className="font-serif text-[32px] font-medium tracking-tight">Create an Account</h1>
+      <h1 className="font-serif text-[32px] font-medium tracking-tight phone:text-[28px]">Create an Account</h1>
       <p className="mt-1 text-[14px] text-muted">Join Serendib to conquer your debt</p>
       <div className="mt-7"><Social onError={setError} /></div>
       <Divider />
@@ -143,12 +144,12 @@ function Signup({ go }: { go: (v: View) => void }) {
           <Field label="Last name"><input autoComplete="family-name" value={f.lastName} onChange={set('lastName')} className="field h-11" /></Field>
         </div>
         <Field label="Email address"><input type="email" autoComplete="email" value={f.email} onChange={set('email')} className="field h-11" placeholder="Enter your email" /></Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 phone:grid-cols-1">
           <Field label="Password"><input type="password" autoComplete="new-password" value={f.password} onChange={set('password')} onFocus={() => setShowRules(true)} className={'field h-11' + ring('password')} placeholder="Create strong password" /></Field>
           <Field label="Confirm password"><input type="password" autoComplete="new-password" value={f.confirm} onChange={set('confirm')} className={'field h-11' + ring('confirm')} placeholder="Confirm your password" /></Field>
         </div>
         {showRules && (
-          <ul className="grid grid-cols-3 gap-x-3 gap-y-1.5 rounded-lg bg-sunken px-3 py-2.5 text-[12px] font-medium" aria-label="Password requirements">
+          <ul className="grid grid-cols-3 gap-x-3 phone:grid-cols-2 gap-y-1.5 rounded-lg bg-sunken px-3 py-2.5 text-[12px] font-medium" aria-label="Password requirements">
             {rule(rules.len, '8+ characters')}{rule(rules.upper, '1 uppercase (A-Z)')}{rule(rules.lower, '1 lowercase (a-z)')}
             {rule(rules.num, '1 number (0-9)')}{rule(rules.special, '1 special symbol')}{rule(rules.match, 'Passwords match')}
           </ul>
@@ -177,7 +178,7 @@ function Forgot({ go }: { go: (v: View) => void }) {
   return (
     <>
       <button type="button" onClick={() => go('login')} className="mb-6 inline-flex items-center gap-1 text-[13px] font-semibold text-muted hover:text-ink"><Icon name="arrow_back" size={18} />Log in</button>
-      <h1 className="font-serif text-[32px] font-medium tracking-tight">Reset your password</h1>
+      <h1 className="font-serif text-[32px] font-medium tracking-tight phone:text-[28px]">Reset your password</h1>
       <p className="mt-1 text-[14px] text-muted">Enter your registered email address to receive password reset instructions</p>
       <form onSubmit={submit} className="mt-7 space-y-4" noValidate>
         <Field label="Email address"><input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field h-11" placeholder="Enter your email" /></Field>
@@ -223,8 +224,12 @@ export function SignIn() {
         </div>
         <p className="relative text-[12px] text-white/60">Your data stays in your own account.</p>
       </aside>
-      <main className="flex flex-1 items-center justify-center overflow-y-auto px-8 py-10">
+      <main className="flex flex-1 items-center justify-center overflow-y-auto px-8 py-10 phone:items-start phone:px-5 phone:pb-[max(24px,env(safe-area-inset-bottom))] phone:pt-[max(28px,env(safe-area-inset-top))]">
         <div className="w-full max-w-[420px]">
+          <div className="mb-8 flex items-center gap-2.5 lg:hidden phone:mb-6">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand font-serif text-[20px] font-semibold text-white">S</span>
+            <span className="font-serif text-[24px] font-medium">Serendib</span>
+          </div>
           {view === 'login' && <Login go={setView} />}
           {view === 'signup' && <Signup go={setView} />}
           {view === 'forgot' && <Forgot go={setView} />}

@@ -14,6 +14,8 @@ import { CardDialogsProvider, useCardDialogs } from './CardDialogs';
 import { AlertList, attentionCount, useAlerts } from './Alerts';
 import { Welcome, Tips } from './Onboarding';
 import { getTheme, setTheme, type ThemeMode } from '../lib/theme';
+import { useLayout } from '../lib/layout';
+import { PhoneFrame, Rail } from './MobileFrame';
 
 interface Workspace {
   openLog: (r?: LogRequest) => void;
@@ -161,10 +163,10 @@ function Topbar() {
         )}
       </div>
       <button type="button" onClick={openPalette} data-tip="search"
-        className="ml-auto flex h-9 w-[340px] items-center gap-2 rounded-lg border border-line bg-panel px-3 text-[13px] text-faint hover:border-line-strong">
+        className="ml-auto flex h-9 w-[340px] items-center gap-2 rounded-lg border border-line bg-panel px-3 text-[13px] text-faint hover:border-line-strong tablet:w-[220px]">
         <Icon name="search" size={18} />
-        <span className="flex-1 text-left">Search cards, entries and actions</span>
-        <span className="kbd">Ctrl K</span>
+        <span className="flex-1 text-left tablet:truncate">Search cards, entries and actions</span>
+        <span className="kbd tablet:hidden">Ctrl K</span>
       </button>
       <Dropdown.Root>
         <Dropdown.Trigger asChild>
@@ -210,7 +212,7 @@ function Palette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bool
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
-        <Dialog.Content className="fixed left-1/2 top-[14vh] z-50 w-[600px] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-panel shadow-pop focus:outline-none">
+        <Dialog.Content className="fixed left-1/2 top-[14vh] z-50 w-[600px] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-panel shadow-pop focus:outline-none tablet:top-[10vh] tablet:w-[min(600px,calc(100vw-48px))] phone:inset-x-0 phone:top-0 phone:w-auto phone:translate-x-0 phone:rounded-none phone:rounded-b-2xl phone:pt-[env(safe-area-inset-top)]">
           <Dialog.Title className="sr-only">Search</Dialog.Title>
           <Dialog.Description className="sr-only">Jump to a page or card, find an entry, or run an action.</Dialog.Description>
           <Command loop>
@@ -302,6 +304,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const cardMatch = useMatch('/cards/:id');
   const cardId = cardMatch?.params.id;
+  // Phone and iPad designs (demo only): the phone frame, or a rail on iPads in portrait
+  const layout = useLayout();
+  const narrow = useNarrow();
   const ws = useMemo<Workspace>(() => ({
     openLog: (r = {}) => setLog(r),
     openPalette: () => setPalette(true),
@@ -334,13 +339,15 @@ export function Shell({ children }: { children: ReactNode }) {
     <Ctx.Provider value={ws}>
       <CardDialogsProvider onCardAdded={(id) => navigate('/cards/' + id)} onCardDeleted={(id) => { if (cardId === id) navigate('/cards'); }}
         onLogPayment={(id, amount) => setLog({ type: 'payment', cardId: id, prefill: amount })}>
+      {layout === 'phone' ? <PhoneFrame>{children}</PhoneFrame> : (
       <div className="flex h-full">
-        <Sidebar />
+        {layout === 'tablet' && narrow ? <Rail /> : <Sidebar />}
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar />
           <main className="scroll-thin flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
+      )}
       <LogDialog request={log} onClose={() => setLog(null)} />
       <Palette open={palette} onOpenChange={setPalette} />
       <Shortcuts open={shortcuts} onOpenChange={setShortcuts} />
@@ -349,6 +356,16 @@ export function Shell({ children }: { children: ReactNode }) {
       </CardDialogsProvider>
     </Ctx.Provider>
   );
+}
+
+function useNarrow() {
+  const [n, setN] = useState(window.innerWidth < 1024);
+  useEffect(() => {
+    const on = () => setN(window.innerWidth < 1024);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return n;
 }
 
 // Used by pages that want this month's plan (memoised on the store version)

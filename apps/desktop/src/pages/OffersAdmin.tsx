@@ -1,10 +1,13 @@
 // Manage offers (admin only): review the collector's drafts, publish, edit and expire offers, add one
-// by hand. The list on the left, the picked offer's form on the right. Same checks and writes as the phone.
+// by hand. The list on the left, the picked offer's form on the right (phones and iPads: the form opens in
+// a sheet). Same checks and writes as the phone.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SL_CARD_ISSUERS, OFFER_CATEGORIES, collectorStatus, adminPublishedList } from '@serendib/core';
 import { isAdmin, loadAdmin, adminAction, type AdminData, type AdminAction } from '../lib/offers';
 import { Chip, Empty, Icon, Segmented, useToast } from '../components/ui';
+import { Sheet } from '../components/Sheet';
+import { useLayout } from '../lib/layout';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Tab = 'drafts' | 'published';
@@ -91,6 +94,7 @@ export function OffersAdmin() {
   const [sel, setSel] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const compact = useLayout() !== 'desktop';
 
   async function reload() {
     try { setData(await loadAdmin()); setLoadError(false); } catch (e) { setLoadError(true); }
@@ -104,9 +108,10 @@ export function OffersAdmin() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const list = useMemo(() => (!data ? [] : tab === 'drafts' ? data.drafts : adminPublishedList(data.published, q)), [data, tab, q]);
-  const current = adding ? NEW : list.find((o: any) => o.id === sel) || list[0];
+  // Desktop always shows a form (the first offer until one is picked); phones and iPads only once one is tapped
+  const current = adding ? NEW : list.find((o: any) => o.id === sel) || (compact ? null : list[0]);
   const cs = collectorStatus(data && data.meta);
-  const done = async (msg?: string) => { setAdding(false); if (msg) toast(msg); await reload(); };
+  const done = async (msg?: string) => { setAdding(false); if (compact) setSel(null); if (msg) toast(msg); await reload(); };
   async function approveSelected() {
     const ids = Object.keys(picked).filter((k) => picked[k]);
     if (!ids.length) { toast('Select drafts to approve first.'); return; }
@@ -125,11 +130,11 @@ export function OffersAdmin() {
   if (!allowed) return null;
   return (
     <div className="flex h-full">
-      <div className="flex w-[440px] shrink-0 flex-col border-r border-line">
-        <div className="space-y-3 border-b border-line px-6 py-5">
-          <button type="button" onClick={() => navigate('/offers')} className="flex items-center gap-1 text-[12px] font-semibold text-faint hover:text-ink"><Icon name="arrow_back" size={16} />Offers</button>
+      <div className="flex w-[440px] shrink-0 flex-col border-r border-line compact:w-full compact:border-r-0">
+        <div className="space-y-3 border-b border-line px-6 py-5 phone:px-4 phone:py-4">
+          <button type="button" onClick={() => navigate('/offers')} className="flex items-center gap-1 text-[12px] font-semibold text-faint hover:text-ink phone:hidden"><Icon name="arrow_back" size={16} />Offers</button>
           <div className="flex items-center justify-between">
-            <h1 className="flex items-center gap-2 font-serif text-[26px] font-medium">Manage offers <Chip>Admin only</Chip></h1>
+            <h1 className="flex items-center gap-2 font-serif text-[26px] font-medium phone:text-[23px]">Manage offers <Chip>Admin only</Chip></h1>
             <button type="button" className="btn-primary h-8" onClick={() => { setAdding(true); setSel(null); }}><Icon name="add" size={16} />Add</button>
           </div>
           <p className={'rounded-lg px-3 py-2 text-[12px] font-medium ' + (cs.tone === 'warn' ? 'bg-warn/10 text-warn' : cs.tone === 'ok' ? 'bg-ok/10 text-ok' : 'bg-sunken text-muted')}>{cs.text}</p>
@@ -145,7 +150,7 @@ export function OffersAdmin() {
           {list.map((o: any) => {
             const on = !adding && current && current.id === o.id;
             return (
-              <div key={o.id} className={'flex items-start gap-3 border-b border-line px-6 py-3 ' + (on ? 'bg-brand/5' : 'hover:bg-sunken')}>
+              <div key={o.id} className={'flex items-start gap-3 border-b border-line px-6 py-3 phone:px-4 ' + (on ? 'bg-brand/5' : 'hover:bg-sunken')}>
                 {tab === 'drafts' && <input type="checkbox" aria-label="Select draft" checked={!!picked[o.id]} onChange={(e) => setPicked({ ...picked, [o.id]: e.target.checked })} className="mt-1 h-4 w-4 accent-[rgb(var(--brand))]" />}
                 <button type="button" onClick={() => { setSel(o.id); setAdding(false); }} className="min-w-0 flex-1 text-left">
                   <span className="flex items-center gap-2">
@@ -160,7 +165,19 @@ export function OffersAdmin() {
           })}
         </div>
       </div>
-      <div className="scroll-thin min-w-0 flex-1 overflow-y-auto px-8 py-7">
+      {compact && (
+        <Sheet open={!!current} onClose={() => { setSel(null); setAdding(false); }} title={adding ? 'New offer' : (current && current.headline) || 'Offer'}>
+          {current && (
+            <div className="px-5 pb-3">
+              {!adding && current.sourceUrl && /^https:\/\//i.test(current.sourceUrl) && (
+                <a href={current.sourceUrl} target="_blank" rel="noopener noreferrer" className="mb-3 flex items-center gap-1 text-[12px] font-semibold text-brand-ink">Source page<Icon name="open_in_new" size={14} /></a>
+              )}
+              <Editor offer={current} kind={adding ? 'new' : tab === 'drafts' ? 'draft' : 'published'} drafts={data ? data.drafts : []} onDone={done} />
+            </div>
+          )}
+        </Sheet>
+      )}
+      <div className="scroll-thin min-w-0 flex-1 overflow-y-auto px-8 py-7 compact:hidden">
         {current ? (
           <div className="mx-auto max-w-[640px]">
             <div className="mb-4 flex items-center justify-between">

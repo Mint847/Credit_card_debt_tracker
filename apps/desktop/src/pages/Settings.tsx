@@ -39,7 +39,7 @@ function Row({ icon, title, sub, onClick, danger, right }: { icon: string; title
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag type={onClick ? 'button' : undefined} onClick={onClick}
-      className={'flex w-full items-center gap-4 px-5 py-3.5 text-left ' + (onClick ? 'hover:bg-sunken ' : '') + (danger ? 'text-danger' : '')}>
+      className={'flex w-full items-center gap-4 px-5 py-3.5 text-left phone:gap-3 phone:px-4 ' + (onClick ? 'hover:bg-sunken ' : '') + (danger ? 'text-danger' : '')}>
       <span className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ' + (danger ? 'bg-danger/10' : 'bg-sunken text-muted')}><Icon name={icon} size={19} /></span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-semibold">{title}</span>
@@ -179,13 +179,13 @@ export function Settings() {
   const copies = copiesOpen ? safetyCopies() : [];
 
   return (
-    <div className="mx-auto flex max-w-[1120px] gap-10 px-8 py-7">
-      <nav className="sticky top-7 h-fit w-52 shrink-0" aria-label="Settings sections">
-        <h1 className="mb-4 font-serif text-[30px] font-medium tracking-tight">Settings</h1>
-        <ul className="space-y-0.5">
+    <div className="mx-auto flex max-w-[1120px] gap-10 px-8 py-7 compact:block tablet:px-6 tablet:py-6 phone:px-4 phone:py-5">
+      <nav className="sticky top-7 h-fit w-52 shrink-0 compact:static compact:mb-6 compact:w-auto" aria-label="Settings sections">
+        <h1 className="mb-4 font-serif text-[30px] font-medium tracking-tight phone:text-[27px]">Settings</h1>
+        <ul className="space-y-0.5 compact:flex compact:gap-2 compact:space-y-0 compact:overflow-x-auto phone:-mx-4 phone:px-4 compact:[scrollbar-width:none]">
           {SECTIONS.map(([id, label, icon]) => (
             <li key={id}><a href={'#set-' + id} onClick={(e) => { e.preventDefault(); document.getElementById('set-' + id)?.scrollIntoView({ behavior: 'smooth' }); }}
-              className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium text-muted hover:bg-sunken hover:text-ink"><Icon name={icon} size={18} />{label}</a></li>
+              className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium text-muted hover:bg-sunken hover:text-ink compact:whitespace-nowrap compact:rounded-full compact:border compact:border-line compact:bg-panel"><Icon name={icon} size={18} />{label}</a></li>
           ))}
         </ul>
       </nav>
@@ -220,7 +220,7 @@ export function Settings() {
         </Section>
 
         <Section id="strategy" title="Default payoff method">
-          <div role="radiogroup" aria-label="Payoff method" className="grid grid-cols-2 gap-3 p-4">
+          <div role="radiogroup" aria-label="Payoff method" className="grid grid-cols-2 gap-3 p-4 phone:grid-cols-1">
             {([['avalanche', 'Debt Avalanche', 'trending_down', 'Saves maximum interest (Target highest APR).', strategySavings(app.cards).label],
                ['snowball', 'Debt Snowball', 'filter_vintage', 'Quick psychological wins (Target lowest balance).', 'Speed payoff']] as [Strategy, string, string, string, string][]).map(([v, t, i, sub, chip]) => {
               const on = app.strategy === v;
@@ -239,12 +239,12 @@ export function Settings() {
         </Section>
 
         <Section id="appearance" title="Appearance">
-          <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center justify-between px-5 py-4 phone:px-4">
             <span><span className="block text-[13px] font-semibold">Theme</span><span className="block text-[12px] text-faint">Saved on this device</span></span>
             <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-lg bg-sunken p-0.5">
               {(['light', 'dark', 'auto'] as ThemeMode[]).map((m) => (
                 <button key={m} type="button" role="radio" aria-checked={theme === m} onClick={() => { setTheme(m); setThemeState(m); }}
-                  className={'h-8 rounded-md px-4 text-[13px] font-semibold capitalize ' + (theme === m ? 'bg-panel text-ink shadow-card' : 'text-faint hover:text-ink')}>{m}</button>
+                  className={'h-8 rounded-md px-4 text-[13px] font-semibold capitalize phone:px-3 ' + (theme === m ? 'bg-panel text-ink shadow-card' : 'text-faint hover:text-ink')}>{m}</button>
               ))}
             </div>
           </div>
