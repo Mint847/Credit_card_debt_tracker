@@ -1,7 +1,7 @@
 // Signing in: the phone app's steps, with its rules and messages from the shared core (auth-rules.js).
 // Each function resolves to an error message to show, or null.
 import { authErrorMessage, isQuietAuthError, shouldRedirectAfter, signupFormError } from '@serendib/core';
-import { auth, firebase } from './firebase';
+import { auth, firebase, OWN_DOMAIN_SIGN_IN } from './firebase';
 import { setPendingName } from './store';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -34,20 +34,33 @@ function providerFor(name: Provider): any {
   return new firebase.auth.TwitterAuthProvider();
 }
 
+// A redirect sign-in remembers which provider it was for, so the page it comes back to can say if it didn't finish
+const REDIRECT_KEY = 'serendib_redirect_signin';
+function isHomeScreenApp() {
+  return (navigator as any).standalone === true || matchMedia('(display-mode: standalone)').matches;
+}
+async function redirectSignIn(provider: any, name: Provider): Promise<string | null> {
+  if (OWN_DOMAIN_SIGN_IN) { try { sessionStorage.setItem(REDIRECT_KEY, name); } catch (e) { /* storage blocked */ } }
+  try { await auth.signInWithRedirect(provider); return null; } catch (e2) {
+    try { sessionStorage.removeItem(REDIRECT_KEY); } catch (e) { /* storage blocked */ }
+    return authErrorMessage(e2, name);
+  }
+}
+
 // One flow for log in and sign up: the account is loaded, or created, once signed in
 export async function socialSignIn(name: Provider): Promise<string | null> {
   if (!auth) return 'Sign-in isn’t available right now.';
   const provider = providerFor(name);
   try {
     await applyPersistence();
+    // From the iPhone home screen, a pop-up opens outside the app and can't report back
+    if (OWN_DOMAIN_SIGN_IN && isHomeScreenApp()) return redirectSignIn(provider, name);
     await auth.signInWithPopup(provider);
     return null;
   } catch (err: any) {
     if (isQuietAuthError(err)) return null;
     // Pop-ups that can't open fall back to a full-page redirect
-    if (shouldRedirectAfter(err)) {
-      try { await auth.signInWithRedirect(provider); return null; } catch (e2) { return authErrorMessage(e2, name); }
-    }
+    if (shouldRedirectAfter(err)) return redirectSignIn(provider, name);
     return authErrorMessage(err, name);
   }
 }
@@ -97,10 +110,19 @@ export async function sendReset(email: string): Promise<string | null> {
   }
 }
 
-// Errors from a redirect sign-in (the pop-up fallback) show up when the page reloads
+// Back from a redirect sign-in: its error, or a note if it came back without signing in (instead of
+// silently landing on the log-in page again)
 export function redirectError(): Promise<string | null> {
   if (!auth) return Promise.resolve(null);
-  return auth.getRedirectResult().then(() => null, (err: any) => authErrorMessage(err));
+  const pending = () => {
+    let p: string | null = null;
+    try { p = sessionStorage.getItem(REDIRECT_KEY); sessionStorage.removeItem(REDIRECT_KEY); } catch (e) { /* storage blocked */ }
+    return p;
+  };
+  return auth.getRedirectResult().then(
+    (res: any) => { const p = pending(); return p && !(res && res.user) && !auth.currentUser ? p + ' sign-in didn’t finish. Please try again.' : null; },
+    (err: any) => authErrorMessage(err, pending() || undefined)
+  );
 }
 
 /* Account (Settings) */
