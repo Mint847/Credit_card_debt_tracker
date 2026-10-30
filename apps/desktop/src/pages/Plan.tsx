@@ -45,7 +45,7 @@ export function Plan() {
           ['Total aggregate debt', fmtAmt(p.totalDebt), 'Total available credit limit: ' + fmtAmt(p.totalLimit)],
           ['Total monthly commitment', app.cards.length ? fmtAmt(p.commitment) : '--', 'Budget ' + fmtAmt(p.budget) + ' (25% of income, or your targets)'],
           ['Total interest bleed', app.cards.length ? fmtAmt(p.interestMonth) : '--', 'Estimated interest this month at your cards’ rates'],
-          ['Debt-free target', !app.cards.length ? '--' : !p.debtFree ? 'Never' : p.debtFree.toLocaleString('en-US', { month: 'short', year: 'numeric' }), 'At your current monthly plan']
+          ['Debt-free target', p.debtFreeLabel, 'At your current monthly plan']
         ].map(([label, value, sub], i) => (
           <div key={label} className="px-5 py-4">
             <p className="label">{label}</p>

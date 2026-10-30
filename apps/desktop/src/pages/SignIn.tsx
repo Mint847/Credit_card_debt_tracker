@@ -4,7 +4,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { checkPasswordRules } from '@serendib/core';
 import { emailLogin, emailSignup, keepSignedIn, redirectError, sendReset, setKeepSignedIn, socialSignIn, type Provider } from '../lib/auth';
 import { Icon } from '../components/ui';
-import { backToClassic } from '../lib/beta';
 
 type View = 'login' | 'signup' | 'forgot';
 
@@ -229,7 +228,6 @@ export function SignIn() {
           {view === 'login' && <Login go={setView} />}
           {view === 'signup' && <Signup go={setView} />}
           {view === 'forgot' && <Forgot go={setView} />}
-          <p className="mt-8 text-center text-[12px] text-faint"><a href="/" onClick={(e) => { e.preventDefault(); backToClassic(); }} className="hover:text-ink hover:underline">Use the classic view instead</a></p>
         </div>
       </main>
     </div>

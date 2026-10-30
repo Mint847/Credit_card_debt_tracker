@@ -58,7 +58,7 @@ It works on phones, iPads and desktop computers, in light or dark mode, and sync
   - **Avalanche** pays the highest interest first and saves the most money. **Snowball** pays the smallest balance first for quicker wins.
   - When a card is cleared, its money rolls on to the next one.
 - **Log this month's payment:** records the plan's suggested payment on the pay-first card in one step.
-- **Overview tiles:** total interest bleed this month and your debt-free target month.
+- **Overview tiles:** total interest bleed this month and your debt-free target month (the same month-by-month plan as Home).
 - **Mark as settled:** clears a card without deleting its history.
 
 ### Card page
@@ -124,7 +124,6 @@ Three sandboxes. Load one of your cards, or try your own numbers:
   - Download a backup
   - Replay app guide
   - Keyboard shortcuts (desktop only)
-  - Try the new desktop app (beta; computers with a mouse or trackpad, 1280 px and up)
   - Reset my card data, which asks before doing anything
   - Sign out
 
@@ -142,9 +141,11 @@ Three sandboxes. Load one of your cards, or try your own numbers:
 |---|---|
 | **Phone** | Bottom tab bar, sheets that slide up |
 | **iPad** (768–1279 px) | Side rail, two-column screens, card list beside the card page, centred dialogs |
-| **Desktop** (1280 px and up) | Compact dashboard (see below) |
+| **Computer** | The desktop app at `/desktop/`: sidebar, tables, side panels and dialogs built for a mouse and keyboard |
 
-**On desktop:**
+**Computers open the desktop app.** A computer (a mouse or trackpad, a screen at least 1280 px wide, not an iPad) opening the app goes straight to the desktop app at `/desktop/`, and a phone or iPad opening a `/desktop/` link goes back to the phone and iPad app. Both apps use the same test, so nobody is bounced between them. To turn this off, set `DESKTOP_APP = false` at the top of `index.html`. For support, adding `?classic` to the address keeps the phone and iPad app in that browser tab.
+
+**The phone app's own desktop layout** (used before the desktop app, and still there if `DESKTOP_APP` is off):
 - **Layout:**
   - a 200 px labelled sidebar
   - slim screen headers
@@ -159,8 +160,6 @@ Three sandboxes. Load one of your cards, or try your own numbers:
   - **Utilisation by card:** each card's balance against its limit, with the 30% line
   - **Recent activity:** the latest entries across all cards; click any row to open that card
 - **Account menu:** opens from the profile row at the bottom of the sidebar.
-
-**New desktop app (beta):** pick **Try the new desktop app** in the account menu to switch to the new desktop app at `/desktop/`. The choice is remembered on that computer, so opening the app goes straight there. **Back to classic view** in its account menu (or **Use the classic view instead** on its sign-in page) switches back. Phones and iPads always open the classic app.
 - **Keyboard shortcuts:**
 
   | Key | Action |
@@ -271,6 +270,8 @@ firebase deploy --only firestore:rules   # security rules, when they change
 
 | Date | Change |
 |---|---|
+| 30 Oct 2026 | **Desktop app launched:** computers open the new desktop app automatically; phones and iPads keep the phone and iPad app. The beta switches are gone. The desktop app loads faster: each page is its own file, and the first download is about half the size |
+| 29 Oct 2026 | **One debt-free date:** Cards Overview, the desktop Plan page and the Share progress message now use the same month-by-month plan as Home (each card's own rate, minimums first, extra money moving to the next card once one is paid off). Cards Overview used to divide the total debt by the monthly payment at a flat 28%, which gave a later date |
 | 29 Oct 2026 | **Desktop app beta:** "Try the new desktop app" in the account menu on computers, remembered per device, with "Back to classic view". Fixed: the Avalanche card shows what it really saves compared with Snowball (it said LKR 34,200 for everyone); "Adopt Fixed Repayment Plan" sets the card's monthly goal and "Negotiate Cash Discount" copies a cash-price request (the unused "Compare Alternatives" button is gone); payoff presets such as Full save the exact amount, not the slider's rounded one |
 | 28 Oct 2026 | **Desktop app, all screens:** real sign-in and sync, card actions, Activity, Plan, Simulators, Spaces, Offers and admin review, Settings and guided setup. More of the phone app's rules moved into the shared core. Fixed: Replay app guide now resets the tips and checklist across devices |
 | 26 Oct 2026 | **Desktop app prototype:** a new React desktop app (Overview, Cards, card workspace, command palette) on sample data, for review. The home screen's payoff plan moved into the shared core |

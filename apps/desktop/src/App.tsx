@@ -1,20 +1,35 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useApp, onNotice } from './lib/store';
 import { SignIn } from './pages/SignIn';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Shell } from './components/Shell';
 import { ToastProvider, useToast } from './components/ui';
-import { Overview } from './pages/Overview';
-import { Cards } from './pages/Cards';
-import { CardWorkspace } from './pages/CardWorkspace';
-import { Activity } from './pages/Activity';
-import { Plan } from './pages/Plan';
-import { Simulators } from './pages/Simulators';
-import { Spaces } from './pages/Spaces';
-import { Offers } from './pages/Offers';
-import { OffersAdmin } from './pages/OffersAdmin';
-import { Settings } from './pages/Settings';
+
+// Each page is its own file, so the sign-in page and the first screen load quickly. Once the workspace
+// is up, the rest load in the background, so moving between pages stays instant.
+const PAGES = {
+  Overview: () => import('./pages/Overview').then((m) => ({ default: m.Overview })),
+  Cards: () => import('./pages/Cards').then((m) => ({ default: m.Cards })),
+  CardWorkspace: () => import('./pages/CardWorkspace').then((m) => ({ default: m.CardWorkspace })),
+  Activity: () => import('./pages/Activity').then((m) => ({ default: m.Activity })),
+  Plan: () => import('./pages/Plan').then((m) => ({ default: m.Plan })),
+  Simulators: () => import('./pages/Simulators').then((m) => ({ default: m.Simulators })),
+  Spaces: () => import('./pages/Spaces').then((m) => ({ default: m.Spaces })),
+  Offers: () => import('./pages/Offers').then((m) => ({ default: m.Offers })),
+  OffersAdmin: () => import('./pages/OffersAdmin').then((m) => ({ default: m.OffersAdmin })),
+  Settings: () => import('./pages/Settings').then((m) => ({ default: m.Settings }))
+};
+const Overview = lazy(PAGES.Overview);
+const Cards = lazy(PAGES.Cards);
+const CardWorkspace = lazy(PAGES.CardWorkspace);
+const Activity = lazy(PAGES.Activity);
+const Plan = lazy(PAGES.Plan);
+const Simulators = lazy(PAGES.Simulators);
+const Spaces = lazy(PAGES.Spaces);
+const Offers = lazy(PAGES.Offers);
+const OffersAdmin = lazy(PAGES.OffersAdmin);
+const Settings = lazy(PAGES.Settings);
 
 // Loading → sign-in → the workspace, as the account's sign-in state changes
 function Splash() {
@@ -47,8 +62,13 @@ export function App() {
 }
 
 function Workspace() {
+  useEffect(() => {
+    const t = window.setTimeout(() => Object.values(PAGES).forEach((load) => { load().catch(() => {}); }), 1500);
+    return () => window.clearTimeout(t);
+  }, []);
   return (
           <Shell>
+            <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Overview />} />
               <Route path="/cards" element={<Cards />} />
@@ -62,6 +82,7 @@ function Workspace() {
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Overview />} />
             </Routes>
+            </Suspense>
           </Shell>
   );
 }

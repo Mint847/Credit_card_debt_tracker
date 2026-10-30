@@ -14,7 +14,6 @@ import { CardDialogsProvider, useCardDialogs } from './CardDialogs';
 import { AlertList, attentionCount, useAlerts } from './Alerts';
 import { Welcome, Tips } from './Onboarding';
 import { getTheme, setTheme, type ThemeMode } from '../lib/theme';
-import { backToClassic } from '../lib/beta';
 
 interface Workspace {
   openLog: (r?: LogRequest) => void;
@@ -114,7 +113,6 @@ function Sidebar() {
               <MenuItem icon="restart_alt" label="Reset my card data" onSelect={() => { const d = resetCardData(); if (d.text) toast(d.text); }} />
               <MenuItem icon="keyboard" label="Keyboard shortcuts" kbd="?" onSelect={openShortcuts} />
               <MenuItem icon="school" label="Replay app guide" onSelect={() => { replayGuide(); navigate('/'); }} />
-              <MenuItem icon="smartphone" label="Back to classic view" onSelect={backToClassic} />
               <Dropdown.Separator className="my-1 h-px bg-line" />
               <MenuItem icon="logout" label="Sign out" onSelect={() => { signOut(); }} />
             </Dropdown.Content>

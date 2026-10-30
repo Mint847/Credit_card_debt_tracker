@@ -6,7 +6,7 @@ export * from './recurring-actions.js';
 export * from './card-space-actions.js';
 export * from './backup-actions.js';
 export * from './session.js';
-export { projectPlan, strategySavings } from './plan.js';
+export { projectPlan, strategySavings, monthsFromNow, monthYear, planDebtFree, cardDebtFreeDate } from './plan.js';
 export * from './auth-rules.js';
 export { prepareAccount } from './account.js';
 export * from './screen-rules.js';

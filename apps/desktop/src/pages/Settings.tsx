@@ -275,7 +275,6 @@ export function Settings() {
           {admin && <Row icon="admin_panel_settings" title="Manage offers" sub="Review drafts and publish bank offers" onClick={() => navigate('/offers/admin')} />}
           <div data-tip="set-replay"><Row icon="school" title="Replay app guide" sub="Walk through setup and screen tips again" onClick={() => { replayGuide(); navigate('/'); }} /></div>
           <Row icon="keyboard" title="Keyboard shortcuts" sub="Ctrl K, 1 to 5, L, P, / and ?" onClick={openShortcuts} />
-          <Row icon="smartphone" title="Back to classic view" sub="The phone layout, on this computer" onClick={() => { window.location.href = '/'; }} />
           {u && prov === 'password' && <Row icon="key" title="Change password" sub="We’ll email you a secure reset link" onClick={async () => { const m = await sendOwnPasswordReset(); if (m) toast(m); }} />}
           <Row icon="delete_forever" title="Delete account" sub="Permanently remove your account and data" danger onClick={() => setDeleting(true)} />
           <Row icon="logout" title="Sign out" danger onClick={() => { signOut(); }} />

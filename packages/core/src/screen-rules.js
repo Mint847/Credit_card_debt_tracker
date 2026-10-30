@@ -1,8 +1,9 @@
 // Small rules both apps' screens share: reading amounts typed in, dates and ordinals as shown,
 // category budgets, the history CSV, the share text and the recurring-payment hints.
 // Moved from the App closure in index.html (Phase 3).
-import { parseYmd, ymd, addDays, balanceAt, calcPayoff, cardApr, cardName, clampDay, isValidDay, spendCategory, SPEND_CATEGORIES, spaceMonthsLeft, spaceMonthlyNeeded, spaceRecentPace, minPaymentFor } from './domain.js';
-import { planAllocationFor, amountDueNow } from './recurring-actions.js';
+import { parseYmd, ymd, addDays, balanceAt, cardName, clampDay, isValidDay, spendCategory, SPEND_CATEGORIES, spaceMonthsLeft, spaceMonthlyNeeded, spaceRecentPace, minPaymentFor } from './domain.js';
+import { amountDueNow } from './recurring-actions.js';
+import { cardDebtFreeDate, monthYear } from './plan.js';
 import { isCancelled, sortedLedger } from './ledger-actions.js';
 
 // "LKR 12,500.50" / "12500" → 12500.5; anything else → NaN
@@ -69,15 +70,9 @@ export function shareText(cards, card) {
     if (then > util) line += ' (down from ' + then + '% last month)';
     else if (then < util) line += ' (up from ' + then + '% last month)';
   }
-  var res = calcPayoff(card.balance, planAllocationFor(cards, card), cardApr(card));
-  var tail = '';
-  if (isFinite(res.months) && res.months > 0) {
-    var d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() + res.months);
-    tail = ' On track to be debt-free by ' + d.toLocaleString('en-US', { month: 'short', year: 'numeric' }) + '.';
-  }
-  return intro + line + '.' + tail;
+  // The month the payoff plan clears this card (money freed by cleared cards moves on to it)
+  var d = cardDebtFreeDate(cards, card);
+  return intro + line + '.' + (d ? ' On track to be debt-free by ' + monthYear(d) + '.' : '');
 }
 
 // The line at the top of an existing recurring payment's form

@@ -85,7 +85,7 @@ export function Overview() {
         <Kpi label="Monthly commitment" value={fmtAmt(p.commitment)} sub="Your plan for this month" />
         <Kpi label="Interest bleed" value={fmtAmt(p.interestMonth)} sub="Per month at today’s balances" />
         <Kpi label="Debt-free"
-          value={pj.debtFree ? pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : app.cards.length ? 'Never' : '--'}
+          value={pj.debtFree ? pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : app.cards.some((c) => c.balance > 0) ? 'Never' : '--'}
           sub={pj.debtFree ? pj.months + (pj.months === 1 ? ' month' : ' months') + (pj.speedUp >= 1 ? ' · ' + pj.speedUp.toFixed(1) + 'x faster than minimums' : '') : 'The budget doesn’t cover the minimums'} />
       </section>
 

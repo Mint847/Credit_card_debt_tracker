@@ -18,12 +18,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet">
   <script>
-    /* ── New desktop app (beta): a PC that picked "Try the new desktop app" opens /desktop/. The choice is kept
-       per device in localStorage (serendib_desktop_beta); "Back to classic view" there clears it. ── */
+    /* ── Computers open the desktop app at /desktop/; phones and iPads stay here. A computer: a mouse or trackpad
+       and a screen at least 1280 px wide, and not an iPad (which can report a trackpad and a Mac). The desktop
+       app uses the same test to send phones back here, so the two never bounce. ── */
     (function () {
+      var DESKTOP_APP = true; // false: computers use this app again
       try {
-        if (localStorage.getItem('serendib_desktop_beta') === 'on' && (location.pathname === '/' || location.pathname === '/index.html') &&
-            window.matchMedia && window.matchMedia('(min-width: 1280px) and (pointer: fine)').matches) location.replace('/desktop/');
+        if (!DESKTOP_APP || (location.pathname !== '/' && location.pathname !== '/index.html')) return;
+        // Support and tests: ?classic keeps this app for the rest of the tab's session
+        if (/[?&]classic(=|&|$)/.test(location.search)) sessionStorage.setItem('serendib_classic', '1');
+        if (sessionStorage.getItem('serendib_classic') === '1') return;
+        var iPad = /iPad|Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+        var computer = !iPad && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+          Math.max(screen.width, screen.height) >= 1280;
+        if (computer) location.replace('/desktop/');
       } catch (e) {}
     })();
   </script>
@@ -1636,8 +1644,7 @@
       overscroll-behavior: contain
     }
 
-    .am-item.desk-only,
-    .am-item.desk-beta {
+    .am-item.desk-only {
       display: none
     }
 
@@ -1664,12 +1671,6 @@
 
     @media (min-width: 1280px) {
       .am-item.desk-only {
-        display: flex
-      }
-    }
-
-    @media (min-width: 1280px) and (pointer: fine) {
-      .am-item.desk-beta {
         display: flex
       }
     }
@@ -6998,7 +6999,7 @@ var SerendibCore = (function() {
         return s + Math.max(0, c.balance);
       }, 0);
     };
-    var curve = [total()];
+    var curve = [total()], clearedIn = {};
     while (portfolio.some(function(c) {
       return c.balance > 0.01;
     }) && months < safetyLimit) {
@@ -7043,10 +7044,35 @@ var SerendibCore = (function() {
         }
       }
       months++;
+      portfolio.forEach(function(c) {
+        if (c.balance <= 0.01 && !(c.id in clearedIn)) clearedIn[c.id] = months;
+      });
       curve.push(total());
     }
     if (months >= safetyLimit) months = Infinity;
-    return { baselineMonths, baselineInterest, months, interest, curve };
+    return { baselineMonths, baselineInterest, months, interest, curve, clearedIn };
+  }
+  function monthsFromNow(months, from) {
+    if (!isFinite(months) || !(months > 0)) return null;
+    var d = from ? new Date(from.getTime()) : /* @__PURE__ */ new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    return d;
+  }
+  function monthYear(d) {
+    return d.toLocaleString("en-US", { month: "short", year: "numeric" });
+  }
+  function planDebtFree(cards, strategy) {
+    if (!cards.some(function(c) {
+      return c.balance > 0;
+    })) return { months: 0, date: null, label: "--", clearedIn: {} };
+    var pr = projectPlan(cards, strategy || getStrategy(), computeMonthlyBudget(cards));
+    var date = monthsFromNow(pr.months);
+    return { months: pr.months, date, label: date ? monthYear(date) : "Never", clearedIn: pr.clearedIn };
+  }
+  function cardDebtFreeDate(cards, card, strategy) {
+    var m = planDebtFree(cards, strategy).clearedIn[card.id];
+    return m ? monthsFromNow(m) : null;
   }
   function strategySavings(cards) {
     var active = cards.filter(function(c) {
@@ -7250,15 +7276,8 @@ var SerendibCore = (function() {
       if (then > util) line += " (down from " + then + "% last month)";
       else if (then < util) line += " (up from " + then + "% last month)";
     }
-    var res = calcPayoff(card.balance, planAllocationFor(cards, card), cardApr(card));
-    var tail = "";
-    if (isFinite(res.months) && res.months > 0) {
-      var d = /* @__PURE__ */ new Date();
-      d.setDate(1);
-      d.setMonth(d.getMonth() + res.months);
-      tail = " On track to be debt-free by " + d.toLocaleString("en-US", { month: "short", year: "numeric" }) + ".";
-    }
-    return intro + line + "." + tail;
+    var d = cardDebtFreeDate(cards, card);
+    return intro + line + "." + (d ? " On track to be debt-free by " + monthYear(d) + "." : "");
   }
   function recurringStatusText(item, todayStr, nextDue) {
     if (isCancelled(item, todayStr)) return "Cancelled" + (item.endDate ? " on " + shortDate(item.endDate) : "") + ". Past charges stay in your history.";
@@ -8278,6 +8297,7 @@ var SerendibCore = (function() {
     cancelRecurringItem,
     cardAdvanceSim,
     cardApr,
+    cardDebtFreeDate,
     cardFee,
     cardFloor,
     cardIssuer,
@@ -8347,7 +8367,9 @@ var SerendibCore = (function() {
     mergeTombstones,
     migrateOnboarding,
     minPaymentFor,
+    monthYear,
     monthlyRecurringTotal,
+    monthsFromNow,
     needsEmailVerification,
     nextDueDayFrom,
     nextStatementAfter,
@@ -8372,6 +8394,7 @@ var SerendibCore = (function() {
     payoffStart,
     periodSummary,
     planAllocationFor,
+    planDebtFree,
     planRestore,
     postDueRecurringOnCard,
     postRecurringNow,
@@ -9529,19 +9552,9 @@ var checkSnowball = document.getElementById('check-snowball');
             else elBleed.innerText = fmtLKR(totalBleed);
         }
 
-        var payoff = calcPayoff(totalDebt, totalMonthlyCommitment);
+        // The same month-by-month plan as the home screen (packages/core/src/plan.js)
         var elDebtFree = document.getElementById("overview-debt-free-target");
-        if (elDebtFree) {
-            if (cards.length === 0) {
-                elDebtFree.innerText = "--";
-            } else if (payoff.months === Infinity || activeCards.length === 0) {
-                elDebtFree.innerText = "Never";
-            } else {
-                var targetDate = new Date();
-                targetDate.setMonth(targetDate.getMonth() + payoff.months);
-                elDebtFree.innerText = targetDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-            }
-        }
+        if (elDebtFree) elDebtFree.innerText = SerendibCore.planDebtFree(cards).label;
         
         var logBtn = document.getElementById("btn-overview-log-payment");
         if (logBtn) logBtn.classList.toggle("hidden", activeCards.length === 0);
@@ -13548,7 +13561,6 @@ renderSpaces();
     <button type="button" role="menuitem" class="am-item" data-am="backup"><span class="material-symbols-outlined" aria-hidden="true">download</span>Download a backup</button>
     <button type="button" role="menuitem" class="am-item desk-only" data-am="shortcuts"><span class="material-symbols-outlined" aria-hidden="true">keyboard</span>Keyboard shortcuts<span class="am-kbd">?</span></button>
     <button type="button" role="menuitem" class="am-item" data-am="guide"><span class="material-symbols-outlined" aria-hidden="true">explore</span>Replay app guide</button>
-    <button type="button" role="menuitem" class="am-item desk-beta" data-am="desktop"><span class="material-symbols-outlined" aria-hidden="true">desktop_windows</span>Try the new desktop app<span class="am-kbd">Beta</span></button>
     <div class="am-sep"></div>
     <button type="button" role="menuitem" class="am-item am-danger" data-am="reset"><span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span>Reset my card data</button>
     <button type="button" role="menuitem" class="am-item am-danger" data-am="signout"><span class="material-symbols-outlined" aria-hidden="true">logout</span>Sign out</button>
@@ -15812,10 +15824,6 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         else if (act === 'reset') { var r = document.getElementById('btn-reset-data'); if (r) r.click(); }
         else if (act === 'shortcuts') document.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
         else if (act === 'guide') { if (window.Onboarding) window.Onboarding.replay(); }
-        else if (act === 'desktop') {
-          try { localStorage.setItem('serendib_desktop_beta', 'on'); } catch (e) {}
-          location.assign('/desktop/');
-        }
         else if (act === 'signout') { if (typeof window.signOutUser === 'function') window.signOutUser(); }
       }
       document.addEventListener('DOMContentLoaded', function () {

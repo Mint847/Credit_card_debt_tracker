@@ -46,3 +46,37 @@ test('the Avalanche chip shows what it really saves over Snowball', () => {
   expect(strategySavings([]).label).toBe('Saves the most interest');
   window.currentUserData = undefined;
 });
+
+import { monthsFromNow, monthYear, planDebtFree, cardDebtFreeDate } from '../src/plan.js';
+import { shareText } from '../src/screen-rules.js';
+test('debt-free months count from the 1st, so short months never roll over', () => {
+  expect(monthYear(monthsFromNow(4, new Date(2026, 9, 31)))).toBe('Feb 2027');
+  expect(monthYear(monthsFromNow(19, new Date(2026, 9, 29)))).toBe('May 2028');
+  expect(monthsFromNow(Infinity)).toBe(null);
+  expect(monthsFromNow(0)).toBe(null);
+});
+
+test('one debt-free date everywhere: the month-by-month plan', () => {
+  window.currentUserData = { income: '100000' };
+  const p = planDebtFree(cards, 'avalanche');
+  const pr = projectPlan(cards, 'avalanche', 25000); // 25% of income
+  expect(p.months).toBe(pr.months);
+  expect(p.label).toBe(monthYear(monthsFromNow(pr.months)));
+  // Each card clears no later than the whole plan; the pay-first card (highest APR) clears first
+  expect(pr.clearedIn.a).toBeLessThanOrEqual(pr.clearedIn.b);
+  expect(Math.max(pr.clearedIn.a, pr.clearedIn.b)).toBe(pr.months);
+  expect(pr.clearedIn.z).toBeUndefined(); // already settled
+  expect(planDebtFree([{ id: 'q', balance: 0, limit: 1 }]).label).toBe('--');
+  window.currentUserData = { income: '1000' };
+  expect(planDebtFree(cards, 'avalanche').label).toBe('Never');
+  window.currentUserData = undefined;
+});
+
+test('share text: the card is debt-free when the plan clears it', () => {
+  window.currentUserData = { income: '100000' };
+  const b = cards[1];
+  const d = cardDebtFreeDate(cards, b, 'avalanche');
+  expect(monthYear(d)).toBe(monthYear(monthsFromNow(projectPlan(cards, 'avalanche', 25000).clearedIn.b)));
+  expect(shareText(cards, b).endsWith(' On track to be debt-free by ' + monthYear(d) + '.')).toBe(true);
+  window.currentUserData = undefined;
+});

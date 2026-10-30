@@ -3,7 +3,7 @@
 import {
   ymd, addDays, cardApr, cardTheme, cardName, computeMonthlyBudget, allocateMonthlyPayments, calcPayoff,
   calcMinPayoff, cardMinRule, cycleStatus, isValidDay, minPaymentFor, nextDueDayFrom, billingPeriod, periodSummary,
-  spendCategory, recurringNextDue, statementDatesBetween, amountDueNow, activeRecurring, projectPlan
+  spendCategory, recurringNextDue, statementDatesBetween, amountDueNow, activeRecurring, projectPlan, planDebtFree, monthsFromNow
 } from '@serendib/core';
 import type { Card, Recurring, Strategy } from './types';
 
@@ -36,8 +36,9 @@ export interface Plan {
   totalDebt: number;
   totalLimit: number;
   interestMonth: number;
-  debtFree: Date | null; // null = never at this pace
+  debtFree: Date | null; // null = never at this pace, or nothing owed
   debtFreeMonths: number;
+  debtFreeLabel: string; // 'Mon YYYY', 'Never' or '--'
 }
 
 // Cards Overview: budget, allocation, monthly interest and the debt-free month
@@ -51,13 +52,9 @@ export function plan(cards: Card[], strategy: Strategy): Plan {
     totalLimit += c.limit;
     if (c.balance > 0) interestMonth += c.balance * (cardApr(c) / 100 / 12);
   });
-  const payoff = calcPayoff(totalDebt, a.total);
-  let debtFree: Date | null = null;
-  if (order.length && payoff.months !== Infinity) {
-    debtFree = new Date();
-    debtFree.setMonth(debtFree.getMonth() + payoff.months);
-  }
-  return { order, budget, alloc: a.alloc, commitment: a.total, totalDebt, totalLimit, interestMonth, debtFree, debtFreeMonths: payoff.months };
+  // The same month-by-month plan as the Overview (core planDebtFree)
+  const free = planDebtFree(cards, strategy);
+  return { order, budget, alloc: a.alloc, commitment: a.total, totalDebt, totalLimit, interestMonth, debtFree: free.date, debtFreeMonths: free.months, debtFreeLabel: free.label };
 }
 
 // The home screen's payoff plan (core projectPlan: the budget pays every minimum, the rest cascades
@@ -97,8 +94,7 @@ export function projection(cards: Card[], strategy: Strategy): Projection {
       }
     });
   }
-  let debtFree: Date | null = null;
-  if (done) { debtFree = new Date(); debtFree.setMonth(debtFree.getMonth() + pr.months); }
+  const debtFree: Date | null = done ? monthsFromNow(pr.months) : null;
   const neverBase = pr.baselineMonths === Infinity;
   return {
     months: pr.months, baselineMonths: pr.baselineMonths, interest: pr.interest, baselineInterest: pr.baselineInterest,
