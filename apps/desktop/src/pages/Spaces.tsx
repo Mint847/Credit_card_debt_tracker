@@ -8,7 +8,7 @@ import { useApp, findSpace, findCard, newSpace, editSpace, deleteSpace, depositT
 import { cardName } from '../lib/derive';
 import { fmtAmt, shortDate } from '../lib/format';
 import { Modal, Label, ErrorLine, Actions, Money, ColourPicker, colourName } from '../components/CardDialogs';
-import { CardDot, Empty, Icon, useToast } from '../components/ui';
+import { CardDot, Empty, Icon, Panel, useToast } from '../components/ui';
 import type { Card, Space } from '../lib/types';
 import { layoutNow, useLayout } from '../lib/layout';
 import { Sheet } from '../components/Sheet';
@@ -156,7 +156,7 @@ function PayForm({ space, cards, onClose, onDone }: { space: Space; cards: Card[
   );
 }
 
-function Detail({ space, cards, open }: { space: Space; cards: Card[]; open: (d: Dlg) => void }) {
+function Detail({ space, cards, open, onClose }: { space: Space; cards: Card[]; open: (d: Dlg) => void; onClose: () => void }) {
   const toast = useToast();
   const today = ymd(new Date());
   const st = spaceStatusLine(space, today, fmtAmt);
@@ -172,15 +172,18 @@ function Detail({ space, cards, open }: { space: Space; cards: Card[]; open: (d:
           <p className="truncate text-[17px] font-semibold">{space.name}</p>
           {isRealYmd(space.targetDate) && <p className="mt-0.5 text-[12px] text-faint">Target date {longDay(space.targetDate)}</p>}
         </div>
-        <Dropdown.Root>
-          <Dropdown.Trigger className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Space options"><Icon name="more_horiz" /></Dropdown.Trigger>
-          <Dropdown.Portal>
-            <Dropdown.Content align="end" sideOffset={6} className="z-50 w-48 rounded-xl border border-line bg-panel p-1.5 shadow-pop">
-              <Dropdown.Item onSelect={() => open({ kind: 'edit', id: space.id })} className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none data-[highlighted]:bg-sunken"><Icon name="edit" size={18} className="text-faint" />Edit space</Dropdown.Item>
-              <Dropdown.Item onSelect={() => open({ kind: 'delete', id: space.id })} className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] text-danger outline-none data-[highlighted]:bg-sunken"><Icon name="delete" size={18} />Delete space</Dropdown.Item>
-            </Dropdown.Content>
-          </Dropdown.Portal>
-        </Dropdown.Root>
+        <div className="-mr-1.5 flex shrink-0 items-center">
+          <Dropdown.Root>
+            <Dropdown.Trigger className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Space options"><Icon name="more_horiz" /></Dropdown.Trigger>
+            <Dropdown.Portal>
+              <Dropdown.Content align="end" sideOffset={6} className="z-50 w-48 rounded-xl border border-line bg-panel p-1.5 shadow-pop">
+                <Dropdown.Item onSelect={() => open({ kind: 'edit', id: space.id })} className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none data-[highlighted]:bg-sunken"><Icon name="edit" size={18} className="text-faint" />Edit space</Dropdown.Item>
+                <Dropdown.Item onSelect={() => open({ kind: 'delete', id: space.id })} className="flex h-8 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-[13px] text-danger outline-none data-[highlighted]:bg-sunken"><Icon name="delete" size={18} />Delete space</Dropdown.Item>
+              </Dropdown.Content>
+            </Dropdown.Portal>
+          </Dropdown.Root>
+          <button type="button" onClick={onClose} className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Close details"><Icon name="close" size={20} /></button>
+        </div>
       </div>
       <div className="px-5">
         <div className="flex items-center gap-4">
@@ -213,6 +216,9 @@ export function Spaces() {
   const app = useApp();
   const toast = useToast();
   const [sel, setSel] = useState<string | null>(layoutNow() === 'desktop' ? app.spaces[0]?.id || null : null);
+  // Closed with its × button: no space selected and no details panel until one is picked again
+  const [shut, setShut] = useState(false);
+  const pick = (id: string | null) => { setSel(id); setShut(false); };
   const [dlg, setDlg] = useState<Dlg | null>(null);
   const today = ymd(new Date());
   // The setup checklist's "Create an emergency buffer" opens the new space form
@@ -221,7 +227,7 @@ export function Spaces() {
   const layout = useLayout();
   const compact = layout !== 'desktop';
   // Desktop shows the first space beside the list; phones and iPads open one when it's tapped
-  const selected = (sel && app.spaces.find((s) => s.id === sel)) || (compact ? null : app.spaces[0]) || null;
+  const selected = shut ? null : (sel && app.spaces.find((s) => s.id === sel)) || (compact ? null : app.spaces[0]) || null;
   const totalCur = app.spaces.reduce((n, s) => n + (Number(s.currentLKR) || 0), 0);
   const totalTarget = app.spaces.reduce((n, s) => n + (Number(s.targetLKR) || 0), 0);
   // The phone app's Spaces summary: the latest ten movements across all spaces
@@ -234,7 +240,7 @@ export function Spaces() {
   const done = (r: Done & { id?: string }) => {
     setDlg(null);
     if (r.text) toast(r.text, { tone: r.tone, action: r.undo ? { label: 'Undo', run: r.undo } : undefined });
-    if (r.id) setSel(r.id);
+    if (r.id) pick(r.id);
   };
   const dSpace = dlg && 'id' in dlg ? findSpace(dlg.id) : undefined;
   let body = null;
@@ -281,7 +287,7 @@ export function Spaces() {
               const st = spaceStatusLine(s, today, fmtAmt);
               const on = selected && s.id === selected.id;
               return (
-                <button key={s.id} type="button" onClick={() => setSel(s.id)} aria-pressed={!!on}
+                <button key={s.id} type="button" onClick={() => pick(s.id)} aria-pressed={!!on}
                   className={'panel flex flex-col gap-4 p-5 text-left transition-shadow ' + (on ? 'ring-2 ring-brand/50' : 'hover:shadow-pop')}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -304,9 +310,9 @@ export function Spaces() {
           </div>
         )}
         {recent.length > 0 && (
-          <section className="panel mt-5">
-            <div className="panel-head"><h2 className="panel-title">Recent activity</h2></div>
-            <ul className="divide-y divide-line px-5 pb-3 phone:px-4">
+          // Folds away like the Overview's sections (remembered on this device)
+          <Panel className="mt-5" title="Recent activity" fold="space-recent" summary={'Latest ' + shortDate(recent[0].h.date)} bodyClass="px-5 pb-3 phone:px-4">
+            <ul className="divide-y divide-line">
               {recent.map(({ h, s: sp }) => {
                 const l = spaceHistoryLabel(h);
                 return (
@@ -320,13 +326,13 @@ export function Spaces() {
                 );
               })}
             </ul>
-          </section>
+          </Panel>
         )}
       </div>
-      {selected && !compact && <Detail space={selected} cards={app.cards} open={setDlg} />}
+      {selected && !compact && <Detail space={selected} cards={app.cards} open={setDlg} onClose={() => setShut(true)} />}
       {compact && (
         <Sheet bare open={!!selected && !dlg} onClose={() => setSel(null)} title={selected ? selected.name : 'Space'}>
-          {selected && <Detail space={selected} cards={app.cards} open={setDlg} />}
+          {selected && <Detail space={selected} cards={app.cards} open={setDlg} onClose={() => setSel(null)} />}
         </Sheet>
       )}
       <Modal open={!!dlg && !!body} onClose={close} title={dlg ? (dlg.kind === 'pay' && dSpace ? 'Pay a card from ' + dSpace.name : TITLES[dlg.kind]) : ''} width={dlg?.kind === 'create' || dlg?.kind === 'edit' ? 560 : 460}>{body}</Modal>

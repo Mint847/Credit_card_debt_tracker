@@ -46,11 +46,12 @@ export function Chip({ tone = 'neutral', children, icon }: { tone?: Tone; childr
   );
 }
 
-// Phones: a bar's colours are laid across the whole track and revealed up to the value, so they blend as it fills
-// and the tip shows the colour for its value; it grows in when shown (index.css .meter-fill)
-// (the classic phone app's bar colours: emerald, amber, rose)
-export const UTIL_COLORS = '#10b981 0%, #10b981 20%, #f59e0b 52%, #f43f5e 75%, #f43f5e 100%';
-export const BUDGET_COLORS = '#10b981 0%, #10b981 70%, #f59e0b 90%, #f43f5e 100%';
+// A bar's colours are laid across the whole track and revealed up to the value, so they blend as it fills and the
+// tip shows the colour for its value; on phones it grows in when shown (index.css .meter-fill)
+// Utilisation: green under 30%, yellow to 50%, orange to 75%, red above, each change a short blend around its threshold
+export const UTIL_COLORS = '#10b981 0%, #10b981 27%, #facc15 33%, #facc15 47%, #f97316 53%, #f97316 72%, #ef4444 78%, #ef4444 100%';
+// Budgets: green, then yellow and orange as spending nears the limit (90% is the warning point), red at the limit
+export const BUDGET_COLORS = '#10b981 0%, #10b981 68%, #facc15 78%, #f97316 90%, #ef4444 100%';
 export const cardColors = (card: Card) => cardTheme(card).hex + '8c 0%, ' + cardTheme(card).hex + ' 100%';
 export function Meter({ value, colors, className = '' }: { value: number; colors: string; className?: string }) {
   const v = Math.max(0, Math.min(100, value));
@@ -61,18 +62,26 @@ export function Meter({ value, colors, className = '' }: { value: number; colors
   );
 }
 
-// Utilisation bar: healthy under 30%, watch to 75%, high above. Phones: blended colours, or the card's own colour
-// for a bar about one card
+// Utilisation bar: the threshold colours blended along the bar (UTIL_COLORS). On phones a bar about one card
+// is in that card's own colour instead
 export function UtilBar({ value, className = '', card }: { value: number; className?: string; card?: Card }) {
   const phone = useLayout() === 'phone';
-  const v = Math.max(0, Math.min(100, value));
-  const color = value >= 75 ? 'bg-danger' : value >= 30 ? 'bg-warn' : 'bg-ok';
-  if (phone) return <Meter value={v} colors={card ? cardColors(card) : UTIL_COLORS} className={className} />;
-  return (
-    <div className={'h-1.5 w-full overflow-hidden rounded-full bg-sunken ' + className}>
-      <div className={'h-full rounded-full ' + color} style={{ width: v + '%' }} />
-    </div>
-  );
+  return <Meter value={value} colors={phone && card ? cardColors(card) : UTIL_COLORS} className={className} />;
+}
+
+// Parts of a whole as one bar whose colours fade into each other at each join (instead of a hard cut);
+// each blend is at most 3% of the bar and never more than a third of the smaller part, so small parts stay visible
+export function blendedParts(parts: { share: number; color: string }[]): string {
+  const stops: string[] = [];
+  let at = 0;
+  parts.forEach((p, i) => {
+    const end = at + p.share;
+    const prev = i > 0 ? parts[i - 1].share : 0, next = i < parts.length - 1 ? parts[i + 1].share : 0;
+    const inW = i > 0 ? Math.min(3, p.share / 3, prev / 3) : 0, outW = next ? Math.min(3, p.share / 3, next / 3) : 0;
+    stops.push(p.color + ' ' + (at + inW).toFixed(2) + '%', p.color + ' ' + (end - outW).toFixed(2) + '%');
+    at = end;
+  });
+  return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
 }
 
 // Phone design: one number in a card of its own, in the PC's plain style (brand or danger only where the PC uses them)

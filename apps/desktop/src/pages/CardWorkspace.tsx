@@ -314,7 +314,6 @@ function RecurringTab({ card }: { card: Card }) {
 }
 
 function BudgetsTab({ card }: { card: Card }) {
-  const phone = useLayout() === 'phone';
   const { period, summary } = cardPeriod(card);
   const openDialog = useCardDialogs();
   const budgets = card.budgets || {};
@@ -335,11 +334,7 @@ function BudgetsTab({ card }: { card: Card }) {
                     <span className="flex items-center gap-2 font-medium"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: categoryHex(k) }} />{spendCategory(k).label}</span>
                     <span className="num"><span className="font-semibold">{fmtAmt(spent)}</span><span className="text-faint"> of {fmtAmt(b)}</span></span>
                   </div>
-                  {phone ? <Meter value={ratio * 100} colors={BUDGET_COLORS} className="!h-2" /> : (
-                  <div className="h-2 overflow-hidden rounded-full bg-sunken">
-                    <div className={'h-full rounded-full ' + (ratio > 1 ? 'bg-danger' : ratio >= 0.9 ? 'bg-warn' : 'bg-ok')} style={{ width: Math.min(100, ratio * 100) + '%' }} />
-                  </div>
-                  )}
+                  <Meter value={ratio * 100} colors={BUDGET_COLORS} className="!h-2" />
                   <p className={'mt-1 text-[11px] ' + (ratio > 1 ? 'text-danger' : 'text-faint')}>{ratio > 1 ? fmtAmt(spent - b) + ' over' : fmtAmt(b - spent) + ' left'}</p>
                 </li>
               );

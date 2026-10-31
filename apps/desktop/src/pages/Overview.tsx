@@ -7,7 +7,7 @@ import { useApp } from '../lib/store';
 import { cardName, projection, spendingByCategory, today, upcomingEvents, util } from '../lib/derive';
 import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
-import { CardDot, Chip, Empty, Icon, Panel, UtilBar } from '../components/ui';
+import { CardDot, Chip, Empty, Icon, Panel, UtilBar, blendedParts } from '../components/ui';
 import { token, useIsDark } from '../lib/theme';
 import { useLayout } from '../lib/layout';
 import { EntryList } from '../components/EntryList';
@@ -170,9 +170,8 @@ export function Overview() {
           {spend.rows.length === 0 && <Empty icon="shopping_bag" title="No spending yet" body="Spending logged in each card’s current billing period shows here." />}
           {spend.rows.length > 0 && (
             <>
-              <div className="meter-reveal mb-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full">
-                {spend.rows.map((r) => <div key={r.key} style={{ width: (r.amount / spend.total) * 100 + '%', background: categoryHex(r.key) }} />)}
-              </div>
+              {/* One bar, the category colours fading into each other where they meet */}
+              <div className="meter-reveal mb-4 h-2.5 rounded-full" style={{ backgroundImage: blendedParts(spend.rows.map((r) => ({ share: (r.amount / spend.total) * 100, color: categoryHex(r.key) }))) }} />
               <ul className="space-y-2.5">
                 {spend.rows.slice(0, 7).map((r) => (
                   <li key={r.key} className="flex items-center gap-2.5 text-[13px]">
