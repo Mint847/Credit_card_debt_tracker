@@ -9,7 +9,7 @@ import {
   logSavedText, parseAmountInput, planAllocationFor, LOG_CARD_KEY, SMS_HINT
 } from '@serendib/core';
 import { useApp, logEntry, deleteEntry, findCard, type LogInput } from '../lib/store';
-import { amountDueNow, cardName } from '../lib/derive';
+import { amountDueNow, cardName, cardTheme } from '../lib/derive';
 import { fmtAmt } from '../lib/format';
 import { CardDot, Icon, Segmented, useToast } from './ui';
 import { Suggest } from './CardDialogs';
@@ -131,7 +131,8 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
     if (undo) toast('Entry deleted', { action: { label: 'Undo', run: undo } });
   }
 
-  const frame = dialogFrame(useLayout(), 540, '7vh', '86vh');
+  const layout = useLayout();
+  const frame = dialogFrame(layout, 540, '7vh', '86vh');
   const statusTone = smsStatus.tone === 'ok' ? 'font-semibold text-ok' : smsStatus.tone === 'warn' ? 'font-semibold text-warn' : 'text-faint';
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -139,9 +140,9 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content style={frame.style} className={frame.className}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save(false); }}>
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4">
-            <Dialog.Title className="text-[15px] font-semibold">{request?.editing ? 'Edit entry' : 'Log spending'}</Dialog.Title>
-            <Dialog.Close className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Close"><Icon name="close" /></Dialog.Close>
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:border-b-0 phone:px-5 phone:pb-2 phone:pt-5">
+            <Dialog.Title className="text-[15px] font-semibold phone:text-[19px] phone:font-bold phone:tracking-tight">{request?.editing ? 'Edit entry' : 'Log spending'}</Dialog.Title>
+            <Dialog.Close className="btn-ghost h-8 w-8 justify-center px-0 phone:h-10 phone:w-10 phone:rounded-full phone:bg-sunken" aria-label="Close"><Icon name="close" /></Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">Record a purchase, a payment or a refund on a card.</Dialog.Description>
 
@@ -171,7 +172,8 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
               <div role="radiogroup" aria-label="Card" className="flex flex-wrap gap-1.5">
                 {(request?.editing ? app.cards.filter((c) => c.id === cardId) : app.cards).map((c) => (
                   <button key={c.id} type="button" role="radio" aria-checked={c.id === cardId} disabled={!!request?.editing} onClick={() => setCardId(c.id)}
-                    className={'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ' + (c.id === cardId ? 'border-ink bg-sunken text-ink' : 'border-line text-muted hover:bg-sunken')}>
+                    className={'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ' + (c.id === cardId ? 'border-ink bg-sunken text-ink' : 'border-line text-muted hover:bg-sunken')}
+                    style={layout === 'phone' && c.id === cardId ? { borderColor: cardTheme(c).hex, background: cardTheme(c).soft } : undefined}>
                     <CardDot card={c} size={8} />{cardName(c)}
                   </button>
                 ))}
@@ -214,11 +216,11 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
                 </div>
                 <div>
                   <span className="label">Category</span>
-                  <div role="radiogroup" aria-label="Category" className="mt-1.5 grid grid-cols-4 gap-1.5">
+                  <div role="radiogroup" aria-label="Category" className="mt-1.5 grid grid-cols-4 gap-1.5 phone:grid-cols-3 phone:gap-2">
                     {SPEND_CATEGORIES.map((c: { key: string; label: string; icon: string }) => (
                       <button key={c.key} type="button" role="radio" aria-checked={category === c.key} onClick={() => setCategory(c.key)}
-                        className={'flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px] font-medium transition-colors ' +
-                          (category === c.key ? 'border-brand bg-brand/10 text-brand-ink' : 'border-line text-muted hover:bg-sunken')}>
+                        className={'flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px] font-medium transition-colors phone:h-11 phone:rounded-xl phone:px-2.5 ' +
+                          (category === c.key ? 'border-brand bg-brand/10 text-brand-ink phone:border-2' : 'border-line text-muted hover:bg-sunken')}>
                         <Icon name={c.icon} size={16} /><span className="truncate">{c.label.split(' ')[0]}</span>
                       </button>
                     ))}
@@ -234,9 +236,9 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
 
             {error && <p role="alert" className="text-[12px] font-semibold text-danger">{error}</p>}
 
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-[11px] text-faint compact:invisible"><span className="kbd">Ctrl</span> <span className="kbd">Enter</span> to save</span>
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between gap-2 pt-1 phone:pb-2">
+              <span className="text-[11px] text-faint compact:invisible phone:hidden"><span className="kbd">Ctrl</span> <span className="kbd">Enter</span> to save</span>
+              <div className="flex gap-2 phone:w-full [&>button]:phone:flex-1 [&>button]:phone:justify-center [&>button]:phone:whitespace-nowrap">
                 {request?.editing ? (
                   <>
                     <button type="button" className="btn-outline text-danger" onClick={remove}>Delete</button>

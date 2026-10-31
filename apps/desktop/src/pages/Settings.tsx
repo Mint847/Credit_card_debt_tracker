@@ -26,10 +26,18 @@ const SECTIONS = [
   ['cbsl', 'CBSL rules', 'gavel'], ['data', 'Privacy & data', 'shield'], ['account', 'Account', 'manage_accounts']
 ];
 
+// Phones: each row's icon tile in its own colour
+const ROW_COLOR: Record<string, string> = {
+  account_balance: 'phone:bg-m-limit/15 phone:text-m-limit', admin_panel_settings: 'phone:bg-m-slate/15 phone:text-m-slate',
+  download: 'phone:bg-m-space/15 phone:text-m-space', upload_file: 'phone:bg-m-limit/15 phone:text-m-limit', history: 'phone:bg-m-spend/15 phone:text-m-spend',
+  key: 'phone:bg-m-debt/15 phone:text-m-debt', keyboard: 'phone:bg-m-slate/15 phone:text-m-slate', school: 'phone:bg-m-free/15 phone:text-m-free',
+  restart_alt: 'phone:bg-m-spend/15 phone:text-m-spend', warning: 'phone:bg-warn/15 phone:text-warn'
+};
+
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section id={'set-' + id} className="scroll-mt-6">
-      <h2 className="mb-3 text-[15px] font-semibold">{title}</h2>
+    <section id={'set-' + id} data-tip={'set-' + id} className="scroll-mt-6">
+      <h2 className="mb-3 text-[15px] font-semibold phone:mb-2.5 phone:px-1 phone:text-[17px] phone:font-bold">{title}</h2>
       <div className="panel divide-y divide-line">{children}</div>
     </section>
   );
@@ -40,7 +48,7 @@ function Row({ icon, title, sub, onClick, danger, right }: { icon: string; title
   return (
     <Tag type={onClick ? 'button' : undefined} onClick={onClick}
       className={'flex w-full items-center gap-4 px-5 py-3.5 text-left phone:gap-3 phone:px-4 ' + (onClick ? 'hover:bg-sunken ' : '') + (danger ? 'text-danger' : '')}>
-      <span className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ' + (danger ? 'bg-danger/10' : 'bg-sunken text-muted')}><Icon name={icon} size={19} /></span>
+      <span className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg phone:h-10 phone:w-10 phone:rounded-xl ' + (danger ? 'bg-danger/10' : 'bg-sunken text-muted ' + (ROW_COLOR[icon] || ''))}><Icon name={icon} size={19} /></span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] font-semibold">{title}</span>
         {sub && <span className={'block text-[12px] ' + (danger ? 'text-danger/80' : 'text-faint')}>{sub}</span>}
@@ -182,10 +190,10 @@ export function Settings() {
     <div className="mx-auto flex max-w-[1120px] gap-10 px-8 py-7 compact:block tablet:px-6 tablet:py-6 phone:px-4 phone:py-5">
       <nav className="sticky top-7 h-fit w-52 shrink-0 compact:static compact:mb-6 compact:w-auto" aria-label="Settings sections">
         <h1 className="mb-4 font-serif text-[30px] font-medium tracking-tight phone:text-[27px]">Settings</h1>
-        <ul className="space-y-0.5 compact:flex compact:gap-2 compact:space-y-0 compact:overflow-x-auto phone:-mx-4 phone:px-4 compact:[scrollbar-width:none]">
+        <ul data-tip="set-nav" className="space-y-0.5 compact:flex compact:gap-2 compact:space-y-0 compact:overflow-x-auto phone:-mx-4 phone:px-4 compact:[scrollbar-width:none]">
           {SECTIONS.map(([id, label, icon]) => (
             <li key={id}><a href={'#set-' + id} onClick={(e) => { e.preventDefault(); document.getElementById('set-' + id)?.scrollIntoView({ behavior: 'smooth' }); }}
-              className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium text-muted hover:bg-sunken hover:text-ink compact:whitespace-nowrap compact:rounded-full compact:border compact:border-line compact:bg-panel"><Icon name={icon} size={18} />{label}</a></li>
+              className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-medium text-muted hover:bg-sunken hover:text-ink compact:whitespace-nowrap compact:rounded-full compact:border compact:border-line compact:bg-panel phone:h-10 phone:gap-2 phone:border-transparent phone:px-4 phone:font-semibold phone:shadow-card"><Icon name={icon} size={18} />{label}</a></li>
           ))}
         </ul>
       </nav>
@@ -220,7 +228,7 @@ export function Settings() {
         </Section>
 
         <Section id="strategy" title="Default payoff method">
-          <div role="radiogroup" aria-label="Payoff method" className="grid grid-cols-2 gap-3 p-4 phone:grid-cols-1">
+          <div role="radiogroup" aria-label="Payoff method" className="grid grid-cols-2 gap-3 p-4 phone:gap-2.5 phone:p-3">
             {([['avalanche', 'Debt Avalanche', 'trending_down', 'Saves maximum interest (Target highest APR).', strategySavings(app.cards).label],
                ['snowball', 'Debt Snowball', 'filter_vintage', 'Quick psychological wins (Target lowest balance).', 'Speed payoff']] as [Strategy, string, string, string, string][]).map(([v, t, i, sub, chip]) => {
               const on = app.strategy === v;

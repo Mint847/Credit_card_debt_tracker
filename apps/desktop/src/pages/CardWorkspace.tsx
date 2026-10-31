@@ -1,6 +1,6 @@
 // One card's workspace: header with the card and its numbers, then Overview, Activity, Recurring,
 // Budgets, Calculators and Billing & statements as tabs
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dropdown from '@radix-ui/react-dropdown-menu';
@@ -12,10 +12,10 @@ import {
 import { useApp, togglePaused, saveTarget } from '../lib/store';
 import { useCardDialogs } from '../components/CardDialogs';
 import { ActivityTable } from '../components/ActivityTable';
-import { amountDueNow, cardApr, cardCycle, cardPayoff, cardPeriod, minPaymentFor, today, util } from '../lib/derive';
+import { amountDueNow, cardApr, cardCycle, cardPayoff, cardPeriod, cardTheme, minPaymentFor, today, util } from '../lib/derive';
 import { fmtAmt, fmtShort, longDate, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
-import { Chip, Empty, Icon, Panel, UtilBar, useToast } from '../components/ui';
+import { BUDGET_COLORS, Chip, Empty, Icon, Meter, Panel, UtilBar, useToast } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { CardFace } from './Cards';
 import type { Card, Recurring } from '../lib/types';
@@ -38,16 +38,18 @@ export function CardWorkspace() {
   const card = app.cards.find((c) => c.id === id);
   const tab = params.get('tab') || 'overview';
   if (!card) return <Empty icon="credit_card_off" title="Card not found" body="It may have been removed on another device." />;
+  // The card's own colour, used by the phone design (the selected tab)
+  const accent = { '--card': cardTheme(card).hex, '--card-soft': cardTheme(card).soft } as CSSProperties;
   return (
-    <div className="mx-auto max-w-[1440px] px-8 py-7 tablet:px-6 tablet:py-6 phone:px-4 phone:py-4">
+    <div className="mx-auto max-w-[1440px] px-8 py-7 tablet:px-6 tablet:py-6 phone:px-4 phone:py-4" style={accent}>
       <Header card={card} />
       <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} className="mt-6 phone:mt-5">
-        <Tabs.List className="flex gap-1 border-b border-line phone:-mx-4 phone:overflow-x-auto phone:px-3 phone:[scrollbar-width:none]" aria-label="Card sections" data-tip="card-tabs">
+        <Tabs.List className="flex gap-1 border-b border-line phone:-mx-4 phone:gap-2 phone:overflow-x-auto phone:border-b-0 phone:px-4 phone:pb-1 phone:[scrollbar-width:none]" aria-label="Card sections" data-tip="card-tabs">
           {TABS.map((t) => (
             <Tabs.Trigger key={t.value} value={t.value}
-              className="-mb-px border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] font-semibold phone:shrink-0 phone:whitespace-nowrap phone:text-[14px] text-faint transition-colors hover:text-ink data-[state=active]:border-brand data-[state=active]:text-ink">
+              className="-mb-px border-b-2 border-transparent px-3 pb-2.5 pt-1 text-[13px] font-semibold phone:mb-0 phone:shrink-0 phone:whitespace-nowrap phone:rounded-full phone:border-b-0 phone:bg-panel phone:px-4 phone:py-2 phone:text-[14px] phone:shadow-card text-faint transition-colors hover:text-ink data-[state=active]:border-brand data-[state=active]:text-ink phone:data-[state=active]:bg-[var(--card-soft)] phone:data-[state=active]:text-ink">
               {t.label}
-              {t.value === 'activity' && <span className="num ml-1.5 text-[11px] font-medium text-faint">{(card.ledger || []).length}</span>}
+              {t.value === 'activity' && <span className="num ml-1.5 text-[11px] font-medium text-faint phone:text-current phone:opacity-75">{(card.ledger || []).length}</span>}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -94,8 +96,8 @@ function Header({ card }: { card: Card }) {
               )}
             </div>
           </div>
-          <div className="flex shrink-0 gap-2 phone:w-full [&>button:not(:last-child)]:phone:flex-1 [&>button]:phone:justify-center">
-            <button type="button" className="btn-outline" data-tip="card-log" onClick={() => openLog({ type: 'purchase', cardId: card.id })}><Icon name="shopping_bag" size={18} />Log spend</button>
+          <div className="flex shrink-0 gap-2 phone:w-full [&>button:not(:last-child)]:phone:flex-1 [&>button]:phone:justify-center" data-tip="card-log">
+            <button type="button" className="btn-outline" onClick={() => openLog({ type: 'purchase', cardId: card.id })}><Icon name="shopping_bag" size={18} />Log spend</button>
             <button type="button" className="btn-primary" onClick={() => openLog({ type: 'payment', cardId: card.id, prefill: due || undefined })}><Icon name="payments" size={18} />Log payment</button>
             <Dropdown.Root>
               <Dropdown.Trigger className="btn-outline w-9 justify-center px-0" aria-label="More actions" data-tip="card-menu"><Icon name="more_horiz" /></Dropdown.Trigger>
@@ -116,12 +118,12 @@ function Header({ card }: { card: Card }) {
             </Dropdown.Root>
           </div>
         </div>
-        <div className="mt-auto grid grid-cols-4 gap-6 pt-5 tablet:grid-cols-2 tablet:gap-x-6 tablet:gap-y-4 phone:grid-cols-2 phone:gap-x-4 phone:gap-y-4 phone:pt-4 [&_p.num]:phone:text-[20px]">
+        <div data-tip="card-stats" className="mt-auto grid grid-cols-4 gap-6 pt-5 tablet:grid-cols-2 tablet:gap-x-6 tablet:gap-y-4 phone:grid-cols-2 phone:gap-x-4 phone:gap-y-4 phone:pt-4 [&_p.num]:phone:text-[20px]">
           <div><p className="label">Balance</p><p className="num mt-1 text-[24px] font-bold tracking-tight">{fmtAmt(card.balance)}</p></div>
           <div>
             <p className="label">Utilisation</p>
             <p className={'num mt-1 text-[24px] font-bold tracking-tight ' + (u >= 75 ? 'text-danger' : '')}>{pct(u)}</p>
-            <UtilBar value={u} className="mt-1" />
+            <UtilBar value={u} card={card} className="mt-1" />
           </div>
           <div><p className="label">Due now</p><p className={'num mt-1 text-[24px] font-bold tracking-tight ' + (st?.overdue ? 'text-danger' : '')}>{fmtAmt(due)}</p>
             <p className="text-[12px] text-faint">{st?.next ? 'by ' + shortDate(st.next.s.due) : st?.overdue ? 'since ' + shortDate(st.overdue.since) : 'Nothing due'}</p></div>
@@ -144,9 +146,9 @@ function OverviewTab({ card }: { card: Card }) {
   return (
     <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
       <div className="col-span-2 compact:col-span-1 space-y-5">
-        <Panel title={'This cycle · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
+        <Panel tip="card-cycle" title={'This cycle · ' + shortDate(period.start) + ' – ' + shortDate(period.end)}
           action={<span className="text-[12px] text-faint">{period.hasCycle ? daysBetween(today(), period.end) + ' days to statement' : 'Calendar month (no billing cycle set)'}</span>}>
-          <div className="grid grid-cols-3 gap-4 border-b border-line pb-4 phone:gap-3 [&_p.num]:phone:text-[16px]">
+          <div className="grid grid-cols-3 gap-4 border-b border-line pb-4 phone:gap-3 phone:border-b-0 [&_p.num]:phone:text-[16px]">
             <div><p className="text-[12px] text-faint">Spent</p><p className="num text-[18px] font-bold">{fmtAmt(summary.spent)}</p></div>
             <div><p className="text-[12px] text-faint">Payments</p><p className="num text-[18px] font-bold text-ok">{fmtAmt(summary.payments)}</p></div>
             <div><p className="text-[12px] text-faint">Top merchant</p><p className="truncate text-[15px] font-semibold">{summary.topMerchants[0]?.name || '—'}</p></div>
@@ -156,10 +158,10 @@ function OverviewTab({ card }: { card: Card }) {
               {cats.map((k) => {
                 const b = (card.budgets || {})[k];
                 return (
-                  <li key={k} className="grid grid-cols-[150px_1fr_110px] items-center gap-4 text-[13px] phone:grid-cols-[104px_1fr_92px] phone:gap-3">
+                  <li key={k} className="grid grid-cols-[150px_1fr_110px] items-center gap-4 text-[13px] phone:grid-cols-[1fr_72px_auto] phone:gap-3">
                     <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: categoryHex(k) }} />{spendCategory(k).label}</span>
                     <div className="relative h-2 rounded-full bg-sunken">
-                      <div className="h-full rounded-full" style={{ width: (summary.byCat[k] / max) * 100 + '%', background: categoryHex(k) }} />
+                      <div className="meter-reveal h-full rounded-full" style={{ width: (summary.byCat[k] / max) * 100 + '%', background: categoryHex(k) }} />
                     </div>
                     <span className="num text-right font-medium">{fmtAmt(summary.byCat[k])}{b ? <span className="block text-[11px] font-normal text-faint">of {fmtShort(b)}</span> : null}</span>
                   </li>
@@ -312,6 +314,7 @@ function RecurringTab({ card }: { card: Card }) {
 }
 
 function BudgetsTab({ card }: { card: Card }) {
+  const phone = useLayout() === 'phone';
   const { period, summary } = cardPeriod(card);
   const openDialog = useCardDialogs();
   const budgets = card.budgets || {};
@@ -332,9 +335,11 @@ function BudgetsTab({ card }: { card: Card }) {
                     <span className="flex items-center gap-2 font-medium"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: categoryHex(k) }} />{spendCategory(k).label}</span>
                     <span className="num"><span className="font-semibold">{fmtAmt(spent)}</span><span className="text-faint"> of {fmtAmt(b)}</span></span>
                   </div>
+                  {phone ? <Meter value={ratio * 100} colors={BUDGET_COLORS} className="!h-2" /> : (
                   <div className="h-2 overflow-hidden rounded-full bg-sunken">
                     <div className={'h-full rounded-full ' + (ratio > 1 ? 'bg-danger' : ratio >= 0.9 ? 'bg-warn' : 'bg-ok')} style={{ width: Math.min(100, ratio * 100) + '%' }} />
                   </div>
+                  )}
                   <p className={'mt-1 text-[11px] ' + (ratio > 1 ? 'text-danger' : 'text-faint')}>{ratio > 1 ? fmtAmt(spent - b) + ' over' : fmtAmt(b - spent) + ' left'}</p>
                 </li>
               );
@@ -394,6 +399,8 @@ function CalculatorsTab({ card }: { card: Card }) {
   const amt = parseFloat(price), pct = parseFloat(sur) / 100;
   const sc = amt >= 1 && !isNaN(pct) && pct >= 0 ? calcSurchargeAPR(amt, pct, tenure) : null;
   const fill = start.max > start.min ? ((pay - start.min) / (start.max - start.min)) * 100 : 0;
+  // Phones: the slider in the card's own colour
+  const sliderColor = useLayout() === 'phone' ? cardTheme(card).hex : 'rgb(var(--brand))';
 
   return (
     <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
@@ -415,8 +422,8 @@ function CalculatorsTab({ card }: { card: Card }) {
           <span className="num text-[15px] font-bold">{sim.payment}</span>
         </div>
         <input type="range" aria-label="Monthly payment" min={start.min} max={start.max} step={500} value={pay} disabled={sim.paidOff}
-          onChange={(e) => setPay(parseFloat(e.target.value))} className="mt-2 w-full accent-[rgb(var(--brand))]"
-          style={{ background: 'linear-gradient(to right, rgb(var(--brand)) ' + fill + '%, rgb(var(--sunken)) ' + fill + '%)' }} />
+          onChange={(e) => setPay(parseFloat(e.target.value))} className="slider mt-2 w-full accent-[rgb(var(--brand))]"
+          style={{ accentColor: sliderColor, '--slider': sliderColor, background: 'linear-gradient(to right, ' + sliderColor + ' ' + fill + '%, rgb(var(--sunken)) ' + fill + '%)' } as CSSProperties} />
         <div className="mt-1 flex justify-between text-[11px] font-semibold text-faint">
           {([['min', 'Min'], ['rec', 'Recommended'], ['half', '50%'], ['full', 'Full']] as const).map(([k, l]) => (
             <button key={k} type="button" disabled={sim.paidOff} onClick={() => setPay(payoffPreset(card, k))} className={'hover:text-ink ' + (k === 'rec' ? 'text-brand-ink' : '')}>{l}</button>

@@ -24,7 +24,17 @@ export default {
         'brand-ink': v('brand-ink'),
         danger: v('danger'),
         warn: v('warn'),
-        ok: v('ok')
+        ok: v('ok'),
+        // Metric colours, used by the phone design
+        'm-debt': v('m-debt'),
+        'm-plan': v('m-plan'),
+        'm-interest': v('m-interest'),
+        'm-free': v('m-free'),
+        'm-limit': v('m-limit'),
+        'm-spend': v('m-spend'),
+        'm-space': v('m-space'),
+        'm-offer': v('m-offer'),
+        'm-slate': v('m-slate')
       },
       boxShadow: {
         pop: '0 12px 32px -8px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.06)',

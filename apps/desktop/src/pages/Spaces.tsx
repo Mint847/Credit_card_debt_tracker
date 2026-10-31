@@ -262,13 +262,13 @@ export function Spaces() {
           <button type="button" className="btn-primary" data-tip="add-space" onClick={() => setDlg({ kind: 'create' })}><Icon name="add" size={18} />Add space</button>
         </div>
         {app.spaces.length > 0 && (
-          <section className="panel mb-5 flex items-center gap-6 px-5 py-4 phone:mb-4 phone:flex-wrap phone:gap-x-4 phone:gap-y-3 phone:px-4 [&>div.flex-1]:phone:order-last [&>div.flex-1]:phone:basis-full">
+          <section data-tip="spaces-total" className="panel mb-5 flex items-center gap-6 px-5 py-4 phone:mb-4 phone:flex-wrap phone:gap-x-4 phone:gap-y-3 phone:px-4 [&>div.flex-1]:phone:order-last [&>div.flex-1]:phone:basis-full">
             <div>
               <p className="label">Total saved</p>
               <p className="num mt-1 text-[22px] font-bold">{fmtAmt(totalCur)} <span className="text-[13px] font-medium text-faint">/ {fmtAmt(totalTarget)}</span></p>
             </div>
             <div className="flex-1">
-              <div className="h-2 overflow-hidden rounded-full bg-sunken"><div className="h-full rounded-full bg-ok" style={{ width: (totalTarget > 0 ? Math.min(100, (totalCur / totalTarget) * 100) : 0) + '%' }} /></div>
+              <div className="h-2 overflow-hidden rounded-full bg-sunken"><div className="meter-reveal h-full rounded-full bg-ok" style={{ width: (totalTarget > 0 ? Math.min(100, (totalCur / totalTarget) * 100) : 0) + '%' }} /></div>
             </div>
             <span className="rounded-full bg-ok/10 px-3 py-1 text-[12px] font-semibold text-ok">{Math.round(totalTarget > 0 ? (totalCur / totalTarget) * 100 : 0)}% Funded</span>
           </section>
@@ -276,7 +276,7 @@ export function Spaces() {
         {app.spaces.length === 0 ? (
           <div className="panel"><Empty icon="savings" title="No Spaces Found" body="Create a space to start allocating money for upcoming bills and emergencies." /></div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="space-list">
             {app.spaces.map((s) => {
               const st = spaceStatusLine(s, today, fmtAmt);
               const on = selected && s.id === selected.id;
@@ -285,7 +285,7 @@ export function Spaces() {
                   className={'panel flex flex-col gap-4 p-5 text-left transition-shadow ' + (on ? 'ring-2 ring-brand/50' : 'hover:shadow-pop')}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold">{s.name}</p>
+                      <p className="truncate text-[15px] font-semibold phone:text-[17px] phone:font-bold">{s.name}</p>
                       <p className="mt-0.5 text-[12px] text-faint">Target: {longDay(s.targetDate)}</p>
                     </div>
                     <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: hexOf(s) }} />
@@ -294,7 +294,7 @@ export function Spaces() {
                     <Ring space={s} />
                     <div>
                       <p className="num text-[18px] font-bold" style={{ color: hexOf(s) }}>{fmtAmt(Number(s.currentLKR) || 0)}</p>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-faint">of {fmtAmt(Number(s.targetLKR) || 0)} goal</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-faint phone:normal-case phone:tracking-normal">of {fmtAmt(Number(s.targetLKR) || 0)} goal</p>
                     </div>
                   </div>
                   <p className={'border-t border-line pt-3 text-[12px] font-semibold ' + (st.tone === 'ok' ? 'text-ok' : 'text-warn')}>{st.text}</p>

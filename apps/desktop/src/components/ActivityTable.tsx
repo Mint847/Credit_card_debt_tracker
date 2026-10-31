@@ -124,7 +124,7 @@ export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; s
 
   return (
     <div className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 phone:gap-2.5">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 phone:gap-2.5 phone:py-4" data-tip="activity-filters">
         <div className="relative w-64 phone:w-full">
           <Icon name="search" size={18} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
           <input ref={search} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search merchant or note" aria-label="Search" className="field pl-9" />
@@ -152,10 +152,10 @@ export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; s
         </Tip>
       </div>
       {rows.length === 0 ? <Empty icon="receipt_long" title={total ? 'No entries match.' : single ? 'Nothing logged on this card yet.' : 'Nothing logged yet.'} body={total ? 'Try a different search or filter.' : undefined} /> : listView ? (
-        <div className="-mt-px"><EntryList rows={table.getRowModel().rows.map((r) => ({ c: r.original.card, e: r.original.e }))} showCard={!single}
+        <div className="-mt-px" data-tip="activity-list"><EntryList rows={table.getRowModel().rows.map((r) => ({ c: r.original.card, e: r.original.e }))} showCard={!single}
           onOpen={(c, e) => openLog({ editing: { id: e.id, cardId: c.id } })} /></div>
       ) : (
-        <table className="w-full table-fixed text-[13px]">
+        <table className="w-full table-fixed text-[13px]" data-tip="activity-list">
           <colgroup>
             <col className="w-24" /><col /><col className="w-44" />{!single && <col className="w-48" />}<col className="w-32" /><col className="w-20" />
           </colgroup>

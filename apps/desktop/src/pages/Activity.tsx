@@ -19,7 +19,7 @@ export function Activity() {
           <p className="mt-1 text-[13px] text-faint">{entries} entries across {app.cards.length} cards · {fmtAmt(spend.total)} spent this cycle</p>
         </div>
         <div className="flex gap-2 [&>button]:phone:flex-1 [&>button]:phone:justify-center">
-          <button type="button" className="btn-outline" onClick={() => openLog({ sms: true })}><Icon name="sms" size={18} />Paste SMS</button>
+          <button type="button" className="btn-outline" data-tip="paste-sms" onClick={() => openLog({ sms: true })}><Icon name="sms" size={18} />Paste SMS</button>
           <button type="button" className="btn-primary" onClick={() => openLog({ type: 'purchase' })}><Icon name="add" size={18} />Log an entry</button>
         </div>
       </div>

@@ -35,6 +35,31 @@
   --ok: 110 231 183;
   color-scheme: dark;
 }
+/* Phone design: in light mode the page sits a shade darker so the cards stand out */
+[data-layout=phone]:not(.dark) { --canvas: 241 243 245; }
+/* Colours for the phone design's menus (kept to phones: declared for every layout they shift PC text rendering) */
+[data-layout=phone] {
+  --m-debt: 79 70 229;        /* indigo: debt and balances */
+  --m-plan: 0 107 92;         /* teal: this month's plan */
+  --m-interest: 190 18 60;    /* rose: interest and costs */
+  --m-free: 3 105 76;         /* emerald: debt-free, savings made */
+  --m-limit: 3 105 161;       /* sky: limits and available credit */
+  --m-spend: 168 56 10;       /* orange: spending */
+  --m-space: 109 40 217;      /* violet: Spaces */
+  --m-offer: 190 24 93;       /* pink: offers */
+  --m-slate: 71 85 105;       /* slate: settings */
+}
+[data-layout=phone].dark {
+  --m-debt: 165 180 252;
+  --m-plan: 79 219 194;
+  --m-interest: 253 164 175;
+  --m-free: 110 231 183;
+  --m-limit: 125 211 252;
+  --m-spend: 253 186 116;
+  --m-space: 196 181 253;
+  --m-offer: 249 168 212;
+  --m-slate: 203 213 225;
+}
 
 html, body, #root { height: 100%; }
 body {
@@ -72,6 +97,29 @@ body {
   .field { @apply h-9 w-full rounded-lg border border-line bg-panel px-3 text-[13px] text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold; }
   .kbd { @apply inline-flex items-center rounded border border-line bg-sunken px-1.5 text-[10px] font-semibold text-faint; }
+
+  /* ── Phone design (phones only; PC and iPad keep everything above) ──
+     Kept in this layer so a phone: utility on an element still wins over it. */
+  [data-layout=phone] .font-serif { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  [data-layout=phone] h1.font-serif { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  /* One step up for small text, so nothing on a phone is under 12 px */
+  [data-layout=phone] .text-\[10px\], [data-layout=phone] .text-\[10\.5px\], [data-layout=phone] .text-\[11px\] { font-size: 12px; }
+  [data-layout=phone] .text-\[12px\], [data-layout=phone] .text-\[12\.5px\] { font-size: 13px; }
+  [data-layout=phone] .text-\[13px\] { font-size: 14px; }
+  [data-layout=phone] .text-\[14px\] { font-size: 15px; }
+  /* Cards: rounder; in light mode a soft shadow instead of a border, in dark a quiet border */
+  [data-layout=phone] .panel { border-radius: 20px; border-color: transparent; box-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 18px -8px rgb(16 24 40 / 0.10); }
+  [data-layout=phone].dark .panel { border-color: rgb(var(--line)); box-shadow: none; }
+  [data-layout=phone] .panel-head { padding-left: 16px; padding-right: 16px; }
+  [data-layout=phone] .panel-title { font-size: 16px; font-weight: 700; }
+  /* Labels in sentence case: small uppercase letters are hard to read on a phone */
+  [data-layout=phone] .label { text-transform: none; letter-spacing: 0; font-size: 13px; color: rgb(var(--muted)); }
+  /* Buttons: bigger, rounder touch targets */
+  [data-layout=phone] :is(.btn, .btn-primary, .btn-outline) { min-height: 44px; border-radius: 14px; font-size: 14px; }
+  [data-layout=phone] .btn-ghost { border-radius: 12px; }
+  [data-layout=phone] .btn-primary { box-shadow: 0 4px 14px -6px rgb(var(--brand) / 0.55); }
+  [data-layout=phone] .field { border-radius: 14px; }
+  [data-layout=phone] .chip { font-size: 12px; padding: 3px 9px; }
 }
 
 /* Thin scrollbars inside panels */
@@ -83,7 +131,25 @@ body {
 .sheet-up { animation: sheet-up 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .fade-in { animation: fade-in 0.2s ease-out; }
 @media (prefers-reduced-motion: reduce) { .sheet-up, .fade-in { animation: none; } }
+/* The tour's spotlight: the page dimmed around one element, outlined in the brand colour.
+   tour-spot-move glides it from the previous element; it's removed once there, so it then follows without lag. */
+.tour-spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgb(15 23 42 / 0.55); pointer-events: none; }
+.tour-spot::after { content: ''; position: absolute; inset: -4px; border-radius: 18px; border: 2px solid rgb(var(--brand-ink)); }
+.tour-spot-move { transition: top .25s cubic-bezier(.4, 0, .2, 1), left .25s cubic-bezier(.4, 0, .2, 1), width .25s cubic-bezier(.4, 0, .2, 1), height .25s cubic-bezier(.4, 0, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .tour-spot-move { transition: none; } }
 /* Bigger touch targets on phones and iPads */
 [data-layout=phone] .btn, [data-layout=tablet] .btn { min-height: 40px; }
-[data-layout=phone] .field { height: 44px; font-size: 16px; }
+[data-layout=phone] .field { height: 48px; font-size: 16px; }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+/* Phones: bars grow in from the left when they appear, and glide when the value changes */
+@keyframes meter-in { from { clip-path: inset(0 100% 0 0 round 9999px); } }
+@keyframes reveal-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+[data-layout=phone] .meter-fill { animation: meter-in .8s cubic-bezier(.22, 1, .36, 1); transition: clip-path .5s cubic-bezier(.22, 1, .36, 1); }
+[data-layout=phone] .meter-reveal { animation: reveal-in .8s cubic-bezier(.22, 1, .36, 1); }
+@media (prefers-reduced-motion: reduce) { [data-layout=phone] :is(.meter-fill, .meter-reveal) { animation: none; transition: none; } }
+/* Phones: sliders drawn by hand (the track is the element's own gradient, the handle in --slider, e.g. the card's colour) */
+[data-layout=phone] input[type=range].slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 9999px; outline: none; }
+[data-layout=phone] input[type=range].slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); transition: transform .15s ease; }
+[data-layout=phone] input[type=range].slider:active::-webkit-slider-thumb { transform: scale(1.12); }
+[data-layout=phone] input[type=range].slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); }
+[data-layout=phone] input[type=range].slider:disabled { opacity: .5; }

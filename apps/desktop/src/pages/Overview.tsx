@@ -60,13 +60,14 @@ export function Overview() {
       <Checklist />
       <div className="flex items-end justify-between phone:flex-col phone:items-stretch phone:gap-4">
         <div>
-          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">{greeting()}, {app.profile.firstName}</h1>
+          <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:!text-[24px]">{greeting()}, {app.profile.firstName}</h1>
           <p className="mt-1 text-[13px] text-faint">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · {app.cards.length} cards ·{' '}
             {app.strategy === 'avalanche' ? 'Avalanche' : 'Snowball'} plan
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* Phones: logging is under the + button */}
+        <div className="flex gap-2 phone:hidden">
           <button type="button" className="btn-outline phone:hidden" onClick={() => openLog({ sms: true })}><Icon name="sms" size={18} />Paste SMS</button>
           <button type="button" className="btn-primary phone:h-11 phone:flex-1 phone:justify-center" onClick={() => openLog({ type: 'payment', cardId: p.order[0]?.id, prefill: p.order[0] ? p.alloc[p.order[0].id] : undefined })}>
             <Icon name="payments" size={18} />Log this month’s payment
@@ -97,7 +98,7 @@ export function Overview() {
         {/* Payoff pace */}
         <Panel tip="payoff" className="col-span-2 compact:col-span-1" title="Payoff pace" fold="payoff"
           summary={pj.debtFree ? 'Debt-free ' + pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : undefined}
-          action={<div className="flex items-center gap-4 text-[12px] text-faint phone:gap-2.5 phone:text-[11px]">
+          action={<div className="flex items-center gap-4 text-[12px] text-faint phone:gap-2.5 phone:text-[12px]">
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-brand" />Your plan</span>
             <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-faint" />Minimums only</span>
           </div>}>
@@ -169,7 +170,7 @@ export function Overview() {
           {spend.rows.length === 0 && <Empty icon="shopping_bag" title="No spending yet" body="Spending logged in each card’s current billing period shows here." />}
           {spend.rows.length > 0 && (
             <>
-              <div className="mb-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full">
+              <div className="meter-reveal mb-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full">
                 {spend.rows.map((r) => <div key={r.key} style={{ width: (r.amount / spend.total) * 100 + '%', background: categoryHex(r.key) }} />)}
               </div>
               <ul className="space-y-2.5">
@@ -187,7 +188,7 @@ export function Overview() {
         </Panel>
 
         {/* Pay-first order */}
-        <Panel className="tablet:col-span-2" title="This month’s plan" fold="plan" summary={<span className="num font-semibold text-ink">{fmtAmt(p.commitment)}</span>} action={<Link to="/plan" className="text-[12px] font-semibold text-brand-ink hover:underline">Open plan</Link>} bodyClass="px-2 pb-3">
+        <Panel tip="home-plan" className="tablet:col-span-2" title="This month’s plan" fold="plan" summary={<span className="num font-semibold text-ink">{fmtAmt(p.commitment)}</span>} action={<Link to="/plan" className="text-[12px] font-semibold text-brand-ink hover:underline phone:rounded-full phone:bg-brand/10 phone:px-3 phone:py-1.5 phone:hover:no-underline">Open plan</Link>} bodyClass="px-2 pb-3">
           <ol>
             {p.order.map((c, i) => (
               <li key={c.id}>
@@ -210,7 +211,7 @@ export function Overview() {
       </div>
 
       {/* Recent activity */}
-      <Panel title="Recent activity" fold="recent" summary={recent.length ? 'Latest ' + shortDate(recent[0].e.date) : 'No entries yet'} action={<Link to="/activity" className="text-[12px] font-semibold text-brand-ink hover:underline">View all</Link>} bodyClass="pb-2">
+      <Panel tip="home-recent" title="Recent activity" fold="recent" summary={recent.length ? 'Latest ' + shortDate(recent[0].e.date) : 'No entries yet'} action={<Link to="/activity" className="text-[12px] font-semibold text-brand-ink hover:underline phone:rounded-full phone:bg-brand/10 phone:px-3 phone:py-1.5 phone:hover:no-underline">View all</Link>} bodyClass="pb-2">
         {layout === 'phone' ? <EntryList rows={recent} onOpen={(c, e) => openLog({ editing: { id: e.id, cardId: c.id } })} /> : (
         <table className="w-full text-[13px]">
           <thead>

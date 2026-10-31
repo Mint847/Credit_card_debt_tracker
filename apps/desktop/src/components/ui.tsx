@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { cardTheme } from '../lib/derive';
 import type { Card } from '../lib/types';
+import { useLayout } from '../lib/layout';
 
 export function Icon({ name, className = '', fill = false, size }: { name: string; className?: string; fill?: boolean; size?: number }) {
   return (
@@ -45,13 +46,42 @@ export function Chip({ tone = 'neutral', children, icon }: { tone?: Tone; childr
   );
 }
 
-// Utilisation bar: healthy under 30%, watch to 75%, high above
-export function UtilBar({ value, className = '' }: { value: number; className?: string }) {
+// Phones: a bar's colours are laid across the whole track and revealed up to the value, so they blend as it fills
+// and the tip shows the colour for its value; it grows in when shown (index.css .meter-fill)
+// (the classic phone app's bar colours: emerald, amber, rose)
+export const UTIL_COLORS = '#10b981 0%, #10b981 20%, #f59e0b 52%, #f43f5e 75%, #f43f5e 100%';
+export const BUDGET_COLORS = '#10b981 0%, #10b981 70%, #f59e0b 90%, #f43f5e 100%';
+export const cardColors = (card: Card) => cardTheme(card).hex + '8c 0%, ' + cardTheme(card).hex + ' 100%';
+export function Meter({ value, colors, className = '' }: { value: number; colors: string; className?: string }) {
+  const v = Math.max(0, Math.min(100, value));
+  return (
+    <div className={'relative h-1.5 w-full overflow-hidden rounded-full bg-sunken ' + className}>
+      <div className="meter-fill absolute inset-0" style={{ backgroundImage: 'linear-gradient(90deg, ' + colors + ')', clipPath: 'inset(0 ' + (100 - v) + '% 0 0 round 9999px)' }} />
+    </div>
+  );
+}
+
+// Utilisation bar: healthy under 30%, watch to 75%, high above. Phones: blended colours, or the card's own colour
+// for a bar about one card
+export function UtilBar({ value, className = '', card }: { value: number; className?: string; card?: Card }) {
+  const phone = useLayout() === 'phone';
   const v = Math.max(0, Math.min(100, value));
   const color = value >= 75 ? 'bg-danger' : value >= 30 ? 'bg-warn' : 'bg-ok';
+  if (phone) return <Meter value={v} colors={card ? cardColors(card) : UTIL_COLORS} className={className} />;
   return (
     <div className={'h-1.5 w-full overflow-hidden rounded-full bg-sunken ' + className}>
       <div className={'h-full rounded-full ' + color} style={{ width: v + '%' }} />
+    </div>
+  );
+}
+
+// Phone design: one number in a card of its own, in the PC's plain style (brand or danger only where the PC uses them)
+export function MetricTile({ label, value, sub, accent, className = '' }: { label: string; value: ReactNode; sub?: ReactNode; accent?: 'brand' | 'danger'; className?: string }) {
+  return (
+    <div className={'panel min-w-0 p-4 ' + className}>
+      <p className="label">{label}</p>
+      <p className={'num mt-1.5 truncate text-[22px] font-bold leading-tight tracking-tight ' + (accent === 'brand' ? 'text-brand-ink' : accent === 'danger' ? 'text-danger' : '')}>{value}</p>
+      {sub && <p className="mt-1 text-xs leading-snug text-faint">{sub}</p>}
     </div>
   );
 }
@@ -96,7 +126,7 @@ export function Panel({ title, action, children, className = '', bodyClass = 'px
     return (
       <section className={'panel ' + className + (shut ? ' self-start' : '')} data-tip={tip} data-fold={fold}>
         <div className={'panel-head gap-3 ' + (shut ? 'pb-4' : '')}>
-          <button type="button" onClick={toggle} aria-expanded={!shut} aria-controls={bodyId}
+          <button type="button" onClick={toggle} aria-expanded={!shut} aria-controls={bodyId} data-tip={'fold-' + fold}
             className="group -my-2.5 -ml-1.5 flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-1.5 text-left">
             <Icon name="expand_more" size={20} className={'shrink-0 text-faint transition-transform duration-200 group-hover:text-ink ' + (shut ? '-rotate-90' : '')} />
             <h2 className="panel-title truncate">{title}</h2>
@@ -153,7 +183,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex w-[360px] flex-col gap-2 phone:inset-x-3 phone:bottom-[calc(84px+env(safe-area-inset-bottom))] phone:w-auto" role="status" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-[13px] text-ink shadow-pop">
+          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-[13px] text-ink shadow-pop phone:rounded-2xl phone:py-3.5">
             <Icon name={t.tone === 'warn' ? 'warning' : 'check_circle'} className={t.tone === 'warn' ? 'text-warn' : 'text-brand-ink'} fill />
             <span className="flex-1">{t.text}</span>
             {t.action && (
@@ -172,10 +202,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 // Segmented control (strategy, entry type, filters)
 export function Segmented<T extends string>({ value, options, onChange, size = 'md' }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; size?: 'sm' | 'md' }) {
   return (
-    <div role="radiogroup" className="inline-flex rounded-lg bg-sunken p-0.5">
+    <div role="radiogroup" className="inline-flex rounded-lg bg-sunken p-0.5 phone:rounded-full phone:p-1">
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
-          className={(size === 'sm' ? 'h-7 px-2.5 text-[12px] ' : 'h-8 px-3 text-[13px] ') + 'rounded-md font-semibold transition-colors ' +
+          className={(size === 'sm' ? 'h-7 px-2.5 text-[12px] phone:h-8 phone:px-3 ' : 'h-8 px-3 text-[13px] phone:h-9 phone:px-4 ') + 'rounded-md font-semibold transition-colors phone:rounded-full ' +
             (value === o.value ? 'bg-panel text-ink shadow-card' : 'text-faint hover:text-ink')}>
           {o.label}
         </button>

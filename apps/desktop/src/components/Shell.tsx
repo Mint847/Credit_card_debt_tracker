@@ -67,7 +67,7 @@ function Sidebar() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand font-serif text-[19px] font-semibold text-white">S</span>
         <span className="font-serif text-[21px] font-medium tracking-tight">Serendib</span>
       </div>
-      <nav className="scroll-thin flex-1 overflow-y-auto px-3 pb-3" aria-label="Main">
+      <nav className="scroll-thin flex-1 overflow-y-auto px-3 pb-3" aria-label="Main" data-tip="nav">
         <div className="space-y-0.5">{NAV.map((n) => <NavItem key={n.to} to={n.to} label={n.label} icon={n.icon} kbd={n.key} />)}</div>
         <p className="label mb-1.5 mt-6 px-3">Tools</p>
         <div className="space-y-0.5">{TOOLS.map((n) => <NavItem key={n.to} to={n.to} label={n.label} icon={n.icon} kbd={n.key} />)}</div>
@@ -86,7 +86,7 @@ function Sidebar() {
       <div className="border-t border-line p-3">
         <NavItem to="/settings" label="Settings" icon="settings" />
         <Dropdown.Root>
-          <Dropdown.Trigger className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+          <Dropdown.Trigger data-tip="account" className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
             {app.user?.photoURL
               ? <img src={app.user.photoURL} alt="" referrerPolicy="no-referrer" className="h-8 w-8 rounded-full object-cover" />
               : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/15 text-[12px] font-bold text-brand-ink">{initials}</span>}

@@ -37,9 +37,9 @@ export function Modal({ open, onClose, title, width = 480, children }: { open: b
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content style={frame.style} className={frame.className}>
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:px-5 phone:pt-5">
-            <Dialog.Title className="text-[15px] font-semibold">{title}</Dialog.Title>
-            <Dialog.Close className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Close"><Icon name="close" /></Dialog.Close>
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:border-b-0 phone:px-5 phone:pb-2 phone:pt-5">
+            <Dialog.Title className="text-[15px] font-semibold phone:text-[19px] phone:font-bold phone:tracking-tight">{title}</Dialog.Title>
+            <Dialog.Close className="btn-ghost h-8 w-8 justify-center px-0 phone:h-10 phone:w-10 phone:rounded-full phone:bg-sunken" aria-label="Close"><Icon name="close" /></Dialog.Close>
           </div>
           <Dialog.Description className="sr-only">{title}</Dialog.Description>
           <div className="px-6 py-5 phone:px-5">{children}</div>

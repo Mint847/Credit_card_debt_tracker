@@ -11,8 +11,12 @@ export var CHECKLIST = [
   { key: 'sim', label: 'Try a simulator', hint: 'See what minimum payments really cost', icon: 'calculate' },
   { key: 'buffer', label: 'Create an emergency buffer', hint: 'A savings space for surprises', icon: 'savings' }
 ];
-// Screens with first-visit tips (the same keys on every device, so a tip seen once stays seen)
-export var TIP_SCREENS = ['screen-home', 'screen-list', 'screen-detail', 'screen-simulators', 'screen-spaces', 'view-offers', 'screen-profile'];
+// Screens with first-visit tips (the same keys on every device, so a tip seen once stays seen).
+// The classic app's tips, then the new app's tour (Oct 2026), which has its own keys so that everyone
+// sees the new tour once, whatever they saw before.
+export var CLASSIC_TIP_SCREENS = ['screen-home', 'screen-list', 'screen-detail', 'screen-simulators', 'screen-spaces', 'view-offers', 'screen-profile'];
+export var TOUR_SCREENS = ['tour-home', 'tour-cards', 'tour-card', 'tour-activity', 'tour-plan', 'tour-simulators', 'tour-spaces', 'tour-offers', 'tour-settings'];
+export var TIP_SCREENS = CLASSIC_TIP_SCREENS.concat(TOUR_SCREENS);
 
 // The account's onboarding object, created if missing
 export function onboardingState(data) {

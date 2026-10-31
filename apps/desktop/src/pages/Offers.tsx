@@ -18,7 +18,7 @@ function OfferCard({ offer, cards, onTerms }: { offer: any; cards: Card[]; onTer
   const card: Card | null = info.match ? info.match.card : null;
   const t = card ? cardTheme(card) : null;
   return (
-    <article className="panel flex flex-col gap-3 p-5 transition-shadow hover:shadow-pop">
+    <article className="panel flex flex-col gap-3 p-5 transition-shadow hover:shadow-pop phone:p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className={'truncate rounded-md px-2.5 py-1 text-[12px] font-bold ' + (t ? '' : 'bg-sunken text-ink')} style={t ? { background: t.soft, color: t.ink } : undefined}>{offer.bank}</span>
@@ -32,8 +32,8 @@ function OfferCard({ offer, cards, onTerms }: { offer: any; cards: Card[]; onTer
         )}
       </div>
       <div className="space-y-1">
-        {offer.merchant && <p className="text-[11px] font-semibold uppercase tracking-wide text-faint">{offer.merchant}</p>}
-        <h2 className="text-[16px] font-semibold leading-snug">{offer.headline}</h2>
+        {offer.merchant && <p className="text-[11px] font-semibold uppercase tracking-wide text-faint phone:normal-case phone:tracking-normal">{offer.merchant}</p>}
+        <h2 className="text-[16px] font-semibold leading-snug phone:text-[17px] phone:font-bold">{offer.headline}</h2>
         {offer.details && <p className="text-[13px] text-muted">{offer.details}</p>}
       </div>
       <div className="mt-auto space-y-1 text-[12px]">
@@ -86,15 +86,15 @@ export function Offers() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2" data-tip="offers-cats">
         {view.chips.map((c: any) => (
           <button key={c.key} type="button" aria-pressed={c.active} onClick={() => setCategory(c.key)}
-            className={'flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors ' + (c.active ? 'border-brand/40 bg-brand/10 text-brand-ink' : 'border-line bg-panel text-muted hover:bg-sunken')}>
+            className={'flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors phone:py-2 ' + (c.active ? 'border-brand/40 bg-brand/10 text-brand-ink phone:border-brand phone:bg-brand phone:text-white' : 'border-line bg-panel text-muted hover:bg-sunken phone:border-transparent phone:shadow-card')}>
             <Icon name={c.icon} size={16} />{c.label}<span className="text-[11px] opacity-70">{c.count}</span>
           </button>
         ))}
         {mode === 'explore' && (
-          <select value={view.bank} onChange={(e) => setBank(e.target.value)} className="field ml-auto h-9 w-56" aria-label="Bank">
+          <select value={view.bank} onChange={(e) => setBank(e.target.value)} className="field ml-auto h-9 w-56 phone:ml-0 phone:w-full" aria-label="Bank">
             <option value="all">All banks</option>
             {view.banks.map((b: { key: string; name: string }) => <option key={b.key} value={b.key}>{b.name}</option>)}
           </select>
@@ -118,7 +118,7 @@ export function Offers() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="offers-list">
           {view.shown.map((o: any) => <OfferCard key={o.id} offer={o} cards={view.userCards} onTerms={() => setTerms(o)} />)}
         </div>
       )}

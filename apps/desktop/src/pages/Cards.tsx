@@ -232,7 +232,7 @@ function CardList({ rows, onAdd }: { rows: Row[]; onAdd: () => void }) {
                   )}
                 </div>
                 <div className="mt-2.5 flex items-center gap-2.5">
-                  <UtilBar value={r.util} />
+                  <UtilBar value={r.util} card={c} />
                   <span className={'num shrink-0 text-[12px] font-semibold ' + (r.util >= 75 ? 'text-danger' : r.util >= 30 ? 'text-warn' : 'text-ok')}>{pct(r.util)}</span>
                   <span className="num shrink-0 text-[12px] text-faint">of {fmtShort(c.limit).replace('LKR ', '')}</span>
                 </div>

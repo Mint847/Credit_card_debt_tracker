@@ -8141,7 +8141,9 @@ var SerendibCore = (function() {
     { key: "sim", label: "Try a simulator", hint: "See what minimum payments really cost", icon: "calculate" },
     { key: "buffer", label: "Create an emergency buffer", hint: "A savings space for surprises", icon: "savings" }
   ];
-  var TIP_SCREENS = ["screen-home", "screen-list", "screen-detail", "screen-simulators", "screen-spaces", "view-offers", "screen-profile"];
+  var CLASSIC_TIP_SCREENS = ["screen-home", "screen-list", "screen-detail", "screen-simulators", "screen-spaces", "view-offers", "screen-profile"];
+  var TOUR_SCREENS = ["tour-home", "tour-cards", "tour-card", "tour-activity", "tour-plan", "tour-simulators", "tour-spaces", "tour-offers", "tour-settings"];
+  var TIP_SCREENS = CLASSIC_TIP_SCREENS.concat(TOUR_SCREENS);
   function onboardingState(data) {
     if (!data) return null;
     if (!data.onboarding || typeof data.onboarding !== "object") data.onboarding = {};
@@ -8234,6 +8236,7 @@ var SerendibCore = (function() {
     CA_FEE_PCT,
     CHECKLIST,
     CHECKLIST_HIDDEN_TOAST,
+    CLASSIC_TIP_SCREENS,
     DAILY_RATE,
     DEFAULT_CARDS,
     HELP_TEXTS,
@@ -8262,6 +8265,7 @@ var SerendibCore = (function() {
     SYNC_FIELDS,
     TIP_SCREENS,
     TOMBSTONE_DAYS,
+    TOUR_SCREENS,
     _num,
     _pick,
     _str,

@@ -16,7 +16,7 @@ const short = (n: number) => (n >= 1e6 ? n / 1e6 + 'M' : n / 1e3 + 'k');
 function Source({ value, onChange, cards }: { value: string; onChange: (v: string) => void; cards: Card[] }) {
   const card = value !== 'custom' ? findCard(value) : undefined;
   return (
-    <div>
+    <div data-tip="sim-source">
       <label htmlFor="sim-source" className="label">Load data from</label>
       <div className="relative mt-1.5">
         <select id="sim-source" value={value} onChange={(e) => onChange(e.target.value)} className="field h-10 appearance-none pl-8">
@@ -90,8 +90,8 @@ function Explainer({ icon, title, children }: { icon: string; title: string; chi
 
 function Header({ title, sub, chip }: { title: string; sub: string; chip?: string }) {
   return (
-    <div className="mb-5 flex items-start justify-between">
-      <div><h2 className="text-[17px] font-semibold">{title}</h2><p className="mt-0.5 text-[13px] text-faint">{sub}</p></div>
+    <div className="mb-5 flex items-start justify-between phone:mb-4 phone:flex-col phone:gap-2.5">
+      <div><h2 className="text-[17px] font-semibold phone:text-[19px] phone:font-bold phone:tracking-tight">{title}</h2><p className="mt-0.5 text-[13px] text-faint">{sub}</p></div>
       {chip && <Chip tone="info" icon="gavel">{chip}</Chip>}
     </div>
   );
@@ -134,7 +134,7 @@ function MinimumTrap({ cards }: { cards: Card[] }) {
             <p className="text-[12px] font-semibold text-ok">{s.empty ? '--' : s.principalPct + '% Principal'}</p>
           </div>
           <p className="mt-0.5 text-[12px] text-faint">Where this month’s minimum payment goes</p>
-          <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-sunken">
+          <div className="meter-reveal mt-3 flex h-3 overflow-hidden rounded-full bg-sunken">
             <div className="bg-ok transition-all" style={{ width: (s.empty ? 0 : s.principalPct) + '%' }} />
             <div className="bg-danger/70 transition-all" style={{ width: (s.empty ? 0 : s.interestPct) + '%' }} />
           </div>
@@ -241,9 +241,9 @@ export function Simulators() {
       <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">Simulators</h1>
       <p className="mt-1 text-[13px] text-faint">Try a saved card or your own numbers. Nothing here changes your cards.</p>
       <Tabs.Root value={tab} onValueChange={(v) => setParams(v === 'minimum' ? {} : { tab: v }, { replace: true })} className="mt-6">
-        <Tabs.List className="mb-5 inline-flex rounded-xl bg-sunken p-1 phone:mb-4 phone:flex phone:w-full" aria-label="Simulators" data-tip="sim-tabs">
+        <Tabs.List className="mb-5 inline-flex rounded-xl bg-sunken p-1 phone:mb-4 phone:flex phone:w-full phone:rounded-full phone:bg-panel phone:shadow-card" aria-label="Simulators" data-tip="sim-tabs">
           {[['minimum', 'Min Payment Trap', 'trending_down'], ['advance', 'Cash Advance', 'local_atm'], ['surcharge', '0% Surcharge', 'percent']].map(([v, l, i]) => (
-            <Tabs.Trigger key={v} value={v} className="flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold phone:flex-1 phone:justify-center phone:px-1.5 phone:text-[12px] [&>.icon]:phone:hidden text-faint transition-colors hover:text-ink data-[state=active]:bg-panel data-[state=active]:text-ink data-[state=active]:shadow-card">
+            <Tabs.Trigger key={v} value={v} className="flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold phone:flex-1 phone:justify-center phone:whitespace-nowrap phone:rounded-full phone:px-1 phone:py-2.5 phone:text-[12px] [&>.icon]:phone:hidden text-faint transition-colors hover:text-ink data-[state=active]:bg-panel data-[state=active]:text-ink data-[state=active]:shadow-card phone:data-[state=active]:bg-brand phone:data-[state=active]:text-white">
               <Icon name={i} size={18} />{l}
             </Tabs.Trigger>
           ))}

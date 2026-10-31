@@ -41,7 +41,7 @@ export const layoutNow = () => current;
 export function dialogFrame(layout: Layout, width: number, top = '8vh', maxHeight = '84vh'): { className: string; style: CSSProperties } {
   if (layout === 'phone') {
     return {
-      className: 'sheet-up scroll-thin fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] shadow-pop focus:outline-none',
+      className: 'sheet-up scroll-thin fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-[28px] border-t border-line/60 bg-panel pb-[env(safe-area-inset-bottom)] shadow-pop focus:outline-none',
       style: {}
     };
   }
