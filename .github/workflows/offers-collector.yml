@@ -22,12 +22,14 @@ jobs:
       run:
         working-directory: tools/offers-collector
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Actions pinned to commit IDs (a moved tag can't change what runs next to the secrets)
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        # Exactly the versions in package-lock.json: this job holds the Firestore admin key
+        run: npm ci --no-audit --no-fund
       - name: Install headless Chromium (for pages that need a browser)
         run: npx playwright install --with-deps chromium
       - name: Run unit tests

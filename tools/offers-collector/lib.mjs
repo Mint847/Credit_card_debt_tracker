@@ -122,7 +122,8 @@ export function toOffer(x, source, today) {
   if (validUntil && validUntil < today) return { skip: 'already ended' };
   const validFrom = isRealDate(x.validFrom) ? x.validFrom : '';
   const category = CATEGORIES.includes(x.category) ? x.category : 'other';
-  const detail = typeof x.detailUrl === 'string' && /^https:\/\//i.test(x.detailUrl) ? x.detailUrl : '';
+  // The offer's own link, only on the bank's site (page text could steer the model to another address)
+  const detail = typeof x.detailUrl === 'string' && sameSite(x.detailUrl, source.url) ? x.detailUrl : '';
   const minSpend = typeof x.minSpend === 'number' && Number.isFinite(x.minSpend) && x.minSpend > 0 ? x.minSpend : null;
   const offer = {
     issuer: source.issuer,

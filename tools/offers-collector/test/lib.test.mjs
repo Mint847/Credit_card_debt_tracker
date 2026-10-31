@@ -95,3 +95,12 @@ test('sameSite keeps redirects on the bank site, over https', () => {
   assert.equal(sameSite('https://169.254.169.254/latest/meta-data', src), false);
   assert.equal(sameSite('not a url', src), false);
 });
+
+test('toOffer keeps an offer link only on the bank site', () => {
+  const on = toOffer(extracted({ detailUrl: 'https://www.seylan.lk/promotions/cards/jetwing' }), SOURCE, TODAY).offer;
+  assert.equal(on.sourceUrl, 'https://www.seylan.lk/promotions/cards/jetwing');
+  const off = toOffer(extracted({ detailUrl: 'https://seylan-rewards.example.com/claim' }), SOURCE, TODAY).offer;
+  assert.equal(off.sourceUrl, SOURCE.url);
+  const js = toOffer(extracted({ detailUrl: 'javascript:alert(1)' }), SOURCE, TODAY).offer;
+  assert.equal(js.sourceUrl, SOURCE.url);
+});
