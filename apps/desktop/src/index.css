@@ -151,9 +151,10 @@ body {
 @keyframes ring-draw { from { stroke-dashoffset: var(--c); } }
 [data-layout=phone] .ring-draw { animation: ring-draw .9s cubic-bezier(.22, 1, .36, 1); }
 @media (prefers-reduced-motion: reduce) { [data-layout=phone] .ring-draw { animation: none; } }
-/* Phones: sliders drawn by hand (the track is the element's own gradient, the handle in --slider, e.g. the card's colour) */
-[data-layout=phone] input[type=range].slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 9999px; outline: none; }
-[data-layout=phone] input[type=range].slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); transition: transform .15s ease; }
-[data-layout=phone] input[type=range].slider:active::-webkit-slider-thumb { transform: scale(1.12); }
-[data-layout=phone] input[type=range].slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); }
-[data-layout=phone] input[type=range].slider:disabled { opacity: .5; }
+/* Sliders drawn by hand (the track is the element's own gradient, the handle in --slider, e.g. the card's colour):
+   the browser's own track turns dark with light colours like amber */
+input[type=range].slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 9999px; outline: none; }
+input[type=range].slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); transition: transform .15s ease; }
+input[type=range].slider:active::-webkit-slider-thumb { transform: scale(1.12); }
+input[type=range].slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 9999px; background: var(--slider); border: 3px solid rgb(var(--panel)); box-shadow: 0 1px 5px rgb(0 0 0 / 0.3); }
+input[type=range].slider:disabled { opacity: .5; }

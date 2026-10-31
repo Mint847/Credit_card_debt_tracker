@@ -3,7 +3,6 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { cardTheme } from '../lib/derive';
 import type { Card } from '../lib/types';
-import { useLayout } from '../lib/layout';
 
 export function Icon({ name, className = '', fill = false, size }: { name: string; className?: string; fill?: boolean; size?: number }) {
   return (
@@ -50,9 +49,6 @@ export function Chip({ tone = 'neutral', children, icon }: { tone?: Tone; childr
 // tip shows the colour for its value; on phones it grows in when shown (index.css .meter-fill)
 // Utilisation: green under 30%, yellow to 50%, orange to 75%, red above, each change a short blend around its threshold
 export const UTIL_COLORS = '#10b981 0%, #10b981 27%, #facc15 33%, #facc15 47%, #f97316 53%, #f97316 72%, #ef4444 78%, #ef4444 100%';
-// Budgets: green, then yellow and orange as spending nears the limit (90% is the warning point), red at the limit
-export const BUDGET_COLORS = '#10b981 0%, #10b981 68%, #facc15 78%, #f97316 90%, #ef4444 100%';
-export const cardColors = (card: Card) => cardTheme(card).hex + '8c 0%, ' + cardTheme(card).hex + ' 100%';
 export function Meter({ value, colors, className = '' }: { value: number; colors: string; className?: string }) {
   const v = Math.max(0, Math.min(100, value));
   return (
@@ -62,11 +58,11 @@ export function Meter({ value, colors, className = '' }: { value: number; colors
   );
 }
 
-// Utilisation bar: the threshold colours blended along the bar (UTIL_COLORS). On phones a bar about one card
-// is in that card's own colour instead
+// Utilisation bar. A bar about one card is in that card's chosen colour; the overall one (home page) blends the
+// threshold colours (UTIL_COLORS)
 export function UtilBar({ value, className = '', card }: { value: number; className?: string; card?: Card }) {
-  const phone = useLayout() === 'phone';
-  return <Meter value={value} colors={phone && card ? cardColors(card) : UTIL_COLORS} className={className} />;
+  const hex = card ? cardTheme(card).hex : '';
+  return <Meter value={value} colors={card ? hex + ' 0%, ' + hex + ' 100%' : UTIL_COLORS} className={className} />;
 }
 
 // Parts of a whole as one bar whose colours fade into each other at each join (instead of a hard cut);

@@ -89,7 +89,7 @@ export function Cards() {
       header: 'Utilisation',
       cell: (i) => (
         <div className="flex items-center gap-2.5">
-          <div className="w-16 shrink-0"><UtilBar value={i.getValue()} /></div>
+          <div className="w-16 shrink-0"><UtilBar value={i.getValue()} card={i.row.original.card} /></div>
           <span className={'num w-9 text-right text-[12px] font-semibold ' + (i.getValue() >= 75 ? 'text-danger' : i.getValue() >= 30 ? 'text-warn' : 'text-ok')}>{pct(i.getValue())}</span>
           {showLimit && <span className="num text-[12px] text-faint">of {fmtShort(i.row.original.limit).replace('LKR ', '')}</span>}
         </div>
@@ -288,7 +288,7 @@ function Inspector({ card, plan, rank, onClose }: { card: Card; plan: number; ra
         </div>
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-[12px]"><span className="text-faint">Utilisation</span><span className="num font-semibold">{pct(u)} of {fmtShort(card.limit)}</span></div>
-          <UtilBar value={u} />
+          <UtilBar value={u} card={card} />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button type="button" className="btn-primary justify-center" onClick={() => openLog({ type: 'payment', cardId: card.id, prefill: due || undefined })}><Icon name="payments" size={18} />Log payment</button>
