@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bundle = readFileSync(join(here, '..', 'dist', 'core.js'), 'utf8').trim();
-const page = join(here, '..', '..', '..', 'stitch_fintech_credit_debt_manager', 'index.html');
+const page = join(here, '..', '..', '..', 'web', 'index.html');
 const html = readFileSync(page, 'utf8');
 
 const start = html.indexOf('<!-- CORE:START');

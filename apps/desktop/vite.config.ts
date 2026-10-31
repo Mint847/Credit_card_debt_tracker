@@ -30,6 +30,6 @@ const csp = (): Plugin => ({
 export default defineConfig({
   base: '/desktop/',
   plugins: [react(), csp()],
-  build: { outDir: '../../stitch_fintech_credit_debt_manager/desktop', emptyOutDir: true, target: 'es2020' },
+  build: { outDir: '../../web/desktop', emptyOutDir: true, target: 'es2020' },
   server: { port: 5174 }
 });

@@ -10,8 +10,7 @@
       "serve.py",
       "index.with-google.html",
       "**/.*",
-      "**/node_modules/**",
-      "stitch_fintech_credit_debt_manager/**"
+      "**/node_modules/**"
     ],
     "predeploy": [
       "npm --prefix .. run build:desktop"

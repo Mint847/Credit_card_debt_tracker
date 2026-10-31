@@ -1,299 +1,161 @@
-# Serendib: Sri Lanka Credit Card Debt Tracker
+<h1 align="center">Serendib</h1>
 
-> A web app that helps Sri Lankan cardholders see all their credit card debt in one place, decide which card to pay first, log spending and payments, and understand what minimum payments, cash advances and "0%" plans really cost.
+<p align="center">
+  <strong>A credit card debt tracker for Sri Lanka.</strong><br>
+  See every card in one place, know which one to pay first, and get debt-free sooner.
+</p>
 
-**Live app:** https://stitch-debt-manager.web.app
+<p align="center">
+  <a href="https://stitch-debt-manager.web.app"><strong>Open the app</strong></a> ·
+  <a href="https://stitch-debt-manager.web.app/desktop/?demo">Try the demo (no sign-in)</a> ·
+  <a href="docs/features.md">All features</a> ·
+  <a href="docs/development.md">Run it locally</a>
+</p>
 
-It works on phones, iPads and desktop computers, in light or dark mode, and syncs across all of your devices.
+<p align="center">
+  <img src="docs/screenshots/hero.png" alt="Serendib on a computer, an iPad and a phone" width="100%">
+</p>
 
----
-
-## Contents
-
-- [Features](#features)
-  - [Home dashboard](#home-dashboard)
-  - [Cards and the monthly repayment plan](#cards-and-the-monthly-repayment-plan)
-  - [Card page](#card-page)
-  - [Spending, payments and statements](#spending-payments-and-statements)
-  - [Simulators](#simulators)
-  - [Spaces (savings buffers)](#spaces-savings-buffers)
-  - [Offers](#offers)
-  - [Profile and settings](#profile-and-settings)
-  - [Accounts, sync and your data](#accounts-sync-and-your-data)
-  - [Phone, iPad and desktop](#phone-ipad-and-desktop)
-  - [Guided setup and tutorial](#guided-setup-and-tutorial)
-- [How the numbers are worked out](#how-the-numbers-are-worked-out)
-- [Supported banks](#supported-banks)
-- [Repository structure](#repository-structure)
-- [Technical architecture](#technical-architecture)
-- [Running it locally](#running-it-locally)
-- [Deployment](#deployment)
-- [Change history](#change-history)
-- [License](#license)
+One app for **computers, iPads and phones**, in light or dark mode, with your data synced live across all your devices. It is built around how Sri Lankan cards work: CBSL's 28% interest cap, each bank's minimum-payment rules and cash-advance fees, and the "0%" instalment plans banks offer.
 
 ---
 
-## Features
+## What it does
 
-### Home dashboard
-- **Debt at a glance:** total debt, total limit, overall credit utilisation (target under 30%) and a safe-limit marker.
-- **One-tap logging:** *Log spend* and *Log payment* buttons. Pick the card and the amount, and every total updates straight away.
-- **Alerts that need you.** Each alert has a coloured status label:
-  - **Payment due:** the next due date, the minimum left to pay, and a *Log payment* shortcut. It changes to **On track** once every minimum is paid.
-  - **Check-in:** "Did you pay?" the day after a due date when the minimum looks unpaid.
-  - **Overdue:** how many days late, with a catch-up plan. A **Critical** alert warns before a missed payment can be reported to CRIB (30+ days).
-  - **Over budget:** a spending category over its budget this period.
-  - **Tomorrow:** recurring charges due the next day.
-  - **Interest:** estimated interest this month across all cards.
-- **Payoff pace:** the bank minimum against your target plan, your debt-free date and the interest you save.
-- **Calculator shortcuts** and a **setup checklist** for new users.
+| | Feature | What you get |
+|:-:|---|---|
+| 📊 | **Debt at a glance** | Total debt, utilisation against the 30% safe limit, this month's payments, the interest it's costing you and your debt-free date |
+| 🎯 | **A monthly repayment plan** | Every card gets its minimum, the rest goes to one *pay first* card. Choose **Avalanche** (highest interest first, saves the most) or **Snowball** (smallest balance first, quick wins) |
+| 💳 | **Card pages** | Balance, utilisation, what's due and when, this statement cycle, budgets, recurring payments, statements and calculators for each card |
+| 🧾 | **Spending and payments** | Log purchases, payments and refunds, or paste your bank's SMS and the amount, shop and card fill themselves in. Search, filter and export everything |
+| 🔔 | **Alerts that need you** | Due dates, missed payments with a catch-up plan, budgets you've gone over and charges due tomorrow |
+| 🧮 | **Simulators** | The minimum payment trap, the real cost of a cash advance, and the interest hidden in a "0%" plan's fee |
+| 🐖 | **Spaces** | Savings buffers for emergencies or goals, so a surprise bill doesn't land on a credit card |
+| 🏷️ | **Offers** | Card promotions from Sri Lankan banks, filtered to the cards you hold |
+| 🔒 | **Private and synced** | Google or email sign-in, live sync between devices, backups you can download and restore. No card numbers, ever |
+| 🧭 | **Guided setup** | A welcome, a setup checklist and a spotlight tour of every screen |
 
-### Cards and the monthly repayment plan
-- **Add, edit and delete cards:** bank, card tier or nickname, credit limit, current balance, APR and an icon colour.
-  - **Bank suggestions:** a type-ahead list of Sri Lankan banks with their card networks. Typing "amex", "hsbc" or "standard chartered" finds the bank that now issues those cards.
-  - **Tier chips:** the bank's own card tiers (for example *Visa Platinum*, *Mastercard World*) appear as one-tap chips.
-  - **Card colours:** chosen per card and carried through every screen.
-- **This month's repayment strategy:**
-  - Every card gets at least its minimum, and the rest goes to one **Pay first** card, chosen by your strategy.
-  - **Avalanche** pays the highest interest first and saves the most money. **Snowball** pays the smallest balance first for quicker wins.
-  - When a card is cleared, its money rolls on to the next one.
-- **Log this month's payment:** records the plan's suggested payment on the pay-first card in one step.
-- **Overview tiles:** total interest bleed this month and your debt-free target month (the same month-by-month plan as Home).
-- **Mark as settled:** clears a card without deleting its history.
-
-### Card page
-- **Summary:** outstanding balance, remaining limit, utilisation and the next statement and due date.
-- **Three calculators for that card.** Swipe left or right on a phone or iPad to move between them; on desktop they sit beside the summary.
-  - **Payoff simulator:** minimum-only payoff time and interest against a fixed payment. A slider (Min, Recommended, 50%, Full) shows how much paying more saves. *Commit a monthly payment* saves a target the plan always honours.
-  - **Cash advance:** the bank's fee and daily interest for 15, 30 and 60 days.
-  - **0% surcharge:** the true yearly interest rate hidden in a "0%" plan's upfront fee.
-- **Share your progress:** a short progress message with no balances, limits or bank details. It uses the phone's share sheet where available, or copies the text.
-- **Card actions:** edit details, clear the balance, set the billing cycle, delete the card.
-
-### Spending, payments and statements
-- **Log entries:** purchases, payments and refunds, with a category, merchant, date and note. Merchant names are suggested from your history.
-- **Paste a bank SMS:** paste the bank's transaction message and the amount, merchant and date are filled in for you.
-- **Budgets per category:** set them for each card, with progress bars and over-budget alerts.
-- **Recurring payments** (subscriptions, bills): they add themselves on the right day each month. You can pause or cancel them, give them an end date, or undo a month's charge so that month is skipped.
-- **History:** every entry, searchable. Tap an entry to edit or delete it.
-- **Match statement:** if the balance doesn't match your bank statement, enter the statement figure and the difference is recorded as an adjustment.
-- **Billing cycles:** set the statement day and due day for each card. The app then:
-  - records each statement
-  - tracks how much of the minimum you've paid
-  - detects overdue payments, with a catch-up plan for each card
-
-### Simulators
-Three sandboxes. Load one of your cards, or try your own numbers:
-- **Minimum payment trap:** how long a balance takes to clear on minimums, and how much a fixed payment of about 12 months saves. Includes a principal-versus-interest split of the first payment.
-- **Cash advance trap:** the upfront fee, daily interest and total owed for any amount and number of days.
-- **0% surcharge exposer:** the hidden cost and yearly interest rate of an instalment plan's fee.
-
-### Spaces (savings buffers)
-- **Create a space:** an emergency fund or another savings goal, with a target amount and date.
-- **Use your spaces:** add money, use funds from a space (including paying a card), and see each space's history.
-- **Overview:** a combined total with a progress bar across every space.
-
-### Offers
-- **Card promotions from Sri Lankan banks:** filter by category, or by **My cards** against **Explore all**. Each offer shows its terms, eligible cards and whether your cards qualify.
-- **Sample offers for now:** the Offers page shows sample offers until live promotions are published.
-- **Offer collection pipeline** (`tools/offers-collector`):
-  - a weekly GitHub Action reads each bank's official offers page
-  - Claude extracts structured offers from each page
-  - new or changed offers are saved as drafts, which an admin approves in the app under **Profile → Manage offers**
-
-### Profile and settings
-- **Income:** monthly take-home income, which sets the default repayment budget (25% of income).
-- **Debt-to-income health:** your minimum payments as a share of your income.
-- **Payoff strategy:** switch between Avalanche and Snowball.
-- **Appearance:** **Light**, **Dark** or **Auto** (follows the device), saved per device.
-- **CBSL reference:** the 28% p.a. card interest cap, and the usual 4% minimum payment.
-- **Backup and restore:**
-  - download a JSON backup of your cards, spending and spaces
-  - preview a backup before restoring, then merge it or replace your data, with **Undo**
-  - recover from the last 5 safety copies kept on each device
-- **Account:** change your password, delete your account, sign out, and replay the app guide.
-
-### Accounts, sync and your data
-- **Sign in:** with **Google** or **email and password**, including email verification, password rules, *Keep me signed in* and password reset. X and Apple sign-in buttons are in place but not configured yet.
-- **Google profile photo:** shown in every avatar on all screen sizes, with your initials as the fallback.
-- **Account menu:** tap your profile picture on any screen (in the sidebar on desktop) to open it. It has:
-  - your photo, name, email and sign-in method
-  - Profile & settings
-  - Payoff strategy and CBSL rules, each opening Profile at that section
-  - Light / Dark / Auto
-  - Download a backup
-  - Replay app guide
-  - Keyboard shortcuts (desktop only)
-  - Reset my card data, which asks before doing anything
-  - Sign out
-
-  A tap outside the menu only closes it.
-- **Live sync across devices:** changes on one device appear on the others without reloading.
-- **Safe merging, so nothing is lost:**
-  - cards and spaces are merged item by item, and the newest edit wins
-  - deletions are remembered for 180 days, so a deleted card doesn't come back
-  - default values never overwrite real ones
-  - every save is a transaction against the latest cloud copy
-- **Privacy:** Serendib never asks for card numbers or passwords. Each account can read and write only its own data (enforced by Firestore security rules).
-
-### Phone, iPad and desktop
-| Size | Layout |
-|---|---|
-| **Phone** | Bottom tab bar, sheets that slide up |
-| **iPad** (768–1279 px) | Side rail, two-column screens, card list beside the card page, centred dialogs |
-| **Computer** | The desktop app at `/desktop/`: sidebar, tables, side panels and dialogs built for a mouse and keyboard |
-
-**Computers open the desktop app.** A computer (a mouse or trackpad, a screen at least 1280 px wide, not an iPad) opening the app goes straight to the desktop app at `/desktop/`, and a phone or iPad opening a `/desktop/` link goes back to the phone and iPad app. Both apps use the same test, so nobody is bounced between them. To turn this off, set `DESKTOP_APP = false` at the top of `index.html`. For support, adding `?classic` to the address keeps the phone and iPad app in that browser tab.
-
-**The phone app's own desktop layout** (used before the desktop app, and still there if `DESKTOP_APP` is off):
-- **Layout:**
-  - a 200 px labelled sidebar
-  - slim screen headers
-  - desktop-sized text and spacing
-  - three-column Home
-  - all three simulators side by side
-  - a three-pane card page (card list, summary and calculators, spending)
-  - grids for Spaces and Offers
-- **Extra panels** (desktop only):
-  - **Upcoming payments:** overdue payments, minimums due, statements closing and recurring charges in the next 30 days
-  - **Spending by category:** this period's spending across all cards, with budgets marked
-  - **Utilisation by card:** each card's balance against its limit, with the 30% line
-  - **Recent activity:** the latest entries across all cards; click any row to open that card
-- **Account menu:** opens from the profile row at the bottom of the sidebar.
-- **Keyboard shortcuts:**
-
-  | Key | Action |
-  |---|---|
-  | `1`–`5` | Switch tabs |
-  | `L` | Log spending |
-  | `P` | Log a payment |
-  | `/` | Search the open card's history |
-  | `?` | Show all shortcuts |
-  | `Esc` | Close a dialog |
-
-  Visible focus outlines and themed scrollbars appear on mouse and keyboard devices.
-
-### Guided setup and tutorial
-- **Welcome:** three slides, ending with your income and payoff strategy.
-- **Setup checklist:** set income, choose a strategy, link a card, set a billing cycle, try a simulator, create a buffer. Each step ticks itself off.
-- **Spotlight tips on each screen:**
-  - each tip follows its element even when content loads or moves, and stays fully on screen on every device
-  - tips adapt to the device: swipe hints on touch screens, the shortcuts tip on desktop
-  - replay them any time from Profile
+The full catalogue is in **[docs/features.md](docs/features.md)**.
 
 ---
 
-## How the numbers are worked out
-- **Payoff:**
-  - each month starts from a statement balance
-  - paying it in full by the due date costs no interest; whatever is left carries a month's interest (APR ÷ 12)
-  - the minimum is the card's rule applied to the statement balance; most banks use 4% with an LKR 1,000 floor, and Nations Trust uses a lower LKR 250 floor
-- **Fixed plan:** the "about 12 months" fixed payment is rounded up to the nearest LKR 1,000.
-- **Cash advance:** the bank's fee (percentage, fixed or both, per its tariff) plus simple daily interest (APR ÷ 365) from the day of withdrawal. There is no interest-free period.
-- **0% plans:** the fee is turned into an interest rate with an IRR calculation and shown as a yearly rate, the same basis as the 28% cap. For example, a 5% fee over 12 months is about 9.1% a year.
-- **Interest cap:** CBSL has capped credit card interest at 28% a year since August 2023.
+## On every device
 
-## Supported banks
-Commercial Bank, Bank of Ceylon, People's Bank, Sampath Bank, HNB, Seylan Bank, Nations Trust Bank, NDB Bank, DFCC Bank, Pan Asia Bank, Union Bank, CDB, Cargills Bank and LOLC Finance.
-- **Former brands:**
-  - HSBC's retail cards now map to Nations Trust Bank (May 2026).
-  - Standard Chartered's retail cards now map to DFCC Bank (July 2026).
-- **Fees:** cash-advance fees come from each bank's published tariff, with the date each was checked. Banks not yet checked use the app's defaults.
+Each screen is laid out for the device: a sidebar and tables on a computer, a side rail on an iPad, and a design of its own on phones, with larger text, a bottom tab bar and one-handed layouts.
+
+<table>
+  <tr>
+    <th width="52%">Computer</th>
+    <th width="28%">iPad</th>
+    <th width="20%">Phone</th>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Overview</strong> · your debt, payoff pace, alerts and this month's plan at a glance</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/01-overview.png" alt="Overview on a computer"></td>
+    <td><img src="docs/screenshots/ipad/01-overview.png" alt="Overview on an iPad"></td>
+    <td><img src="docs/screenshots/phone/01-overview.png" alt="Overview on a phone"></td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Plan</strong> · which card to pay first and how this month's money is split</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/04-plan.png" alt="Plan on a computer"></td>
+    <td><img src="docs/screenshots/ipad/04-plan.png" alt="Plan on an iPad"></td>
+    <td><img src="docs/screenshots/phone/04-plan.png" alt="Plan on a phone"></td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Card page</strong> · one card's balance, due date, plan, activity, budgets and calculators</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/03-card.png" alt="A card on a computer"></td>
+    <td><img src="docs/screenshots/ipad/03-card.png" alt="A card on an iPad"></td>
+    <td><img src="docs/screenshots/phone/03-card.png" alt="A card on a phone"></td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Activity</strong> · every entry across every card, searchable and filterable</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/05-activity.png" alt="Activity on a computer"></td>
+    <td><img src="docs/screenshots/ipad/05-activity.png" alt="Activity on an iPad"></td>
+    <td><img src="docs/screenshots/phone/05-activity.png" alt="Activity on a phone"></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>More screens:</strong> Cards, Spaces, Simulators, Offers and Settings</summary>
+<br>
+<table>
+  <tr>
+    <th width="52%">Computer</th>
+    <th width="28%">iPad</th>
+    <th width="20%">Phone</th>
+  </tr>
+  <tr><td colspan="3"><strong>Cards</strong> · all your cards, their balances, utilisation and status</td></tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/02-cards.png" alt="Cards on a computer"></td>
+    <td><img src="docs/screenshots/ipad/02-cards.png" alt="Cards on an iPad"></td>
+    <td><img src="docs/screenshots/phone/02-cards.png" alt="Cards on a phone"></td>
+  </tr>
+  <tr><td colspan="3"><strong>Spaces</strong> · savings buffers with goals, progress and history</td></tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/06-spaces.png" alt="Spaces on a computer"></td>
+    <td><img src="docs/screenshots/ipad/06-spaces.png" alt="Spaces on an iPad"></td>
+    <td><img src="docs/screenshots/phone/06-spaces.png" alt="Spaces on a phone"></td>
+  </tr>
+  <tr><td colspan="3"><strong>Simulators</strong> · minimum payments, cash advances and "0%" plans</td></tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/07-simulators.png" alt="Simulators on a computer"></td>
+    <td><img src="docs/screenshots/ipad/07-simulators.png" alt="Simulators on an iPad"></td>
+    <td><img src="docs/screenshots/phone/07-simulators.png" alt="Simulators on a phone"></td>
+  </tr>
+  <tr><td colspan="3"><strong>Offers</strong> · promotions for the cards you hold</td></tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/08-offers.png" alt="Offers on a computer"></td>
+    <td><img src="docs/screenshots/ipad/08-offers.png" alt="Offers on an iPad"></td>
+    <td><img src="docs/screenshots/phone/08-offers.png" alt="Offers on a phone"></td>
+  </tr>
+  <tr><td colspan="3"><strong>Settings</strong> · income, payoff method, appearance, CBSL rules, backups and your account</td></tr>
+  <tr>
+    <td><img src="docs/screenshots/pc/09-settings.png" alt="Settings on a computer"></td>
+    <td><img src="docs/screenshots/ipad/09-settings.png" alt="Settings on an iPad"></td>
+    <td><img src="docs/screenshots/phone/09-settings.png" alt="Settings on a phone"></td>
+  </tr>
+</table>
+</details>
+
+### Dark mode
+Light, dark or automatic (following your device), on every screen.
+
+<p align="center"><img src="docs/screenshots/dark-mode.png" alt="Serendib in dark mode on a computer, an iPad and a phone" width="100%"></p>
+
+<sub>Screenshots use the built-in demo account; all names and amounts are sample data.</sub>
 
 ---
 
-## Repository structure
+## Built with
 
-| Path | What it is |
-|---|---|
-| `stitch_fintech_credit_debt_manager/index.html` | The app: one HTML file with all screens and styles, plus the built shared core inlined between `CORE:START` and `CORE:END` |
-| `apps/desktop/` | The new desktop app (React, TypeScript, Tailwind): every screen of the phone app, laid out for a computer. Uses the shared core and the same account; served from `/desktop/` |
-| `packages/core/` | The shared core: calculations, data rules, every action, saving, sync, sign-in rules, alerts, simulators, offers, backup and onboarding rules, and the help texts, with Vitest tests. Both apps use it. Built into the phone app by `npm run build:core` |
-| `stitch_fintech_credit_debt_manager/firestore.rules` | Firestore security rules (own data only; offers public to read, admin to write) |
-| `stitch_fintech_credit_debt_manager/firebase.json`, `.firebaserc` | Firebase Hosting and project settings |
-| `stitch_fintech_credit_debt_manager/serve.py` | Local development server with no-cache headers (port 8080) |
-| `tools/offers-collector/` | Weekly offers collector (Node, Claude API, Firebase Admin) and the admin set-up script |
-| `.github/workflows/offers-collector.yml` | Runs the collector every Monday |
-| `0%_surcharge/`, `card_overview/`, `home_page/`, … | Original UI design prototypes |
-| `Sri Lanka Credit Card App.pdf` / `.txt`, `sri_lanka_credit_card_cash_advance_fees.xlsx`, `Web design/` | Reference material |
+**React**, **TypeScript** and **Tailwind** for the app · a shared **JavaScript core** with **Vitest** tests · **Firebase** Authentication, Cloud Firestore and Hosting · a weekly **GitHub Actions** job that collects bank offers with the **Claude API**.
 
-## Technical architecture
-- **Front end:** a single-page app in one HTML file.
-- **Shared core:** the logic lives in `packages/core` (plain JavaScript modules, built with Vite). The build writes it into `index.html`, so the deployed app is still one file. Edit the core in `packages/core/src`, never between the `CORE` markers.
-- **Desktop app:** `apps/desktop` is a separate React app for computers, with the same features. It imports the core directly, signs in to the same Firebase project and reads and writes the same account document, so the two apps stay in sync. `?demo` opens it with a sample account and no sign-in.
-- **Styling:**
-  - Tailwind CSS via the Play CDN (forms and container-queries plugins)
-  - every colour is a CSS variable, so dark mode swaps values without touching the markup
-  - responsive layers at 768, 1024, 1280, 1440 and 1536 px
-- **Back end:**
-  - **Firebase Authentication:** Google and email/password sign-in.
-  - **Cloud Firestore:** one document per user (`users/{uid}`), plus the public `offers` collection.
-  - **Firebase Hosting:** serves the app.
-- **Offline cache:** each account's data is also cached on the device, so the app opens instantly and keeps up to 5 safety copies.
+Your data stays in your own account: Firestore security rules let each account read and write only its own data, and the site sends a strict Content Security Policy. More in **[docs/how-it-works.md](docs/how-it-works.md)**.
 
-## Running it locally
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Mint847/Credit_card_debt_tracker.git
-   cd Credit_card_debt_tracker/stitch_fintech_credit_debt_manager
-   ```
-2. **Start the local server** from inside the app folder. It serves the current folder.
-   ```bash
-   python serve.py
-   ```
-3. **Open the app:** go to http://localhost:8080.
+## Repository
 
-Sign-in and sync use the live Firebase project, so you'll need an internet connection.
-
-## Core tests and build
-```bash
-npm install            # once, from the repository root
-npm run test:core      # unit tests for the shared core
-npm run build:core     # rebuild the core and write it into index.html
-npm run dev:desktop    # run the desktop app locally (http://localhost:5174/desktop/)
-npm run build:desktop  # type-check and build the desktop app into stitch_fintech_credit_debt_manager/desktop
+```
+apps/desktop/            the app (computers, iPads and phones)
+packages/core/           shared logic and its tests
+web/                     the deployed site: built app, classic app, Firebase settings and security rules
+tools/offers-collector/  the weekly bank-offers collector
+docs/                    features, how it works, development guide, change history, screenshots, research
+design/                  early mock-ups and design references
 ```
 
-## Deployment
-Run `npm run build:core` first if anything in `packages/core` changed. Deploying hosting rebuilds the desktop app first (the `predeploy` step in `firebase.json`), so run `npm install` from the repository root once.
-```bash
-npm install -g firebase-tools
-cd stitch_fintech_credit_debt_manager
-firebase login
-firebase deploy --only hosting           # the app
-firebase deploy --only firestore:rules   # security rules, when they change
-```
-
----
-
-## Change history
-
-| Date | Change |
-|---|---|
-| 30 Oct 2026 | **Desktop app launched:** computers open the new desktop app automatically; phones and iPads keep the phone and iPad app. The beta switches are gone. The desktop app loads faster: each page is its own file, and the first download is about half the size |
-| 29 Oct 2026 | **One debt-free date:** Cards Overview, the desktop Plan page and the Share progress message now use the same month-by-month plan as Home (each card's own rate, minimums first, extra money moving to the next card once one is paid off). Cards Overview used to divide the total debt by the monthly payment at a flat 28%, which gave a later date |
-| 29 Oct 2026 | **Desktop app beta:** "Try the new desktop app" in the account menu on computers, remembered per device, with "Back to classic view". Fixed: the Avalanche card shows what it really saves compared with Snowball (it said LKR 34,200 for everyone); "Adopt Fixed Repayment Plan" sets the card's monthly goal and "Negotiate Cash Discount" copies a cash-price request (the unused "Compare Alternatives" button is gone); payoff presets such as Full save the exact amount, not the slider's rounded one |
-| 28 Oct 2026 | **Desktop app, all screens:** real sign-in and sync, card actions, Activity, Plan, Simulators, Spaces, Offers and admin review, Settings and guided setup. More of the phone app's rules moved into the shared core. Fixed: Replay app guide now resets the tips and checklist across devices |
-| 26 Oct 2026 | **Desktop app prototype:** a new React desktop app (Overview, Cards, card workspace, command palette) on sample data, for review. The home screen's payoff plan moved into the shared core |
-| 25 Oct 2026 | **Shared core:** the app's logic moved into `packages/core` with unit tests, ready for the new desktop app. No visible change |
-| 25 Oct 2026 | **Account menu everywhere:** tapping your profile picture opens the account menu on phone and iPad too. It replaces the hamburger side menu, and all of that menu's options moved into it |
-| 25 Oct 2026 | **Desktop panels:** upcoming payments, spending by category, utilisation by card and recent activity. One sidebar avatar on desktop |
-| 25 Oct 2026 | **Desktop redesign:** a compact dashboard, an account menu from the avatar, and Google profile photos everywhere |
-| 25 Oct 2026 | **Tutorial update:** the spotlight follows its element reliably on every device. New tips for quick log, alerts, shortcuts, sharing, appearance and backup |
-| 25 Oct 2026 | **Simulator math fixes:** one payoff method everywhere, both surcharge calculators agree, labels show the rate actually used, and the Cash Advance inputs recalculate |
-| 25 Oct 2026 | **Card page:** swipe between the three calculators |
-| 25 Oct 2026 | **Design:** coloured accent stripes replaced by status labels and colour dots |
-| 25 Oct 2026 | **Add card form:** cleaner bank and tier suggestions (floating list, tier chips), and rounded text fields restored app-wide |
-| 25 Oct 2026 | **Desktop layout:** labelled sidebar, three-pane card page and keyboard shortcuts |
-| 25 Oct 2026 | **Sync fix:** cross-device data loss fixed (item-by-item merge, deletions remembered, transactional saves). Cards overview redesigned |
-| 25 Oct 2026 | **iPad and large screens:** side rail, two-column layouts, centred dialogs |
-| 25 Oct 2026 | **New features:** dark mode, payment tracking with statement cycles and catch-up plans, Spaces history and use-funds, backup restore with preview and Undo, sharing progress |
-| 24 Oct 2026 | **Sync and colours:** card colours across the app, live cross-device sync, audit fixes |
-| 24 Oct 2026 | **Spending and offers:** spend logging (SMS paste, budgets, recurring payments, history), the offers back end and collector, a sign-in overhaul, and card suggestions |
-| 24 Oct 2026 | **Onboarding and bank data:** onboarding overhaul (welcome, checklist, tips) and updated bank tariffs |
-| 23 Oct 2026 | **Repayment plan fixes:** strategy budget allocation, card menu actions and billing calendar inputs |
-| 17–18 Oct 2026 | **Accounts:** forgot password, password rules, Google sign-up autofill, per-user data isolation, and the first guided walkthrough |
-| 12 Oct 2026 | **First release:** initial version of the app and repository |
+## Documentation
+- **[Features](docs/features.md):** everything the app does
+- **[How it works](docs/how-it-works.md):** the maths, supported banks, architecture and security
+- **[Development](docs/development.md):** run, test, build and deploy
+- **[Change history](docs/changelog.md)**
 
 ## License
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE).
