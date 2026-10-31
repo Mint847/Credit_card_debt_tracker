@@ -14,7 +14,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { CATEGORIES, htmlToText, chunkText, robotsDisallows, toOffer, planChanges, todayInColombo } from './lib.mjs';
+import { CATEGORIES, htmlToText, chunkText, robotsDisallows, sameSite, toOffer, planChanges, todayInColombo } from './lib.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = parseArgs(process.argv.slice(2));
@@ -126,14 +126,24 @@ async function fetchPage(source) {
     const page = await browser.newPage({ userAgent: USER_AGENT });
     try {
       await page.goto(source.url, { waitUntil: 'networkidle', timeout: 60000 });
-      return await page.content();
+      if (!sameSite(page.url(), source.url)) throw new Error('Redirected off the bank site to ' + page.url());
+      return capped(await page.content());
     } finally {
       await page.close();
     }
   }
   const res = await fetch(source.url, { headers: { 'User-Agent': USER_AGENT, 'Accept': 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(30000) });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.text();
+  if (!sameSite(res.url, source.url)) throw new Error('Redirected off the bank site to ' + res.url);
+  if (Number(res.headers.get('content-length')) > MAX_PAGE_BYTES) throw new Error('Page too large');
+  return capped(await res.text());
+}
+
+// A page larger than this is not an offers page (and would only cost tokens)
+const MAX_PAGE_BYTES = 5 * 1024 * 1024;
+function capped(html) {
+  if (html.length > MAX_PAGE_BYTES) throw new Error('Page too large');
+  return html;
 }
 
 const anthropic = new Anthropic();

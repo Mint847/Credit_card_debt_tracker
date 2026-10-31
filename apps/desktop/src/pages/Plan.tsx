@@ -1,5 +1,6 @@
 // Plan: this month's repayment strategy, as the phone app's Cards Overview works it out (budget,
 // pay-first order, each card's amount, interest bleed, debt-free target), with the strategy choice
+import { useId, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cardApr, minPaymentFor } from '@serendib/core';
 import { useApp, setStrategy } from '../lib/store';
@@ -173,36 +174,23 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
       {/* This month: the amount, the card to pay first and the split across cards */}
       <section className="panel p-5">
         <p className="text-sm font-semibold text-muted">This month you pay</p>
-        <p className="num mt-1 text-[34px] font-extrabold leading-none tracking-tight">{has ? fmtAmt(p.commitment) : '--'}</p>
         {target ? (
           <>
-            <p className="mt-3 flex items-center gap-2 text-sm">
+            {p.commitment > 0 ? <SplitRing p={p} /> : <p className="num mt-1 text-[34px] font-extrabold leading-none tracking-tight">{fmtAmt(p.commitment)}</p>}
+            <p className="mt-4 flex items-center gap-2 text-sm">
               <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">Pay first</span>
               <span className="min-w-0 flex-1 truncate font-semibold">{cardName(target)}</span>
             </p>
-            {p.commitment > 0 && (
-              <div className="mt-4">
-                <div className="meter-reveal flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-sunken">
-                  {p.order.map((c) => <div key={c.id} style={{ width: ((p.alloc[c.id] || 0) / p.commitment) * 100 + '%', background: cardTheme(c).hex }} />)}
-                </div>
-                <ul className="mt-2.5 space-y-1">
-                  {p.order.map((c) => (
-                    <li key={c.id} className="flex items-center gap-2 text-xs text-muted">
-                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cardTheme(c).hex }} />
-                      <span className="min-w-0 flex-1 truncate">{cardName(c)}</span>
-                      <span className="num font-semibold text-ink">{fmtAmt(p.alloc[c.id] || 0)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             <button type="button" className="btn-primary mt-4 w-full justify-center" data-tip="plan-pay"
               onClick={() => openLog({ type: 'payment', cardId: target.id, prefill: p.alloc[target.id] })}>
               <Icon name="payments" size={18} />Log this month’s payment
             </button>
           </>
         ) : (
-          <p className="mt-3 text-sm text-muted">{has ? 'Every card is paid off. Nothing to pay this month.' : 'Add a card to see this month’s plan.'}</p>
+          <>
+            <p className="num mt-1 text-[34px] font-extrabold leading-none tracking-tight">{has ? fmtAmt(p.commitment) : '--'}</p>
+            <p className="mt-3 text-sm text-muted">{has ? 'Every card is paid off. Nothing to pay this month.' : 'Add a card to see this month’s plan.'}</p>
+          </>
         )}
       </section>
 
@@ -298,6 +286,74 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
       {settled.length > 0 && (
         <p className="px-1 text-xs text-faint">{settled.length} card{settled.length === 1 ? '' : 's'} paid off: {settled.map(cardName).join(', ')}.</p>
       )}
+    </div>
+  );
+}
+
+
+// Phones: this month's money as a thin ring, one arc per card in its own colour (largest first, clockwise from
+// the top, small gaps between), the total in the centre and the cards listed beside it. Tap a card or its arc
+// to see its amount in the centre. Six or more cards keep the four largest and fold the rest into "Other".
+interface Slice { id: string; name: string; color: string; amount: number; others?: string[] }
+function SplitRing({ p }: { p: PlanData }) {
+  const [sel, setSel] = useState<string | null>(null);
+  const maskId = useId();
+  const rows: Slice[] = p.order.map((c) => ({ id: c.id, name: cardName(c), color: cardTheme(c).hex, amount: p.alloc[c.id] || 0 }))
+    .filter((r) => r.amount > 0).sort((a, b) => b.amount - a.amount);
+  const rest = rows.slice(4);
+  const slices: Slice[] = rows.length >= 6
+    ? [...rows.slice(0, 4), { id: 'other', name: 'Other', color: 'rgb(var(--faint))', amount: rest.reduce((s, r) => s + r.amount, 0), others: rest.map((r) => r.name) }]
+    : rows;
+  const total = slices.reduce((s, r) => s + r.amount, 0);
+  const SIZE = 140, SW = 12, R = (SIZE - SW) / 2, C = 2 * Math.PI * R, GAP = 5;
+  const many = slices.length > 1;
+  let at = 0;
+  const arcs = slices.map((s) => { const len = (s.amount / total) * C; const a = { ...s, start: at, len }; at += len; return a; });
+  const shown = slices.find((s) => s.id === sel);
+  const share = (n: number) => Math.round((n / total) * 100) + '%';
+  const centre = Math.round(shown ? shown.amount : total).toLocaleString('en-US');
+  const toggle = (id: string) => setSel(sel === id ? null : id);
+  return (
+    <div className="mt-3 flex items-center gap-4">
+      <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
+        <svg viewBox={'0 0 ' + SIZE + ' ' + SIZE} width={SIZE} height={SIZE} className="-rotate-90" role="img"
+          aria-label={'This month’s split: ' + slices.map((s) => s.name + ' ' + fmtAmt(s.amount) + ' (' + share(s.amount) + ')').join(', ')}>
+          {/* Draws the ring in clockwise when it appears (index.css .ring-draw) */}
+          <mask id={maskId}>
+            <circle className="ring-draw" cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="white" strokeWidth={SW + 4}
+              strokeDasharray={C} strokeDashoffset={0} style={{ '--c': C } as CSSProperties} />
+          </mask>
+          <g mask={'url(#' + maskId + ')'}>
+            {arcs.map((a) => (
+              <circle key={a.id} cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke={a.color} strokeWidth={SW}
+                strokeLinecap={many ? 'round' : 'butt'}
+                strokeDasharray={many ? Math.max(0.01, a.len - GAP - SW) + ' ' + C : undefined}
+                strokeDashoffset={many ? -(a.start + (GAP + SW) / 2) : undefined}
+                opacity={sel && sel !== a.id ? 0.25 : 1} className="cursor-pointer transition-opacity duration-200" onClick={() => toggle(a.id)} />
+            ))}
+          </g>
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center" aria-live="polite">
+          <span className="text-xs font-semibold text-faint">LKR</span>
+          <span className={'num font-extrabold leading-tight tracking-tight ' + (centre.length > 8 ? 'text-lg' : 'text-[22px]')}>{centre}</span>
+          <span className="max-w-[108px] truncate text-xs text-faint">{shown ? shown.name.split(' ')[0] + ' · ' + share(shown.amount) : 'this month'}</span>
+        </div>
+      </div>
+      <ul className="min-w-0 flex-1 space-y-0.5">
+        {slices.map((s) => (
+          <li key={s.id}>
+            <button type="button" aria-pressed={sel === s.id} onClick={() => toggle(s.id)}
+              className={'flex w-full items-start gap-2 rounded-xl px-2 py-1.5 text-left transition-opacity duration-200 ' + (sel === s.id ? 'bg-sunken' : '') + (sel && sel !== s.id ? ' opacity-40' : '')}>
+              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold">{s.name}</span>
+                <span className="block text-xs text-muted"><span className="num font-semibold text-ink">{fmtAmt(s.amount)}</span> · {share(s.amount)}</span>
+                {s.others && <span className="block truncate text-xs text-faint">{s.others.join(', ')}</span>}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

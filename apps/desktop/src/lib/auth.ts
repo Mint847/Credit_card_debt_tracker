@@ -172,7 +172,7 @@ export async function deleteAccount(typed: string, password: string): Promise<st
     }
     pauseSaves(true); // no saves racing the delete
     await db.collection('users').doc(u.uid).delete();
-    try { localStorage.removeItem('stitch_user_uid_' + u.uid); } catch (e) { /* storage blocked */ }
+    try { localStorage.removeItem('stitch_user_uid_' + u.uid); localStorage.removeItem('serendib_safety_' + u.uid); } catch (e) { /* storage blocked */ }
     await u.delete();
     return null;
   } catch (e) {

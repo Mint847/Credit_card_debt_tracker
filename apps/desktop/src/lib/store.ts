@@ -243,7 +243,8 @@ export function signOut(): Promise<void> {
   if (u && !sync.isCloudReady()) {
     if (!window.confirm('Some changes haven’t synced to your account yet. If you sign out now they will be lost. Sign out anyway?')) return Promise.resolve();
   }
-  if (u) { try { localStorage.removeItem('stitch_user_uid_' + u.uid); } catch (e) { /* storage blocked */ } }
+  // ...and its safety copies too: full snapshots of cards, balances and spending
+  if (u) { try { localStorage.removeItem('stitch_user_uid_' + u.uid); localStorage.removeItem('serendib_safety_' + u.uid); } catch (e) { /* storage blocked */ } }
   session.stopCloudRetry();
   return auth.signOut().catch(() => notice({ text: 'Couldn’t sign out. Please try again.', tone: 'warn' }));
 }

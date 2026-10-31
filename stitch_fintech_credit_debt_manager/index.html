@@ -3,6 +3,9 @@
 
 <head>
   <meta charset="utf-8">
+  <!-- Content Security Policy: scripts only from this site and the CDNs below (inline scripts are allowed because
+       this app is built from them; the new app at /desktop/ allows none). frame-ancestors is sent as a header. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://apis.google.com https://www.gstatic.com; frame-src 'self' https://stitch-debt-manager.firebaseapp.com https://stitch-debt-manager.web.app https://apis.google.com https://accounts.google.com; worker-src 'self' blob:; manifest-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15367,8 +15370,9 @@ This action cannot be undone. The spending history, recurring payments, budgets 
       if (u && typeof App !== 'undefined' && App.isCloudReady && !App.isCloudReady()) {
           if (!window.confirm("Some changes haven't synced to your account yet. If you sign out now they will be lost. Sign out anyway?")) return;
       }
-      // The cloud holds the account's data, so don't leave a copy on this (possibly shared) device
-      if (u) { try { localStorage.removeItem('stitch_user_uid_' + u.uid); } catch (e) {} }
+      // The cloud holds the account's data, so don't leave a copy on this (possibly shared) device,
+      // safety copies included (full snapshots of cards, balances and spending)
+      if (u) { try { localStorage.removeItem('stitch_user_uid_' + u.uid); localStorage.removeItem('serendib_safety_' + u.uid); } catch (e) {} }
       stopCloudRetry();
       auth.signOut().catch(function(error) {
           console.error("Sign out error", error);
@@ -15529,7 +15533,7 @@ This action cannot be undone. The spending history, recurring payments, budgets 
         }
         if (typeof App !== 'undefined' && App.setCloudReady) App.setCloudReady(false); // no saves racing the delete
         await db.collection('users').doc(u.uid).delete();
-        try { localStorage.removeItem('stitch_user_uid_' + u.uid); } catch (e) {}
+        try { localStorage.removeItem('stitch_user_uid_' + u.uid); localStorage.removeItem('serendib_safety_' + u.uid); } catch (e) {}
         await u.delete();
         window.closeDeleteAccountModal();
         if (typeof window.showToast === 'function') window.showToast('Your account has been deleted.', 'info');

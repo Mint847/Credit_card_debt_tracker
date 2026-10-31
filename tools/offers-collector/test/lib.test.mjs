@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { htmlToText, chunkText, robotsDisallows, toOffer, planChanges, contentKey } from '../lib.mjs';
+import { htmlToText, chunkText, robotsDisallows, sameSite, toOffer, planChanges, contentKey } from '../lib.mjs';
 
 const SOURCE = { issuer: 'seylan', bank: 'Seylan Bank', url: 'https://www.seylan.lk/promotions/cards' };
 const TODAY = '2026-10-24';
@@ -82,4 +82,16 @@ test('planChanges: verify unchanged, skip known drafts, mark updates and expire 
 
 test('contentKey matches the app (index.html offerContentKey) normalisation', () => {
   assert.equal(contentKey({ issuer: 'ntb', merchant: '  Cargills   Food City ', validUntil: '2026-11-30', discountText: '30% OFF' }), 'ntb|cargills food city|2026-11-30|30% off');
+});
+
+test('sameSite keeps redirects on the bank site, over https', () => {
+  const src = 'https://www.combank.lk/rewards-promotions';
+  assert.equal(sameSite('https://www.combank.lk/rewards-promotions/', src), true);
+  assert.equal(sameSite('https://combank.lk/promos', src), true);
+  assert.equal(sameSite('https://offers.combank.lk/x', src), true);
+  assert.equal(sameSite('http://www.combank.lk/rewards-promotions', src), false);
+  assert.equal(sameSite('https://combank.lk.evil.com/x', src), false);
+  assert.equal(sameSite('https://evilcombank.lk/x', src), false);
+  assert.equal(sameSite('https://169.254.169.254/latest/meta-data', src), false);
+  assert.equal(sameSite('not a url', src), false);
 });

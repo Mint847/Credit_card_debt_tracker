@@ -63,6 +63,19 @@ export function chunkText(text, maxChars = 50000) {
   return chunks;
 }
 
+// A redirect must stay on the bank's own site, over https: the configured host or one of its subdomains
+// (www.combank.lk -> combank.lk and back counts as the same site). Anything else is refused.
+export function sameSite(finalUrl, sourceUrl) {
+  try {
+    const f = new URL(finalUrl), s = new URL(sourceUrl);
+    if (f.protocol !== 'https:') return false;
+    const base = s.hostname.replace(/^www\./, '');
+    return f.hostname === base || f.hostname.endsWith('.' + base);
+  } catch (e) {
+    return false;
+  }
+}
+
 // Minimal robots.txt check for our user agent (or *): is this path disallowed?
 export function robotsDisallows(robotsTxt, pathname, agentToken = 'serendib') {
   let applies = false, sawAgentInGroup = false;
