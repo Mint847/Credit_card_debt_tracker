@@ -1,13 +1,14 @@
 // The card dialogs: add / edit card, billing cycle, match my statement, clear balance, delete,
 // share progress, category budgets and recurring payments. Same fields, checks and messages as the
 // phone app's sheets (the checks run in the shared core); laid out as centred dialogs.
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import * as Popover from '@radix-ui/react-popover';
 import confetti from 'canvas-confetti';
 import {
   CARD_THEMES, SPEND_CATEGORIES, RECURRING_SUGGESTIONS, bankSuggestions, tierSuggestions, rankSuggestions, cardApr, isValidDay,
   parseAmountInput, matchDiffText, shareText, recurringStatusText, recurringDayHint, chargeNowDate, recurringNextDue, isCancelled,
-  billingPeriod, periodSummary, ymd, spendCategory, catchUpPlan
+  billingPeriod, periodSummary, ymd, parseYmd, dueDateFor, spendCategory, catchUpPlan
 } from '@serendib/core';
 import {
   useApp, findCard, addNewCard, editCard, clearBalance, deleteCard, setBilling, matchBalance, saveBudgets, saveRecurring,
@@ -35,7 +36,7 @@ export function Modal({ open, onClose, title, width = 480, children }: { open: b
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="motion-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content style={frame.style} className={frame.className}>
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:border-b-0 phone:px-5 phone:pb-2 phone:pt-5">
             <Dialog.Title className="text-[15px] font-semibold phone:text-[19px] phone:font-bold phone:tracking-tight">{title}</Dialog.Title>
@@ -206,27 +207,105 @@ function CardForm({ card, onClose, onDone }: { card?: Card; onClose: () => void;
 }
 
 /* Billing cycle */
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const fullDate = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+// A day of the month picked from a calendar. Only the day is kept (it repeats every month); the calendar opens
+// on the month it next falls in, with the cycle's other date marked so the gap between them is easy to see.
+function DayPicker({ id, value, onChange, at, other, otherName }: {
+  id: string; value: number; onChange: (day: number) => void; at: Date; other: Date; otherName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => new Date(at.getFullYear(), at.getMonth(), 1));
+  const grid = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (open) setMonth(new Date(at.getFullYear(), at.getMonth(), 1)); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  const y = month.getFullYear(), m = month.getMonth();
+  const count = new Date(y, m + 1, 0).getDate();
+  const lead = new Date(y, m, 1).getDay();
+  const today = new Date();
+  const focusDay = (d: number) => grid.current?.querySelector<HTMLButtonElement>('[data-day="' + d + '"]')?.focus();
+  const onKey = (e: React.KeyboardEvent, d: number) => {
+    const step = ({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 } as Record<string, number>)[e.key];
+    if (!step) return;
+    e.preventDefault();
+    focusDay(Math.min(count, Math.max(1, d + step)));
+  };
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button id={id} type="button" className="field flex h-10 items-center justify-between gap-2 text-left">
+          <span>Day {value}</span>
+          <Icon name="calendar_month" size={18} className="text-faint" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content align="start" sideOffset={6} collisionPadding={12}
+          onOpenAutoFocus={(e) => { e.preventDefault(); requestAnimationFrame(() => focusDay(value <= count ? value : count)); }}
+          className="z-[70] w-[284px] rounded-xl border border-line bg-panel p-3 shadow-pop focus:outline-none">
+          <div className="mb-2 flex items-center justify-between">
+            <button type="button" className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Previous month" onClick={() => setMonth(new Date(y, m - 1, 1))}><Icon name="chevron_left" /></button>
+            <p className="text-[13px] font-semibold" aria-live="polite">{month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</p>
+            <button type="button" className="btn-ghost h-8 w-8 justify-center px-0" aria-label="Next month" onClick={() => setMonth(new Date(y, m + 1, 1))}><Icon name="chevron_right" /></button>
+          </div>
+          <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-faint" aria-hidden="true">
+            {WEEKDAYS.map((w) => <span key={w} className="py-1">{w}</span>)}
+          </div>
+          <div ref={grid} className="grid grid-cols-7 gap-y-0.5" role="group" aria-label="Days">
+            {Array.from({ length: lead }, (_, i) => <span key={'b' + i} />)}
+            {Array.from({ length: count }, (_, i) => {
+              const d = i + 1, date = new Date(y, m, d);
+              const picked = sameDay(date, at), marked = sameDay(date, other), isToday = sameDay(date, today);
+              return (
+                <button key={d} type="button" data-day={d} tabIndex={d === Math.min(value, count) ? 0 : -1}
+                  aria-pressed={picked} aria-label={date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + (marked ? ', ' + otherName : '')}
+                  onClick={() => { onChange(d); setOpen(false); }} onKeyDown={(e) => onKey(e, d)}
+                  className={'mx-auto flex h-9 w-9 items-center justify-center rounded-full text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ' +
+                    (picked ? 'bg-brand font-semibold text-white dark:text-canvas' : marked ? 'font-semibold text-brand-ink ring-1 ring-inset ring-brand/50 hover:bg-sunken' : 'hover:bg-sunken') +
+                    (isToday && !picked ? ' underline decoration-2 underline-offset-4' : '')}>
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 flex items-center gap-1.5 border-t border-line pt-2 text-[11px] text-faint">
+            <span className="inline-block h-3 w-3 rounded-full ring-1 ring-inset ring-brand/50" aria-hidden="true" />{otherName}: {fullDate(other)}
+            <span className="ml-auto">Repeats monthly</span>
+          </p>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 function Billing({ card, onClose, onDone }: { card: Card; onClose: () => void; onDone: (d: Done) => void }) {
   const todayDay = new Date().getDate();
   const [sd, setSd] = useState(isValidDay(card.statementDay) ? card.statementDay! : todayDay);
   const [dd, setDd] = useState(isValidDay(card.dueDay) ? card.dueDay! : todayDay);
   const [error, setError] = useState('');
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const pick = (id: string, label: string, v: number, set: (n: number) => void) => (
-    <div>
-      <Label htmlFor={id}>{label}</Label>
-      <select id={id} value={v} onChange={(e) => set(parseInt(e.target.value, 10))} className="field h-10">
-        {days.map((d) => <option key={d} value={d}>Day {d}</option>)}
-      </select>
-    </div>
-  );
+  // Where these days next fall: the next statement (today counts), and the first due day after it
+  const stmtStr: string = billingPeriod({ statementDay: sd }, ymd(new Date())).end;
+  const dueStr: string = dueDateFor(stmtStr, dd);
+  const stmt = parseYmd(stmtStr) as Date, due = parseYmd(dueStr) as Date;
+  const gap = Math.round((due.getTime() - stmt.getTime()) / 864e5);
   return (
     <>
       <CardLine card={card} />
       <div className="grid grid-cols-2 gap-4">
-        {pick('bc-statement', 'Statement generation (day of month)', sd, setSd)}
-        {pick('bc-due', 'Payment due (day of month)', dd, setDd)}
+        {/* Labels top-aligned, fields level (a label may wrap on narrow screens) */}
+        <div className="flex flex-col">
+          <Label htmlFor="bc-statement">Statement date</Label>
+          <div className="mt-auto"><DayPicker id="bc-statement" value={sd} onChange={setSd} at={stmt} other={due} otherName="Payment due" /></div>
+        </div>
+        <div className="flex flex-col">
+          <Label htmlFor="bc-due">Payment due date</Label>
+          <div className="mt-auto"><DayPicker id="bc-due" value={dd} onChange={setDd} at={due} other={stmt} otherName="Statement" /></div>
+        </div>
       </div>
+      <p className="mt-3 flex items-start gap-2 rounded-lg bg-sunken px-3 py-2.5 text-[12px] text-muted" aria-live="polite">
+        <Icon name="event" size={16} className="mt-px text-faint" />
+        <span>Next statement on <b className="font-semibold text-ink">{fullDate(stmt)}</b>, payment due <b className="font-semibold text-ink">{fullDate(due)}</b> ({gap} {gap === 1 ? 'day' : 'days'} later).</span>
+      </p>
       <p className="mt-3 text-[12px] text-faint">Changing these starts tracking again from the cycle that’s still awaiting payment.</p>
       <ErrorLine text={error} />
       <Actions onCancel={onClose} primary="Save changes" onPrimary={() => { const r = setBilling(card.id, sd, dd); if (r.error) setError(r.error); else onDone(r); }} />

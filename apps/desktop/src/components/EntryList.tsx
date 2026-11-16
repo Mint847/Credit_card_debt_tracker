@@ -10,7 +10,7 @@ import type { Card, Entry } from '../lib/types';
 export function EntryList({ rows, onOpen, showCard = true }: { rows: { c: Card; e: Entry }[]; onOpen: (c: Card, e: Entry) => void; showCard?: boolean }) {
   const phone = useLayout() === 'phone';
   return (
-    <ul className="border-t border-line">
+    <ul className="stagger border-t border-line">
       {rows.map(({ c, e }) => {
         const credit = e.type === 'payment' || e.type === 'refund' || (e.type === 'adjustment' && e.amount < 0);
         const cat = e.category ? spendCategory(e.category) : null;

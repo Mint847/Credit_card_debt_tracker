@@ -6,7 +6,7 @@ import { daysBetween, isValidDay } from '@serendib/core';
 import { useApp } from '../lib/store';
 import { amountDueNow, cardApr, cardCycle, cardName, cardPayoff, cardTheme, minPaymentFor, today, util } from '../lib/derive';
 import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
-import { CardTile, Chip, Icon, UtilBar, type Tone } from '../components/ui';
+import { CardTile, Chip, CountUp, Icon, UtilBar, type Tone } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { useCardDialogs } from '../components/CardDialogs';
 import type { Card } from '../lib/types';
@@ -148,7 +148,7 @@ export function Cards() {
                 </tr>
               ))}
             </thead>
-            <tbody>
+            <tbody className="stagger">
               {table.getRowModel().rows.map((r) => {
                 const isSel = r.original.card.id === selectedId;
                 return (
@@ -202,12 +202,12 @@ function CardList({ rows, onAdd }: { rows: Row[]; onAdd: () => void }) {
         <button type="button" className="btn-primary" data-tip="add-card" onClick={onAdd}><Icon name="add" size={18} />Add card</button>
       </div>
       <div className="panel grid grid-cols-2 gap-px overflow-hidden bg-line tablet:grid-cols-4">
-        <div className="bg-panel px-4 py-3"><p className="label">Total owed</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(p.totalDebt)}</p></div>
-        <div className="bg-panel px-4 py-3"><p className="label">This month</p><p className="num mt-1 text-[19px] font-bold text-brand-ink">{fmtAmt(p.commitment)}</p></div>
+        <div className="bg-panel px-4 py-3"><p className="label">Total owed</p><p className="num mt-1 text-[19px] font-bold"><CountUp value={p.totalDebt} format={fmtAmt} /></p></div>
+        <div className="bg-panel px-4 py-3"><p className="label">This month</p><p className="num mt-1 text-[19px] font-bold text-brand-ink"><CountUp value={p.commitment} format={fmtAmt} /></p></div>
         <div className="hidden bg-panel px-4 py-3 tablet:block"><p className="label">Total limit</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(p.totalLimit)}</p></div>
         <div className="hidden bg-panel px-4 py-3 tablet:block"><p className="label">Available</p><p className="num mt-1 text-[19px] font-bold">{fmtAmt(Math.max(0, p.totalLimit - p.totalDebt))}</p></div>
       </div>
-      <ul className="space-y-3 tablet:grid tablet:grid-cols-2 tablet:gap-4 tablet:space-y-0" data-tip="cards-table">
+      <ul className="stagger space-y-3 tablet:grid tablet:grid-cols-2 tablet:gap-4 tablet:space-y-0" data-tip="cards-table">
         {rows.map((r) => {
           const c = r.card;
           const rank = p.order.findIndex((x) => x.id === c.id);

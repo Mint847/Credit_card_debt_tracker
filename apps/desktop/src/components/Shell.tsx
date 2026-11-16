@@ -149,7 +149,7 @@ function Topbar() {
   const card = cardMatch ? app.cards.find((c) => c.id === cardMatch.params.id) : undefined;
   const count = attentionCount(useAlerts());
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-line bg-canvas/85 px-6 backdrop-blur">
+    <header className="header-lift sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-line bg-canvas/85 px-6 backdrop-blur">
       <div className="flex min-w-0 items-center gap-2 text-[13px]">
         {card ? (
           <>
@@ -211,7 +211,7 @@ function Palette({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bool
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="motion-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content className="fixed left-1/2 top-[14vh] z-50 w-[600px] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-panel shadow-pop focus:outline-none tablet:top-[10vh] tablet:w-[min(600px,calc(100vw-48px))] phone:inset-x-0 phone:top-0 phone:w-auto phone:translate-x-0 phone:rounded-none phone:rounded-b-2xl phone:pt-[env(safe-area-inset-top)]">
           <Dialog.Title className="sr-only">Search</Dialog.Title>
           <Dialog.Description className="sr-only">Jump to a page or card, find an entry, or run an action.</Dialog.Description>
@@ -280,7 +280,7 @@ function Shortcuts({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bo
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="motion-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content className="fixed left-1/2 top-[16vh] z-50 w-[440px] -translate-x-1/2 rounded-2xl border border-line bg-panel p-6 shadow-pop focus:outline-none">
           <Dialog.Title className="mb-3 text-[15px] font-semibold">Keyboard shortcuts</Dialog.Title>
           <Dialog.Description className="sr-only">Keys that work anywhere in the app.</Dialog.Description>
@@ -342,9 +342,9 @@ export function Shell({ children }: { children: ReactNode }) {
       {layout === 'phone' ? <PhoneFrame>{children}</PhoneFrame> : (
       <div className="flex h-full">
         {layout === 'tablet' && narrow ? <Rail /> : <Sidebar />}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="frame-scroll flex min-w-0 flex-1 flex-col">
           <Topbar />
-          <main className="scroll-thin flex-1 overflow-y-auto">{children}</main>
+          <main className="page-scroller scroll-thin flex-1 overflow-y-auto" data-motion="fade">{children}</main>
         </div>
       </div>
       )}

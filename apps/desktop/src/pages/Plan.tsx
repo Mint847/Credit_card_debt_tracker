@@ -1,13 +1,13 @@
 // Plan: this month's repayment strategy, as the phone app's Cards Overview works it out (budget,
 // pay-first order, each card's amount, interest bleed, debt-free target), with the strategy choice
-import { useId, useState, type CSSProperties } from 'react';
+import { useId, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cardApr, minPaymentFor } from '@serendib/core';
 import { useApp, setStrategy } from '../lib/store';
 import { cardName, cardTheme } from '../lib/derive';
 import { fmtAmt } from '../lib/format';
 import { useLayout } from '../lib/layout';
-import { CardTile, Chip, Empty, Icon, MetricTile, Panel } from '../components/ui';
+import { CardTile, Chip, CountUp, Empty, Icon, MetricTile, Panel } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import type { Card, Strategy } from '../lib/types';
 import type { Plan as PlanData } from '../lib/derive';
@@ -49,12 +49,12 @@ export function Plan() {
       </div>
 
       <section className="panel grid grid-cols-4 divide-x divide-line compact:gap-px compact:divide-x-0 compact:overflow-hidden compact:bg-line tablet:grid-cols-2 phone:grid-cols-2">
-        {[
-          ['Total aggregate debt', fmtAmt(p.totalDebt), 'Total available credit limit: ' + fmtAmt(p.totalLimit)],
-          ['Total monthly commitment', app.cards.length ? fmtAmt(p.commitment) : '--', 'Budget ' + fmtAmt(p.budget) + ' (25% of income, or your targets)'],
-          ['Total interest bleed', app.cards.length ? fmtAmt(p.interestMonth) : '--', 'Estimated interest this month at your cards’ rates'],
+        {([
+          ['Total aggregate debt', <CountUp value={p.totalDebt} format={fmtAmt} />, 'Total available credit limit: ' + fmtAmt(p.totalLimit)],
+          ['Total monthly commitment', app.cards.length ? <CountUp value={p.commitment} format={fmtAmt} /> : '--', 'Budget ' + fmtAmt(p.budget) + ' (25% of income, or your targets)'],
+          ['Total interest bleed', app.cards.length ? <CountUp value={p.interestMonth} format={fmtAmt} /> : '--', 'Estimated interest this month at your cards’ rates'],
           ['Debt-free target', p.debtFreeLabel, 'At your current monthly plan']
-        ].map(([label, value, sub], i) => (
+        ] as [string, ReactNode, string][]).map(([label, value, sub], i) => (
           <div key={label} className="px-5 py-4 compact:bg-panel phone:px-4 phone:py-3.5">
             <p className="label">{label}</p>
             <p className={'num mt-1.5 text-[22px] font-bold tracking-tight phone:text-[18px] ' + (i === 2 && app.cards.length ? 'text-danger' : '')}>{value}</p>
@@ -68,7 +68,7 @@ export function Plan() {
           action={<Chip tone="info">{strat.title}</Chip>} bodyClass="px-3 pb-3">
           <p className="mb-3 px-2 text-[13px] text-muted">{strat.desc}</p>
           {app.cards.length === 0 && <Empty icon="credit_card" title="No cards added" body="Add a card to see this month’s plan." />}
-          <ul className="space-y-1">
+          <ul className="stagger space-y-1">
             {p.order.concat(settled).map((card, index) => {
               const isTarget = index === 0 && card.balance > 0;
               const isSettled = card.balance === 0;
@@ -195,10 +195,10 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
       </section>
 
       <div className="grid grid-cols-2 gap-3">
-        <MetricTile label="Total debt" value={fmtAmt(p.totalDebt)} sub={'of ' + fmtAmt(p.totalLimit) + ' limit'} />
-        <MetricTile accent="danger" label="Interest" value={has ? fmtAmt(p.interestMonth) : '--'} sub="This month, at your cards’ rates" />
+        <MetricTile label="Total debt" value={<CountUp value={p.totalDebt} format={fmtAmt} />} sub={'of ' + fmtAmt(p.totalLimit) + ' limit'} />
+        <MetricTile accent="danger" label="Interest" value={has ? <CountUp value={p.interestMonth} format={fmtAmt} /> : '--'} sub="This month, at your cards’ rates" />
         <MetricTile label="Debt-free" value={p.debtFreeLabel} sub="On this plan" />
-        <MetricTile label="Budget" value={fmtAmt(p.budget)} sub="Each month" />
+        <MetricTile label="Budget" value={<CountUp value={p.budget} format={fmtAmt} />} sub="Each month" />
       </div>
 
       {/* Where the money goes: every card, the pay-first one on top */}
@@ -209,7 +209,7 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
         </div>
         <p className="mt-1 text-sm text-muted">{strat.phoneDesc}</p>
         {!has && <Empty icon="credit_card" title="No cards added" body="Add a card to see this month’s plan." />}
-        <ul className="mt-3 space-y-2">
+        <ul className="stagger mt-3 space-y-2">
           {p.order.concat(settled).map((card, index) => {
             const isTarget = index === 0 && card.balance > 0;
             const isSettled = card.balance === 0;
@@ -335,11 +335,11 @@ function SplitRing({ p }: { p: PlanData }) {
         </svg>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center" aria-live="polite">
           <span className="text-xs font-semibold text-faint">LKR</span>
-          <span className={'num font-extrabold leading-tight tracking-tight ' + (centre.length > 8 ? 'text-lg' : 'text-[22px]')}>{centre}</span>
+          <span className={'num font-extrabold leading-tight tracking-tight ' + (centre.length > 8 ? 'text-lg' : 'text-[22px]')}>{shown ? centre : <CountUp value={Math.round(total)} format={(n) => n.toLocaleString('en-US')} />}</span>
           <span className="max-w-[108px] truncate text-xs text-faint">{shown ? shown.name.split(' ')[0] + ' · ' + share(shown.amount) : 'this month'}</span>
         </div>
       </div>
-      <ul className="min-w-0 flex-1 space-y-0.5">
+      <ul className="stagger min-w-0 flex-1 space-y-0.5">
         {slices.map((s) => (
           <li key={s.id}>
             <button type="button" aria-pressed={sel === s.id} onClick={() => toggle(s.id)}

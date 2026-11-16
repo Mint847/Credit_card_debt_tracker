@@ -39,7 +39,7 @@ export function Welcome() {
   return (
     <Dialog.Root open onOpenChange={(v) => { if (!v) skip(); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[3px]" />
+        <Dialog.Overlay className="motion-overlay fixed inset-0 z-50 bg-black/40 backdrop-blur-[3px]" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid w-[860px] -translate-x-1/2 -translate-y-1/2 grid-cols-[320px_1fr] overflow-hidden rounded-3xl border border-line bg-panel shadow-pop focus:outline-none tablet:w-[min(860px,calc(100vw-48px))] tablet:grid-cols-[260px_1fr] phone:inset-x-0 phone:bottom-0 phone:left-0 phone:top-auto phone:max-h-[92vh] phone:w-full phone:translate-x-0 phone:translate-y-0 phone:grid-cols-1 phone:overflow-y-auto phone:rounded-b-none phone:pb-[env(safe-area-inset-bottom)]">
           <div className="relative flex flex-col justify-between overflow-hidden p-8 text-white phone:hidden" style={{ background: 'linear-gradient(160deg, #00473c 0%, #006b5c 55%, #008374 100%)' }}>
             <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
@@ -334,7 +334,9 @@ function Spotlight({ tips, i, layout, onNext, onBack, onClose, onSkip }: { tips:
     const tall = el.getBoundingClientRect().height > window.innerHeight * 0.5;
     const scrolled = el, margin = el.style.scrollMarginTop;
     if (tall) el.style.scrollMarginTop = '16px';
-    try { el.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: tall ? 'start' : 'center' }); } catch (e) { /* old browsers */ }
+    // (a frame later with motion on: the scroll reveal pauses for the tour, and the panel must be back in place first)
+    const scroll = () => { try { scrolled.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: tall ? 'start' : 'center' }); } catch (e) { /* old browsers */ } };
+    const later = reducedMotion() ? (scroll(), 0) : requestAnimationFrame(scroll);
     let raf = 0, last = '', still = 0, settled = false, moved = 0;
     const started = Date.now();
     const frame = () => {
@@ -355,6 +357,7 @@ function Spotlight({ tips, i, layout, onNext, onBack, onClose, onSkip }: { tips:
     frame();
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(later);
       if (tall) setTimeout(() => { scrolled.style.scrollMarginTop = margin; }, 1300);
     };
   }, [tip]); // eslint-disable-line react-hooks/exhaustive-deps

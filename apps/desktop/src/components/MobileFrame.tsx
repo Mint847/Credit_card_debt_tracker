@@ -111,7 +111,7 @@ function TabButton({ to, label, icon, active, onClick }: { to?: string; label: s
       <span className={'text-xs font-semibold ' + (active ? 'text-brand-ink' : 'text-faint')}>{label}</span>
     </>
   );
-  const cls = 'flex flex-1 flex-col items-center gap-1 pt-2';
+  const cls = 'press flex flex-1 flex-col items-center gap-1 pt-2';
   return to ? <NavLink to={to} end={to === '/'} className={cls} aria-current={active ? 'page' : undefined}>{inner}</NavLink>
     : <button type="button" className={cls} onClick={onClick}>{inner}</button>;
 }
@@ -130,8 +130,8 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
   const inMore = MORE.some((m) => path.startsWith(m.to));
   const sub = MORE.find((m) => path.startsWith(m.to));
   return (
-    <div className="flex h-full flex-col">
-      <header className="sticky top-0 z-30 flex h-[calc(58px+env(safe-area-inset-top))] shrink-0 items-center gap-0.5 border-b border-line/60 bg-canvas/85 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <div className="frame-scroll flex h-full flex-col">
+      <header className="header-lift sticky top-0 z-30 flex h-[calc(58px+env(safe-area-inset-top))] shrink-0 items-center gap-0.5 border-b border-line/60 bg-canvas/85 px-2 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         {card || sub ? (
           <button type="button" onClick={() => { if (card) navigate('/cards'); else if (window.history.length > 1) navigate(-1); else navigate('/'); }} className="btn-ghost h-11 w-11 justify-center px-0" aria-label="Back"><Icon name="arrow_back" /></button>
         ) : (
@@ -149,7 +149,8 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
         </button>
         <button type="button" onClick={() => setSheet('account')} className="ml-0.5 mr-1 rounded-full" aria-label="Account" data-tip="account"><Avatar size={32} /></button>
       </header>
-      <main className="scroll-thin flex-1 overflow-y-auto pb-28">{children}</main>
+      {/* Opening a page: drilled-into pages (a card, anything under More) push in from the right, the tabs fade in (index.css) */}
+      <main className="page-scroller scroll-thin flex-1 overflow-y-auto pb-28" data-motion={card || inMore ? 'push' : 'fade'}>{children}</main>
       <nav aria-label="Main" className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line/70 bg-panel/90 shadow-[0_-6px_20px_-12px_rgb(16_24_40/0.18)] backdrop-blur-md">
         <div className="mx-auto flex h-[66px] max-w-md items-stretch" data-tip="nav">
           <TabButton to="/" label="Overview" icon="space_dashboard" active={path === '/'} />

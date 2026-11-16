@@ -198,7 +198,7 @@ export function Settings() {
         </ul>
       </nav>
 
-      <div className="min-w-0 flex-1 space-y-8 pb-10 pt-1">
+      <div className="stagger min-w-0 flex-1 space-y-8 pb-10 pt-1">
         <Section id="profile" title="Profile">
           <div className="flex items-center gap-4 px-5 py-4">
             {app.user?.photoURL

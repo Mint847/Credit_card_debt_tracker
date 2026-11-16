@@ -7,7 +7,7 @@ import { useApp } from '../lib/store';
 import { cardName, projection, spendingByCategory, today, upcomingEvents, util } from '../lib/derive';
 import { fmtAmt, fmtShort, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
-import { CardDot, Chip, Empty, Icon, Panel, UtilBar, blendedParts } from '../components/ui';
+import { CardDot, Chip, CountUp, Empty, Icon, Panel, UtilBar, blendedParts } from '../components/ui';
 import { token, useIsDark } from '../lib/theme';
 import { useLayout } from '../lib/layout';
 import { EntryList } from '../components/EntryList';
@@ -22,7 +22,7 @@ function greeting() {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-function Kpi({ label, value, sub, children, className = '' }: { label: string; value: string; sub?: React.ReactNode; children?: React.ReactNode; className?: string }) {
+function Kpi({ label, value, sub, children, className = '' }: { label: string; value: React.ReactNode; sub?: React.ReactNode; children?: React.ReactNode; className?: string }) {
   return (
     <div className={'min-w-0 px-5 py-4 compact:bg-panel phone:px-4 phone:py-3.5 ' + className}>
       <p className="label">{label}</p>
@@ -78,8 +78,8 @@ export function Overview() {
       {/* KPI strip */}
       {/* Phone and iPad: a grid with hairlines between cells (the line colour shows through 1px gaps) */}
       <section className="panel grid grid-cols-5 divide-x divide-line compact:gap-px compact:divide-x-0 compact:overflow-hidden compact:bg-line tablet:grid-cols-3 phone:grid-cols-2" data-tip="kpis">
-        <Kpi label="Total debt" value={fmtAmt(p.totalDebt)} sub={'of ' + fmtAmt(p.totalLimit) + ' total limit'} className="phone:col-span-2" />
-        <Kpi label="Utilisation" value={pct(totalUtil, 1)} className="phone:col-span-2">
+        <Kpi label="Total debt" value={<CountUp value={p.totalDebt} format={fmtAmt} />} sub={'of ' + fmtAmt(p.totalLimit) + ' total limit'} className="phone:col-span-2" />
+        <Kpi label="Utilisation" value={<CountUp value={totalUtil} format={(n) => pct(n, 1)} />} className="phone:col-span-2">
           <div className="relative mt-2">
             <UtilBar value={totalUtil} />
             {/* The 30% line: the phone app's safe limit */}
@@ -87,8 +87,8 @@ export function Overview() {
           </div>
           <p className="mt-1.5 text-[12px] text-faint">Safe Limit: {fmtAmt(p.totalLimit * 0.3)} · Target &lt;30%</p>
         </Kpi>
-        <Kpi label="Monthly commitment" value={fmtAmt(p.commitment)} sub="Your plan for this month" />
-        <Kpi label="Interest bleed" value={fmtAmt(p.interestMonth)} sub="Per month at today’s balances" />
+        <Kpi label="Monthly commitment" value={<CountUp value={p.commitment} format={fmtAmt} />} sub="Your plan for this month" />
+        <Kpi label="Interest bleed" value={<CountUp value={p.interestMonth} format={fmtAmt} />} sub="Per month at today’s balances" />
         <Kpi label="Debt-free" className="tablet:col-span-2 phone:col-span-2"
           value={pj.debtFree ? pj.debtFree.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : app.cards.some((c) => c.balance > 0) ? 'Never' : '--'}
           sub={pj.debtFree ? pj.months + (pj.months === 1 ? ' month' : ' months') + (pj.speedUp >= 1 ? ' · ' + pj.speedUp.toFixed(1) + 'x faster than minimums' : '') : 'The budget doesn’t cover the minimums'} />

@@ -141,16 +141,109 @@ body {
 [data-layout=phone] .btn, [data-layout=tablet] .btn { min-height: 40px; }
 [data-layout=phone] .field { height: 48px; font-size: 16px; }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-/* Phones: bars grow in from the left when they appear, and glide when the value changes */
+/* ── Motion ──
+   Subtle and quick, on every device: only opacity, scale/translate (the individual properties, so Tailwind's
+   transform-based centring is untouched), clip-path and shadow. With reduced motion everything is instant
+   (the block at the end), and every screen then looks exactly as it does without this block. */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-in: cubic-bezier(.4, 0, 1, 1); --dur-1: 150ms; --dur-2: 200ms; --dur-3: 250ms; }
+@keyframes fade-rise { from { opacity: 0; translate: 0 6px; } }
+@keyframes push-in { from { opacity: 0; translate: 24px 0; } }
+@keyframes pop-in { from { opacity: 0; scale: .96; } }
+@keyframes pop-out { to { opacity: 0; scale: .96; } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes sheet-down { to { transform: translateY(40px); opacity: 0; } }
+
+/* Bars grow in from the left when they appear, and glide when the value changes; the Plan ring draws in */
 @keyframes meter-in { from { clip-path: inset(0 100% 0 0 round 9999px); } }
 @keyframes reveal-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-[data-layout=phone] .meter-fill { animation: meter-in .8s cubic-bezier(.22, 1, .36, 1); transition: clip-path .5s cubic-bezier(.22, 1, .36, 1); }
-[data-layout=phone] .meter-reveal { animation: reveal-in .8s cubic-bezier(.22, 1, .36, 1); }
-@media (prefers-reduced-motion: reduce) { [data-layout=phone] :is(.meter-fill, .meter-reveal) { animation: none; transition: none; } }
-/* Phones: the Plan page's ring draws in clockwise (--c is its circumference) */
+.meter-fill { animation: meter-in .8s var(--ease-out); transition: clip-path .5s var(--ease-out); }
+.meter-reveal { animation: reveal-in .8s var(--ease-out); }
+/* (--c is the ring's circumference) */
 @keyframes ring-draw { from { stroke-dashoffset: var(--c); } }
-[data-layout=phone] .ring-draw { animation: ring-draw .9s cubic-bezier(.22, 1, .36, 1); }
-@media (prefers-reduced-motion: reduce) { [data-layout=phone] .ring-draw { animation: none; } }
+.ring-draw { animation: ring-draw .9s var(--ease-out); }
+
+/* Pages: each page's own top element animates as it mounts (no wrapper, so layout is untouched): a short fade and
+   rise; on phones, pages you drill into (a card, anything under More) push in from the right (MobileFrame sets
+   data-motion) */
+main[data-motion=fade] > * { animation: fade-rise var(--dur-2) var(--ease-out); }
+main[data-motion=push] > * { animation: push-in var(--dur-3) var(--ease-out); }
+/* Tabs inside a page: the newly shown panel fades in */
+[role=tabpanel][data-state=active] { animation: fade-rise var(--dur-2) var(--ease-out); }
+
+/* Dialogs: fade and grow from 96%; out the same way, faster. Bottom sheets keep their slide and slide back down. */
+.motion-overlay[data-state=open] { animation: fade-in var(--dur-2) ease-out; }
+.motion-overlay[data-state=closed] { animation: fade-out var(--dur-1) ease-in forwards; }
+[role=dialog][data-state=open]:not(.sheet-up) { animation: pop-in var(--dur-3) var(--ease-out); }
+[role=dialog][data-state=closed]:not(.sheet-up) { animation: pop-out var(--dur-1) var(--ease-in) forwards; }
+.sheet-up[data-state=closed] { animation: sheet-down .18s var(--ease-in) forwards; }
+/* Menus, popovers and tooltips grow out of what opened them */
+[data-radix-popper-content-wrapper] > [data-state][data-side] { transform-origin: var(--radix-popper-transform-origin); animation: pop-in var(--dur-1) var(--ease-out); }
+[data-radix-popper-content-wrapper] > [data-state=closed][data-side] { animation: pop-out 120ms var(--ease-in) forwards; }
+@keyframes tip-in-top { from { opacity: 0; translate: 0 3px; } }
+@keyframes tip-in-bottom { from { opacity: 0; translate: 0 -3px; } }
+@keyframes tip-in-left { from { opacity: 0; translate: 3px 0; } }
+@keyframes tip-in-right { from { opacity: 0; translate: -3px 0; } }
+[data-radix-popper-content-wrapper] > :is([data-state=delayed-open], [data-state=instant-open])[data-side=top] { animation: tip-in-top var(--dur-1) var(--ease-out); }
+[data-radix-popper-content-wrapper] > :is([data-state=delayed-open], [data-state=instant-open])[data-side=bottom] { animation: tip-in-bottom var(--dur-1) var(--ease-out); }
+[data-radix-popper-content-wrapper] > :is([data-state=delayed-open], [data-state=instant-open])[data-side=left] { animation: tip-in-left var(--dur-1) var(--ease-out); }
+[data-radix-popper-content-wrapper] > :is([data-state=delayed-open], [data-state=instant-open])[data-side=right] { animation: tip-in-right var(--dur-1) var(--ease-out); }
+
+/* Toasts slide up in and fade out */
+.toast-in { animation: fade-rise var(--dur-3) var(--ease-out); }
+.toast-out { animation: fade-out 180ms var(--ease-in) forwards; }
+
+/* Presses: buttons and touch rows dip slightly while held. Colours change smoothly on hover everywhere
+   (:where keeps this weaker than any element's own transition classes). */
+:where(a, button, [role=tab], [role=menuitem], [role=option], [role=radio]) {
+  transition: color var(--dur-1) ease, background-color var(--dur-1) ease, border-color var(--dur-1) ease, box-shadow var(--dur-1) ease, opacity var(--dur-1) ease, scale var(--dur-1) var(--ease-out);
+}
+:is(.btn, .btn-primary, .btn-outline, .btn-ghost) { transition-property: color, background-color, border-color, box-shadow, opacity, scale; transition-duration: var(--dur-1); }
+:is(.btn, .btn-primary, .btn-outline, .btn-ghost, .press):active:not(:disabled) { scale: .97; }
+.press { transition: background-color var(--dur-1) ease, color var(--dur-1) ease, scale var(--dur-1) var(--ease-out); }
+
+/* Lists cascade in: the first 8 items, 30 ms apart ("backwards": nothing stays applied once it's done, so text
+   renders exactly as before) */
+.stagger > * { animation: fade-rise var(--dur-3) var(--ease-out) backwards; }
+.stagger > :nth-child(2) { animation-delay: 30ms; }
+.stagger > :nth-child(3) { animation-delay: 60ms; }
+.stagger > :nth-child(4) { animation-delay: 90ms; }
+.stagger > :nth-child(5) { animation-delay: 120ms; }
+.stagger > :nth-child(6) { animation-delay: 150ms; }
+.stagger > :nth-child(7) { animation-delay: 180ms; }
+.stagger > :nth-child(n+8) { animation-delay: 210ms; }
+
+/* Scrolling: on phones and iPads, panels further down the page rise into view; on every device the header lifts
+   with a soft shadow once the page scrolls (scroll-driven: browsers without it simply show everything). The reveal
+   stays off on computers: a scroll-linked animation keeps text on its own layer, which softens ClearType text. */
+@keyframes reveal-up { from { opacity: 0; translate: 0 14px; } }
+@keyframes header-lift { from { box-shadow: 0 0 0 0 rgb(16 24 40 / 0); } to { box-shadow: 0 8px 18px -12px rgb(16 24 40 / .32); } }
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :is([data-layout=phone], [data-layout=tablet]) main .panel { animation: reveal-up linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+    /* (paused during the tour, so its spotlight scrolls to where each panel really sits) */
+    html:has([data-tips]) main .panel { animation: none; }
+  }
+  @supports (timeline-scope: --page) {
+    .frame-scroll { timeline-scope: --page; }
+    .page-scroller { scroll-timeline: --page block; }
+    .header-lift { animation: header-lift linear both; animation-timeline: --page; animation-range: 0 48px; }
+  }
+}
+
+/* The theme switch: the new theme spreads from where you tapped (lib/theme.ts) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: theme-reveal 420ms var(--ease-out); }
+@keyframes theme-reveal { from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); } to { clip-path: circle(var(--vt-r, 150%) at var(--vt-x, 50%) var(--vt-y, 50%)); } }
+
+/* Reduced motion: no motion at all. Animations and transitions are switched off rather than shortened: a short
+   duration on every element would start transitions where none were set (transition-property defaults to all, and
+   chart label measuring would read the old size), and near-instant nested animations can leave stale pixels behind.
+   Dialogs and menus still close properly (Radix closes at once when there's no animation). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  :is(.btn, .btn-primary, .btn-outline, .btn-ghost, .press):active { scale: none; }
+}
+
 /* Sliders drawn by hand (the track is the element's own gradient, the handle in --slider, e.g. the card's colour):
    the browser's own track turns dark with light colours like amber */
 input[type=range].slider { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 9999px; outline: none; }

@@ -17,8 +17,26 @@ function apply(mode: ThemeMode) {
   document.documentElement.classList.toggle('dark', dark);
 }
 
+// Where the last tap or click was, so a theme change can spread from it
+let lastPointer: { x: number; y: number } | null = null;
+window.addEventListener('pointerdown', (e) => { lastPointer = { x: e.clientX, y: e.clientY }; }, { capture: true, passive: true });
+
 export function setTheme(mode: ThemeMode) {
   try { localStorage.setItem('serendib_theme', mode); } catch (e) { /* storage blocked */ }
+  const willBeDark = mode === 'dark' || (mode === 'auto' && !!(mq && mq.matches));
+  // (older browsers don't have View Transitions; checked at run time)
+  const start = (document as unknown as { startViewTransition?: (update: () => void) => { finished: Promise<void> } }).startViewTransition;
+  const still = !!mq && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // A real change, with View Transitions available: the new theme spreads in a circle from the tap (index.css)
+  if (willBeDark !== document.documentElement.classList.contains('dark') && start && !still) {
+    const x = lastPointer ? lastPointer.x : innerWidth / 2, y = lastPointer ? lastPointer.y : innerHeight / 2;
+    const root = document.documentElement.style;
+    root.setProperty('--vt-x', x + 'px');
+    root.setProperty('--vt-y', y + 'px');
+    root.setProperty('--vt-r', Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 'px');
+    start.call(document, () => apply(mode)).finished.finally(() => ['--vt-x', '--vt-y', '--vt-r'].forEach((p) => root.removeProperty(p)));
+    return;
+  }
   apply(mode);
 }
 

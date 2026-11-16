@@ -1,5 +1,5 @@
 // Small building blocks shared by every desktop screen
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { cardTheme } from '../lib/derive';
 import type { Card } from '../lib/types';
@@ -170,8 +170,30 @@ export function Empty({ icon, title, body }: { icon: string; title: string; body
   );
 }
 
+// A number that counts up from zero when it first appears (600 ms, easing out), then shows later changes at once.
+// Whole steps while counting, so amounts don't flicker through cents. Instant with reduced motion.
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+export function CountUp({ value, format }: { value: number; format: (n: number) => string }) {
+  const counted = useRef(false);
+  const [shown, setShown] = useState(() => (reducedMotion() || !isFinite(value) || value === 0 ? value : 0));
+  useEffect(() => {
+    if (counted.current || reducedMotion() || !isFinite(value) || value === 0) { counted.current = true; setShown(value); return; }
+    counted.current = true;
+    const start = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - start) / 600);
+      setShown(p < 1 ? Math.round(value * (1 - Math.pow(1 - p, 3))) : value);
+      if (p < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{format(shown)}</>;
+}
+
 /* Toasts: bottom-right, one action (e.g. Undo) */
-interface ToastItem { id: number; text: string; tone: 'info' | 'warn'; action?: { label: string; run: () => void } }
+interface ToastItem { id: number; text: string; tone: 'info' | 'warn'; action?: { label: string; run: () => void }; leaving?: boolean }
 const ToastCtx = createContext<(text: string, opts?: { tone?: 'info' | 'warn'; action?: ToastItem['action'] }) => void>(() => {});
 export const useToast = () => useContext(ToastCtx);
 
@@ -181,6 +203,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((text: string, opts: { tone?: 'info' | 'warn'; action?: ToastItem['action'] } = {}) => {
     const id = next.current++;
     setItems((l) => [...l.slice(-2), { id, text, tone: opts.tone || 'info', action: opts.action }]);
+    // Fades out (toast-out) for a moment before it's removed
+    setTimeout(() => setItems((l) => l.map((t) => (t.id === id ? { ...t, leaving: true } : t))), (opts.action ? 6000 : 3800) - 180);
     setTimeout(() => setItems((l) => l.filter((t) => t.id !== id)), opts.action ? 6000 : 3800);
   }, []);
   return (
@@ -188,7 +212,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex w-[360px] flex-col gap-2 phone:inset-x-3 phone:bottom-[calc(84px+env(safe-area-inset-bottom))] phone:w-auto" role="status" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className="pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-[13px] text-ink shadow-pop phone:rounded-2xl phone:py-3.5">
+          <div key={t.id} className={'pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-4 py-3 text-[13px] text-ink shadow-pop phone:rounded-2xl phone:py-3.5 ' + (t.leaving ? 'toast-out' : 'toast-in')}>
             <Icon name={t.tone === 'warn' ? 'warning' : 'check_circle'} className={t.tone === 'warn' ? 'text-warn' : 'text-brand-ink'} fill />
             <span className="flex-1">{t.text}</span>
             {t.action && (

@@ -15,7 +15,7 @@ import { ActivityTable } from '../components/ActivityTable';
 import { amountDueNow, cardApr, cardCycle, cardPayoff, cardPeriod, cardTheme, minPaymentFor, today, util } from '../lib/derive';
 import { fmtAmt, fmtShort, longDate, pct, shortDate } from '../lib/format';
 import { categoryHex } from '../lib/colors';
-import { Chip, Empty, Icon, Panel, UtilBar, useToast } from '../components/ui';
+import { Chip, CountUp, Empty, Icon, Panel, UtilBar, useToast } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import { CardFace } from './Cards';
 import type { Card, Recurring } from '../lib/types';
@@ -119,15 +119,15 @@ function Header({ card }: { card: Card }) {
           </div>
         </div>
         <div data-tip="card-stats" className="mt-auto grid grid-cols-4 gap-6 pt-5 tablet:grid-cols-2 tablet:gap-x-6 tablet:gap-y-4 phone:grid-cols-2 phone:gap-x-4 phone:gap-y-4 phone:pt-4 [&_p.num]:phone:text-[20px]">
-          <div><p className="label">Balance</p><p className="num mt-1 text-[24px] font-bold tracking-tight">{fmtAmt(card.balance)}</p></div>
+          <div><p className="label">Balance</p><p className="num mt-1 text-[24px] font-bold tracking-tight"><CountUp value={card.balance} format={fmtAmt} /></p></div>
           <div>
             <p className="label">Utilisation</p>
             <p className={'num mt-1 text-[24px] font-bold tracking-tight ' + (u >= 75 ? 'text-danger' : '')}>{pct(u)}</p>
             <UtilBar value={u} card={card} className="mt-1" />
           </div>
-          <div><p className="label">Due now</p><p className={'num mt-1 text-[24px] font-bold tracking-tight ' + (st?.overdue ? 'text-danger' : '')}>{fmtAmt(due)}</p>
+          <div><p className="label">Due now</p><p className={'num mt-1 text-[24px] font-bold tracking-tight ' + (st?.overdue ? 'text-danger' : '')}><CountUp value={due} format={fmtAmt} /></p>
             <p className="text-[12px] text-faint">{st?.next ? 'by ' + shortDate(st.next.s.due) : st?.overdue ? 'since ' + shortDate(st.overdue.since) : 'Nothing due'}</p></div>
-          <div><p className="label">This month’s plan</p><p className="num mt-1 text-[24px] font-bold tracking-tight text-brand-ink">{fmtAmt(p.alloc[card.id] || 0)}</p>
+          <div><p className="label">This month’s plan</p><p className="num mt-1 text-[24px] font-bold tracking-tight text-brand-ink"><CountUp value={p.alloc[card.id] || 0} format={fmtAmt} /></p>
             <p className="text-[12px] text-faint">{p.order.length > 1 && rank >= 0 ? '#' + (rank + 1) + ' of ' + p.order.length + ' in your plan' : ''}</p></div>
         </div>
       </div>

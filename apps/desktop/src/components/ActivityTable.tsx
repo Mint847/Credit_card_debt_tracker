@@ -179,7 +179,7 @@ export function ActivityTable({ cards, single, focusSearch }: { cards: Card[]; s
               </tr>
             ))}
           </thead>
-          <tbody>
+          <tbody className="stagger">
             {table.getRowModel().rows.map((r) => (
               <tr key={r.original.card.id + r.original.e.id} className="group cursor-pointer border-b border-line last:border-0 hover:bg-sunken"
                 onClick={() => openLog({ editing: { id: r.original.e.id, cardId: r.original.card.id } })}>

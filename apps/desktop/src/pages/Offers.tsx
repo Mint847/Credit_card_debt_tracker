@@ -118,7 +118,7 @@ export function Offers() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="offers-list">
+        <div className="stagger grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="offers-list">
           {view.shown.map((o: any) => <OfferCard key={o.id} offer={o} cards={view.userCards} onTerms={() => setTerms(o)} />)}
         </div>
       )}

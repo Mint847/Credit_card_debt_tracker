@@ -137,7 +137,7 @@ export function LogDialog({ request, onClose }: { request: LogRequest | null; on
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="motion-overlay fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" />
         <Dialog.Content style={frame.style} className={frame.className}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save(false); }}>
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-panel px-6 py-4 phone:border-b-0 phone:px-5 phone:pb-2 phone:pt-5">

@@ -282,7 +282,7 @@ export function Spaces() {
         {app.spaces.length === 0 ? (
           <div className="panel"><Empty icon="savings" title="No Spaces Found" body="Create a space to start allocating money for upcoming bills and emergencies." /></div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="space-list">
+          <div className="stagger grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 phone:grid-cols-1 phone:gap-3" data-tip="space-list">
             {app.spaces.map((s) => {
               const st = spaceStatusLine(s, today, fmtAmt);
               const on = selected && s.id === selected.id;
@@ -312,7 +312,7 @@ export function Spaces() {
         {recent.length > 0 && (
           // Folds away like the Overview's sections (remembered on this device)
           <Panel className="mt-5" title="Recent activity" fold="space-recent" summary={'Latest ' + shortDate(recent[0].h.date)} bodyClass="px-5 pb-3 phone:px-4">
-            <ul className="divide-y divide-line">
+            <ul className="stagger divide-y divide-line">
               {recent.map(({ h, s: sp }) => {
                 const l = spaceHistoryLabel(h);
                 return (

@@ -42,7 +42,7 @@ export function AlertList({ compact }: { compact?: boolean }) {
   const h = help ? (HELP_TEXTS as any)[help] : null;
   return (
     <>
-      <ul className="space-y-1">
+      <ul className="stagger space-y-1">
         {items.map((a: any) => {
           const st = STYLE[a.tone] || STYLE.due;
           return (
