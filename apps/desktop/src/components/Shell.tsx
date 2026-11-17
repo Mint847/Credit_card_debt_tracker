@@ -6,6 +6,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Popover from '@radix-ui/react-popover';
 import { Command } from 'cmdk';
 import { useApp, setStrategy, signOut, downloadBackup, resetCardData, replayGuide } from '../lib/store';
+import { DEMO } from '../lib/demo';
 import { cardName, plan, util } from '../lib/derive';
 import { fmtAmt } from '../lib/format';
 import { CardDot, Icon, Tip, useToast } from './ui';
@@ -116,7 +117,7 @@ function Sidebar() {
               <MenuItem icon="keyboard" label="Keyboard shortcuts" kbd="?" onSelect={openShortcuts} />
               <MenuItem icon="school" label="Replay app guide" onSelect={() => { replayGuide(); navigate('/'); }} />
               <Dropdown.Separator className="my-1 h-px bg-line" />
-              <MenuItem icon="logout" label="Sign out" onSelect={() => { signOut(); }} />
+              <MenuItem icon="logout" label={DEMO ? 'Exit demo' : 'Sign out'} onSelect={() => { signOut(); }} />
             </Dropdown.Content>
           </Dropdown.Portal>
         </Dropdown.Root>

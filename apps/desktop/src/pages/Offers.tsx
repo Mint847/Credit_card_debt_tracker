@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { offersView, offerCardInfo, offerTerms, cardTheme } from '@serendib/core';
 import { useApp } from '../lib/store';
+import { DEMO } from '../lib/demo';
 import { useOffers, fetchOffers, isAdmin } from '../lib/offers';
 import { Modal } from '../components/CardDialogs';
 import { useCardDialogs } from '../components/CardDialogs';
@@ -101,7 +102,7 @@ export function Offers() {
         )}
       </div>
 
-      {view.samples && <p className="rounded-xl bg-sunken px-4 py-2.5 text-[12px] text-muted">Sample offers: live bank promotions will appear here once they are published.</p>}
+      {view.samples && <p className="rounded-xl bg-sunken px-4 py-2.5 text-[12px] text-muted">{DEMO ? 'Sample offers for this demo. Live bank promotions will appear here once they are published.' : 'Sample offers: live bank promotions will appear here once they are published.'}</p>}
 
       {view.empty ? (
         <div className="panel flex flex-col items-center px-6 py-14 text-center">

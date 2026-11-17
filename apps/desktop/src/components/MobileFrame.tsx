@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink, useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { useApp, signOut, downloadBackup, resetCardData, replayGuide } from '../lib/store';
+import { DEMO } from '../lib/demo';
 import { cardName } from '../lib/derive';
 import { getTheme, setTheme, type ThemeMode } from '../lib/theme';
 import { CardDot, Icon, Segmented, useToast } from './ui';
@@ -60,7 +61,7 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
       <div className="mx-5 my-1 h-px bg-line phone:hidden" />
       <SheetGroup>
         <SheetItem icon="restart_alt" label="Reset my card data" danger onClick={() => { onClose(); const d = resetCardData(); if (d.text) toast(d.text); }} />
-        <SheetItem icon="logout" label="Sign out" danger onClick={() => { onClose(); signOut(); }} />
+        <SheetItem icon="logout" label={DEMO ? 'Exit demo' : 'Sign out'} danger onClick={() => { onClose(); signOut(); }} />
       </SheetGroup>
       <p className="flex items-start gap-1.5 px-5 pb-1 pt-2 text-[11px] text-faint"><Icon name="lock" size={14} className="text-brand-ink" />Private by design. Serendib never asks for card numbers or passwords.</p>
     </Sheet>

@@ -28,12 +28,12 @@ const SPECS: Spec[] = [
   { id: 'c_com', bank: 'Commercial Bank of Ceylon', nick: 'Visa Gold', color: 'teal', limit: 300000, opening: 118000, apr: 28,
     statementDay: 25, dueDay: 15, last4: '4821', spendPerWeek: 2, cats: ['groceries', 'dining', 'fuel', 'bills'],
     budgets: { groceries: 40000, dining: 15000, fuel: 20000 } },
-  { id: 'c_hnb', bank: 'Hatton National Bank', nick: 'Platinum', color: 'rose', limit: 550000, opening: 188000, apr: 26,
+  { id: 'c_hnb', bank: 'Hatton National Bank', nick: 'Platinum', color: 'rose', limit: 550000, opening: 188000, apr: 28,
     statementDay: 5, dueDay: 25, last4: '7310', spendPerWeek: 1.5, cats: ['shopping', 'travel', 'dining', 'entertainment'],
     budgets: { shopping: 30000, travel: 60000 } },
   { id: 'c_sam', bank: 'Sampath Bank', nick: 'Ultramiles', color: 'amber', limit: 200000, opening: 96000, apr: 28,
     statementDay: 18, dueDay: 8, last4: '0592', spendPerWeek: 0.8, cats: ['fuel', 'groceries', 'health'], skipLastPayment: true },
-  { id: 'c_ntb', bank: 'Nations Trust Bank', nick: 'American Express Gold', color: 'indigo', limit: 400000, opening: 31000, apr: 24,
+  { id: 'c_ntb', bank: 'Nations Trust Bank', nick: 'American Express Gold', color: 'indigo', limit: 400000, opening: 31000, apr: 26,
     statementDay: 10, dueDay: 1, last4: '1005', spendPerWeek: 1, cats: ['dining', 'shopping', 'bills'], targetPayment: 15000 }
 ];
 

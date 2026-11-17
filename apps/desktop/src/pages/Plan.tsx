@@ -1,13 +1,13 @@
 // Plan: this month's repayment strategy, as the phone app's Cards Overview works it out (budget,
 // pay-first order, each card's amount, interest bleed, debt-free target), with the strategy choice
-import { useId, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cardApr, minPaymentFor } from '@serendib/core';
 import { useApp, setStrategy } from '../lib/store';
 import { cardName, cardTheme } from '../lib/derive';
 import { fmtAmt } from '../lib/format';
 import { useLayout } from '../lib/layout';
-import { CardTile, Chip, CountUp, Empty, Icon, MetricTile, Panel } from '../components/ui';
+import { CardTile, Chip, CountUp, Empty, Icon, MetricTile, Panel, useFlip } from '../components/ui';
 import { usePlan, useWorkspace } from '../components/Shell';
 import type { Card, Strategy } from '../lib/types';
 import type { Plan as PlanData } from '../lib/derive';
@@ -22,9 +22,19 @@ const STRATEGIES: { value: Strategy; title: string; icon: string; short: string;
     phoneName: 'Snowball', phoneSub: 'smallest balance first', phoneDesc: 'Clear the smallest balance first. Quick wins keep you going.' }
 ];
 
+// The list cascades in when the page opens; once that's done the class goes, so a row that changes places (a new
+// strategy) isn't replayed by the browser as a new element
+function useCascade() {
+  const [on, setOn] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setOn(false), 700); return () => clearTimeout(t); }, []);
+  return on ? 'stagger ' : '';
+}
+
 export function Plan() {
   const app = useApp();
   const p = usePlan();
+  const cascade = useCascade();
+  const flip = useFlip<HTMLUListElement>(p.order.map((c) => c.id).join());
   const navigate = useNavigate();
   const { openLog } = useWorkspace();
   const settled = app.cards.filter((c) => c.balance === 0);
@@ -39,7 +49,7 @@ export function Plan() {
       <div className="flex items-end justify-between phone:flex-col phone:items-stretch phone:gap-3">
         <div>
           <h1 className="font-serif text-[30px] font-medium leading-tight tracking-tight phone:text-[27px]">Plan</h1>
-          <p className="mt-1 text-[13px] text-faint">This month’s repayment strategy · {strat.title}</p>
+          <p className="mt-1 text-[13px] text-faint">This month’s repayment strategy · <span key={strat.value} className="swap-in inline-block">{strat.title}</span></p>
         </div>
         {target && (
           <button type="button" className="btn-primary phone:h-11 phone:justify-center" data-tip="plan-pay" onClick={() => openLog({ type: 'payment', cardId: target.id, prefill: p.alloc[target.id] })}>
@@ -52,8 +62,8 @@ export function Plan() {
         {([
           ['Total aggregate debt', <CountUp value={p.totalDebt} format={fmtAmt} />, 'Total available credit limit: ' + fmtAmt(p.totalLimit)],
           ['Total monthly commitment', app.cards.length ? <CountUp value={p.commitment} format={fmtAmt} /> : '--', 'Budget ' + fmtAmt(p.budget) + ' (25% of income, or your targets)'],
-          ['Total interest bleed', app.cards.length ? <CountUp value={p.interestMonth} format={fmtAmt} /> : '--', 'Estimated interest this month at your cards’ rates'],
-          ['Debt-free target', p.debtFreeLabel, 'At your current monthly plan']
+          ['Total interest bleed', app.cards.length ? <CountUp value={p.interestMonth} format={fmtAmt} tween /> : '--', 'Estimated interest this month at your cards’ rates'],
+          ['Debt-free target', <span key={p.debtFreeLabel} className="swap-in inline-block">{p.debtFreeLabel}</span>, 'At your current monthly plan']
         ] as [string, ReactNode, string][]).map(([label, value, sub], i) => (
           <div key={label} className="px-5 py-4 compact:bg-panel phone:px-4 phone:py-3.5">
             <p className="label">{label}</p>
@@ -65,10 +75,10 @@ export function Plan() {
 
       <div className="grid grid-cols-3 gap-5 compact:grid-cols-1 phone:gap-4">
         <Panel tip="plan-alloc" className="col-span-2 compact:col-span-1" title={<span className="flex items-center gap-2"><Icon name="bolt" size={18} className="text-brand-ink" />Optimized allocation</span>}
-          action={<Chip tone="info">{strat.title}</Chip>} bodyClass="px-3 pb-3">
-          <p className="mb-3 px-2 text-[13px] text-muted">{strat.desc}</p>
+          action={<span key={strat.value} className="swap-in"><Chip tone="info">{strat.title}</Chip></span>} bodyClass="px-3 pb-3">
+          <p key={strat.value} className="swap-in mb-3 px-2 text-[13px] text-muted">{strat.desc}</p>
           {app.cards.length === 0 && <Empty icon="credit_card" title="No cards added" body="Add a card to see this month’s plan." />}
-          <ul className="stagger space-y-1">
+          <ul ref={flip} className={cascade + 'space-y-1'}>
             {p.order.concat(settled).map((card, index) => {
               const isTarget = index === 0 && card.balance > 0;
               const isSettled = card.balance === 0;
@@ -76,23 +86,23 @@ export function Plan() {
               const min = isSettled ? 0 : minPaymentFor(card);
               const surplus = alloc > min + 0.5;
               return (
-                <li key={card.id}>
+                <li key={card.id} data-flip={card.id}>
                   <button type="button" onClick={() => navigate('/cards/' + card.id)}
                     className={'flex w-full items-center gap-3 rounded-xl px-3 text-left transition-colors ' +
                       (isTarget ? 'border border-brand/20 bg-brand/[0.07] py-3 hover:bg-brand/10' : 'py-2.5 hover:bg-sunken') + (isSettled ? ' opacity-60' : '')}>
                     <span className={'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ' + (isTarget ? 'bg-brand text-white' : 'bg-sunken text-faint')}>{index + 1}</span>
                     <span className="phone:hidden"><CardTile card={card} size={34} /></span>
                     <span className="min-w-0 flex-1">
-                      {isTarget && <span className="mb-0.5 inline-block rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white">Pay first</span>}
+                      {isTarget && <span className="pill-in mb-0.5 inline-block rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white">Pay first</span>}
                       <span className="block truncate text-[13px] font-semibold">{card.bank} {card.nick}</span>
                       <span className="block text-[12px] text-faint">
-                        {isTarget ? 'Direct all surplus here · ' + cardApr(card) + '% APR' : isSettled ? 'No payment due' : (surplus ? 'Minimum + surplus' : 'Minimum payment') + ' · ' + cardApr(card) + '% APR'}
+                        <span key={isTarget ? 't' : surplus ? 's' : 'm'} className="swap-in inline-block">{isTarget ? 'Direct all surplus here · ' + cardApr(card) + '% APR' : isSettled ? 'No payment due' : (surplus ? 'Minimum + surplus' : 'Minimum payment') + ' · ' + cardApr(card) + '% APR'}</span>
                       </span>
                     </span>
                     {isSettled ? <Chip tone="ok">Settled</Chip> : (
                       <span className="text-right">
-                        <span className={'num block font-bold ' + (isTarget ? 'text-[16px] text-brand-ink' : 'text-[14px]')}>{fmtAmt(isTarget || surplus ? alloc : min)}</span>
-                        {isTarget && <span className="block text-[10px] font-semibold uppercase tracking-wide text-faint">Target</span>}
+                        <span className={'num block font-bold ' + (isTarget ? 'text-[16px] text-brand-ink' : 'text-[14px]')}><CountUp value={isTarget || surplus ? alloc : min} format={fmtAmt} tween /></span>
+                        {isTarget && <span className="pill-in block text-[10px] font-semibold uppercase tracking-wide text-faint">Target</span>}
                       </span>
                     )}
                     <Icon name="chevron_right" size={18} className="text-faint" />
@@ -122,7 +132,7 @@ export function Plan() {
                       <span className="block text-[13px] font-semibold">{s.title}</span>
                       <span className="mt-0.5 block text-[12px] text-faint">{s.short}</span>
                     </span>
-                    {on && <Icon name="check_circle" fill className="text-brand-ink" />}
+                    {on && <Icon name="check_circle" fill className="pill-in text-brand-ink" />}
                   </button>
                 );
               })}
@@ -155,6 +165,8 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
   const { openLog } = useWorkspace();
   const target = p.order[0];
   const strat = STRATEGIES.find((s) => s.value === app.strategy) || STRATEGIES[0];
+  const cascade = useCascade();
+  const flip = useFlip<HTMLUListElement>(p.order.map((c) => c.id).join());
   const has = app.cards.length > 0;
   const income = parseFloat(app.profile.income) || 175000;
   const extra = Math.max(0, p.commitment - minTotal);
@@ -168,7 +180,7 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
     <div className="space-y-4 px-4 pb-6 pt-5">
       <div>
         <h1 className="text-[26px] font-bold leading-tight tracking-tight">Plan</h1>
-        <p className="mt-0.5 text-sm text-faint">{strat.phoneName} · {strat.phoneSub}</p>
+        <p className="mt-0.5 text-sm text-faint"><span key={strat.value} className="swap-in inline-block">{strat.phoneName} · {strat.phoneSub}</span></p>
       </div>
 
       {/* This month: the amount, the card to pay first and the split across cards */}
@@ -178,8 +190,8 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
           <>
             {p.commitment > 0 ? <SplitRing p={p} /> : <p className="num mt-1 text-[34px] font-extrabold leading-none tracking-tight">{fmtAmt(p.commitment)}</p>}
             <p className="mt-4 flex items-center gap-2 text-sm">
-              <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">Pay first</span>
-              <span className="min-w-0 flex-1 truncate font-semibold">{cardName(target)}</span>
+              <span className="pill-in shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">Pay first</span>
+              <span key={target.id} className="swap-in min-w-0 flex-1 truncate font-semibold">{cardName(target)}</span>
             </p>
             <button type="button" className="btn-primary mt-4 w-full justify-center" data-tip="plan-pay"
               onClick={() => openLog({ type: 'payment', cardId: target.id, prefill: p.alloc[target.id] })}>
@@ -196,8 +208,8 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
 
       <div className="grid grid-cols-2 gap-3">
         <MetricTile label="Total debt" value={<CountUp value={p.totalDebt} format={fmtAmt} />} sub={'of ' + fmtAmt(p.totalLimit) + ' limit'} />
-        <MetricTile accent="danger" label="Interest" value={has ? <CountUp value={p.interestMonth} format={fmtAmt} /> : '--'} sub="This month, at your cards’ rates" />
-        <MetricTile label="Debt-free" value={p.debtFreeLabel} sub="On this plan" />
+        <MetricTile accent="danger" label="Interest" value={has ? <CountUp value={p.interestMonth} format={fmtAmt} tween /> : '--'} sub="This month, at your cards’ rates" />
+        <MetricTile label="Debt-free" value={<span key={p.debtFreeLabel} className="swap-in inline-block">{p.debtFreeLabel}</span>} sub="On this plan" />
         <MetricTile label="Budget" value={<CountUp value={p.budget} format={fmtAmt} />} sub="Each month" />
       </div>
 
@@ -205,17 +217,17 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
       <section className="panel p-4" data-tip="plan-alloc">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-bold">Where your money goes</h2>
-          <Chip tone="info">{strat.phoneName}</Chip>
+          <span key={strat.value} className="swap-in"><Chip tone="info">{strat.phoneName}</Chip></span>
         </div>
-        <p className="mt-1 text-sm text-muted">{strat.phoneDesc}</p>
+        <p key={strat.value} className="swap-in mt-1 text-sm text-muted">{strat.phoneDesc}</p>
         {!has && <Empty icon="credit_card" title="No cards added" body="Add a card to see this month’s plan." />}
-        <ul className="stagger mt-3 space-y-2">
+        <ul ref={flip} className={cascade + 'mt-3 space-y-2'}>
           {p.order.concat(settled).map((card, index) => {
             const isTarget = index === 0 && card.balance > 0;
             const isSettled = card.balance === 0;
             const surplus = !isSettled && (p.alloc[card.id] || 0) > minPaymentFor(card) + 0.5;
             return (
-              <li key={card.id}>
+              <li key={card.id} data-flip={card.id}>
                 <button type="button" onClick={() => navigate('/cards/' + card.id)}
                   className={'flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-colors ' +
                     'bg-sunken active:bg-line/70' + (isSettled ? ' opacity-70' : '')}>
@@ -229,11 +241,11 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
                   <span className="min-w-0 flex-1">
                     <span className="block break-words text-[15px] font-semibold leading-snug">{card.bank} {card.nick}</span>
                     <span className="mt-0.5 block text-xs text-faint">
-                      {isSettled ? 'Paid off' : (isTarget ? 'All extra money goes here' : surplus ? 'Minimum + extra' : 'Minimum payment') + ' · ' + cardApr(card) + '% APR'}
+                      <span key={isTarget ? 't' : surplus ? 's' : 'm'} className="swap-in inline-block">{isSettled ? 'Paid off' : (isTarget ? 'All extra money goes here' : surplus ? 'Minimum + extra' : 'Minimum payment') + ' · ' + cardApr(card) + '% APR'}</span>
                     </span>
                   </span>
                   {isSettled ? <Chip tone="ok" icon="check">Settled</Chip> : (
-                    <span className={'num shrink-0 text-right font-bold ' + (isTarget ? 'text-lg text-brand-ink' : 'text-base')}>{fmtAmt(amountFor(card))}</span>
+                    <span className={'num shrink-0 text-right font-bold ' + (isTarget ? 'text-lg text-brand-ink' : 'text-base')}><CountUp value={amountFor(card)} format={fmtAmt} tween /></span>
                   )}
                 </button>
               </li>
@@ -257,7 +269,7 @@ function PlanPhone({ p, settled, minTotal }: { p: PlanData; settled: Card[]; min
               <button key={s.value} type="button" role="radio" aria-checked={on} aria-label={s.title} onClick={() => { if (!on) setStrategy(s.value); }}
                 className={'relative flex flex-col items-start rounded-2xl p-3.5 text-left transition-colors ' + (on ? 'bg-brand/[0.08]' : 'bg-sunken active:bg-line/70')}>
                 <span className={'flex h-9 w-9 items-center justify-center rounded-xl ' + (on ? 'bg-brand text-white' : 'bg-panel text-muted')}><Icon name={s.icon} size={19} /></span>
-                {on && <Icon name="check_circle" fill size={20} className="absolute right-3 top-3 text-brand-ink" />}
+                {on && <Icon name="check_circle" fill size={20} className="pill-in absolute right-3 top-3 text-brand-ink" />}
                 <span className="mt-2.5 text-[15px] font-bold">{s.phoneName}</span>
                 <span className="mt-0.5 text-xs leading-snug text-faint">{s.phoneDesc}</span>
               </button>
@@ -298,6 +310,7 @@ interface Slice { id: string; name: string; color: string; amount: number; other
 function SplitRing({ p }: { p: PlanData }) {
   const [sel, setSel] = useState<string | null>(null);
   const maskId = useId();
+  const cascade = useCascade();
   const rows: Slice[] = p.order.map((c) => ({ id: c.id, name: cardName(c), color: cardTheme(c).hex, amount: p.alloc[c.id] || 0 }))
     .filter((r) => r.amount > 0).sort((a, b) => b.amount - a.amount);
   const rest = rows.slice(4);
@@ -305,6 +318,7 @@ function SplitRing({ p }: { p: PlanData }) {
     ? [...rows.slice(0, 4), { id: 'other', name: 'Other', color: 'rgb(var(--faint))', amount: rest.reduce((s, r) => s + r.amount, 0), others: rest.map((r) => r.name) }]
     : rows;
   const total = slices.reduce((s, r) => s + r.amount, 0);
+  const flip = useFlip<HTMLUListElement>(slices.map((x) => x.id).join())
   const SIZE = 140, SW = 12, R = (SIZE - SW) / 2, C = 2 * Math.PI * R, GAP = 5;
   const many = slices.length > 1;
   let at = 0;
@@ -329,7 +343,7 @@ function SplitRing({ p }: { p: PlanData }) {
                 strokeLinecap={many ? 'round' : 'butt'}
                 strokeDasharray={many ? Math.max(0.01, a.len - GAP - SW) + ' ' + C : undefined}
                 strokeDashoffset={many ? -(a.start + (GAP + SW) / 2) : undefined}
-                opacity={sel && sel !== a.id ? 0.25 : 1} className="cursor-pointer transition-opacity duration-200" onClick={() => toggle(a.id)} />
+                opacity={sel && sel !== a.id ? 0.25 : 1} className="arc-glide cursor-pointer" onClick={() => toggle(a.id)} />
             ))}
           </g>
         </svg>
@@ -339,9 +353,9 @@ function SplitRing({ p }: { p: PlanData }) {
           <span className="max-w-[108px] truncate text-xs text-faint">{shown ? shown.name.split(' ')[0] + ' · ' + share(shown.amount) : 'this month'}</span>
         </div>
       </div>
-      <ul className="stagger min-w-0 flex-1 space-y-0.5">
+      <ul ref={flip} className={cascade + 'min-w-0 flex-1 space-y-0.5'}>
         {slices.map((s) => (
-          <li key={s.id}>
+          <li key={s.id} data-flip={s.id}>
             <button type="button" aria-pressed={sel === s.id} onClick={() => toggle(s.id)}
               className={'flex w-full items-start gap-2 rounded-xl px-2 py-1.5 text-left transition-opacity duration-200 ' + (sel === s.id ? 'bg-sunken' : '') + (sel && sel !== s.id ? ' opacity-40' : '')}>
               <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: s.color }} />

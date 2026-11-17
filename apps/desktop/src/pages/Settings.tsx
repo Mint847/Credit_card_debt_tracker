@@ -12,6 +12,7 @@ import {
   applyRestore, accountData, currentUser, signOut, replayGuide, type RestorePlan, type Done
 } from '../lib/store';
 import { sendOwnPasswordReset, deleteAccount } from '../lib/auth';
+import { DEMO } from '../lib/demo';
 import { isAdmin } from '../lib/offers';
 import { getTheme, setTheme, type ThemeMode } from '../lib/theme';
 import { Modal, Actions, ErrorLine } from '../components/CardDialogs';
@@ -284,8 +285,8 @@ export function Settings() {
           <div data-tip="set-replay"><Row icon="school" title="Replay app guide" sub="Walk through setup and screen tips again" onClick={() => { replayGuide(); navigate('/'); }} /></div>
           <Row icon="keyboard" title="Keyboard shortcuts" sub="Ctrl K, 1 to 5, L, P, / and ?" onClick={openShortcuts} />
           {u && prov === 'password' && <Row icon="key" title="Change password" sub="We’ll email you a secure reset link" onClick={async () => { const m = await sendOwnPasswordReset(); if (m) toast(m); }} />}
-          <Row icon="delete_forever" title="Delete account" sub="Permanently remove your account and data" danger onClick={() => setDeleting(true)} />
-          <Row icon="logout" title="Sign out" danger onClick={() => { signOut(); }} />
+          {!DEMO && <Row icon="delete_forever" title="Delete account" sub="Permanently remove your account and data" danger onClick={() => setDeleting(true)} />}
+          <Row icon="logout" title={DEMO ? 'Exit demo' : 'Sign out'} danger onClick={() => { signOut(); }} />
         </Section>
         <p className="text-center text-[11px] text-faint">Serendib Debt Health • v2.4.1 (Build 118)<br />Compliant with Central Bank of Sri Lanka Consumer Protection Directives</p>
       </div>

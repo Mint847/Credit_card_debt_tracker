@@ -212,6 +212,12 @@ main[data-motion=push] > * { animation: push-in var(--dur-3) var(--ease-out); }
 .stagger > :nth-child(7) { animation-delay: 180ms; }
 .stagger > :nth-child(n+8) { animation-delay: 210ms; }
 
+/* Changing a choice (the payoff strategy): new text fades up, a new badge pops, the ring's arcs glide to their new
+   share. Rows that change places slide (useFlip) and amounts count to the new number (CountUp tween). */
+.swap-in { animation: fade-rise var(--dur-2) var(--ease-out) backwards; }
+.pill-in { animation: pop-in var(--dur-2) var(--ease-out) backwards; }
+.arc-glide { transition: opacity .2s ease, stroke-dasharray .5s var(--ease-out), stroke-dashoffset .5s var(--ease-out); }
+
 /* Scrolling: on phones and iPads, panels further down the page rise into view; on every device the header lifts
    with a soft shadow once the page scrolls (scroll-driven: browsers without it simply show everything). The reveal
    stays off on computers: a scroll-linked animation keeps text on its own layer, which softens ClearType text. */

@@ -5,6 +5,8 @@ import { SignIn } from './pages/SignIn';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Shell } from './components/Shell';
 import { ToastProvider, useToast } from './components/ui';
+import { DemoBar } from './components/DemoBar';
+import { DEMO } from './lib/demo';
 
 // Each page is its own file, so the sign-in page and the first screen load quickly. Once the workspace
 // is up, the rest load in the background, so moving between pages stays instant.
@@ -54,7 +56,10 @@ export function App() {
       <Tooltip.Provider>
         <ToastProvider>
           <Notices />
-          {app.status === 'starting' ? <Splash /> : app.status === 'signedOut' ? <SignIn /> : <Workspace />}
+          {app.status === 'starting' ? <Splash /> : app.status === 'signedOut' ? <SignIn /> : DEMO ? (
+            // The public demo: a strip across the top, then the same workspace
+            <div className="flex h-full flex-col"><DemoBar /><div className="relative min-h-0 flex-1"><Workspace /></div></div>
+          ) : <Workspace />}
         </ToastProvider>
       </Tooltip.Provider>
     </BrowserRouter>

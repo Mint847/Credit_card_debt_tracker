@@ -13,6 +13,7 @@ import {
   buildBackupDoc, readBackup, restoreDiff, planRestore, readSafetyCopies, safetyCopyToBackup, restoreDoneText, backupFileName, BACKUP_MAX_BYTES
 } from '@serendib/core';
 import { auth, db, DEMO } from './firebase';
+import { exitDemo } from './demo';
 import { sampleAccount } from './sample';
 import type { Card, Profile, Space, Strategy } from './types';
 
@@ -238,6 +239,7 @@ export function setPendingName(n: { firstName: string; lastName: string } | null
 
 // Sign out; the cloud holds the data, so this device's copy is removed (it may be shared)
 export function signOut(): Promise<void> {
+  if (DEMO) { exitDemo(); return Promise.resolve(); } // the demo has no account: this leaves it
   if (!auth) return Promise.resolve();
   const u = auth.currentUser;
   if (u && !sync.isCloudReady()) {

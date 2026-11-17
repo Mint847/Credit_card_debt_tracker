@@ -1,5 +1,5 @@
 // Small building blocks shared by every desktop screen
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { cardTheme } from '../lib/derive';
 import type { Card } from '../lib/types';
@@ -173,23 +173,54 @@ export function Empty({ icon, title, body }: { icon: string; title: string; body
 // A number that counts up from zero when it first appears (600 ms, easing out), then shows later changes at once.
 // Whole steps while counting, so amounts don't flicker through cents. Instant with reduced motion.
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-export function CountUp({ value, format }: { value: number; format: (n: number) => string }) {
+// With `tween`, a later change counts from the old number to the new one (400 ms) instead of snapping.
+export function CountUp({ value, format, tween }: { value: number; format: (n: number) => string; tween?: boolean }) {
   const counted = useRef(false);
-  const [shown, setShown] = useState(() => (reducedMotion() || !isFinite(value) || value === 0 ? value : 0));
+  const [shown, setShownState] = useState(() => (reducedMotion() || !isFinite(value) || value === 0 ? value : 0));
+  const now = useRef(shown);
+  const setShown = (n: number) => { now.current = n; setShownState(n); };
   useEffect(() => {
-    if (counted.current || reducedMotion() || !isFinite(value) || value === 0) { counted.current = true; setShown(value); return; }
+    const first = !counted.current;
     counted.current = true;
+    const from = first ? 0 : tween ? now.current : value;
+    if (reducedMotion() || !isFinite(value) || from === value || (first && value === 0)) { setShown(value); return; }
+    const span = first ? 600 : 400;
     const start = performance.now();
     let frame = 0;
-    const step = (now: number) => {
-      const p = Math.min(1, (now - start) / 600);
-      setShown(p < 1 ? Math.round(value * (1 - Math.pow(1 - p, 3))) : value);
+    const step = (t: number) => {
+      const p = Math.min(1, (t - start) / span);
+      setShown(p < 1 ? Math.round(from + (value - from) * (1 - Math.pow(1 - p, 3))) : value);
       if (p < 1) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [value]);
   return <>{format(shown)}</>;
+}
+
+// Rows that change places slide to their new spot instead of jumping (FLIP). Put the ref on the list, give each
+// child data-flip={id}, and pass a key that changes when the order does. Nothing moves on the first render.
+export function useFlip<T extends HTMLElement>(key: string) {
+  const ref = useRef<T>(null);
+  const tops = useRef<Map<string, number>>(new Map());
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rows = Array.from(el.children) as HTMLElement[];
+    const next = new Map<string, number>();
+    rows.forEach((r) => { if (r.dataset.flip) next.set(r.dataset.flip, r.offsetTop); });
+    if (!reducedMotion()) {
+      rows.forEach((r) => {
+        const id = r.dataset.flip, was = id ? tops.current.get(id) : undefined;
+        const dy = id && was !== undefined ? was - (next.get(id) as number) : 0;
+        if (Math.abs(dy) > 1 && typeof r.animate === 'function') {
+          r.animate([{ translate: '0 ' + dy + 'px', opacity: 0.35 }, { translate: '0 0', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.22, 1, .36, 1)' });
+        }
+      });
+    }
+    tops.current = next;
+  }, [key]);
+  return ref;
 }
 
 /* Toasts: bottom-right, one action (e.g. Undo) */
