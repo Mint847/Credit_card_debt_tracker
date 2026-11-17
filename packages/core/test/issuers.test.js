@@ -30,6 +30,9 @@ test('Bank matching, fees and tariffs', () => {
   check('NTB fee on 50k = 3,750 (1,250 + 5%)', cardFee({ bank: 'American Express' }, 50000) === 3750);
   check('Seylan floor on 10k = 700', cardFee({ bank: 'Seylan' }, 10000) === 700);
   check('Standard Chartered now uses DFCC fee (5% / 1,250)', cardFee({ bank: 'Standard Chartered' }, 80000) === 4000);
+  check('Cargills fee on 50k = 3,490 (990 + 5%)', cardFee({ bank: 'Cargills Bank' }, 50000) === 3490, cardFee({ bank: 'Cargills Bank' }, 50000));
+  check('Cargills card rate 26%', cardIssuer({ bank: 'Cargills Bank' }).apr === 26);
+  check('DFCC floor on 10k = 1,250', cardFee({ bank: 'DFCC' }, 10000) === 1250);
   check('Unknown bank uses default 4% / 500', cardFee({ bank: 'Robocop Bank' }, 5000) === 500);
   check('stored issuer key wins over the name', cardFee({ bank: 'whatever', issuer: 'seylan' }, 10000) === 700);
 

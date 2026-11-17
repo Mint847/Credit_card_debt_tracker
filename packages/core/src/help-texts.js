@@ -126,7 +126,7 @@ export var HELP_TEXTS = {
           title: "Minimum Payment Trap",
           subtitle: "CBSL Statutory Minimum",
           body: [
-            { type: "p", text: "CBSL mandates that banks accept a minimum payment of 4% of the balance. While this prevents default and late fees, paying only this amount retroactively voids your grace period and maximizes the compound interest paid to the bank." }
+            { type: "p", text: "Each bank sets its own minimum payment: a few percent of the balance (HNB 3%, most banks 4%, BOC 5%). Paying it keeps you clear of late fees and CRIB arrears, but once the full balance isn't paid, interest is charged daily from each purchase date and the balance shrinks very slowly." }
           ]
         },
         crib: {
@@ -136,7 +136,7 @@ export var HELP_TEXTS = {
           title: "CRIB Default Classification",
           subtitle: "Central Bank of Sri Lanka",
           body: [
-            { type: "p", text: "The Central Bank of Sri Lanka (CBSL) classifies credit facilities past due for more than 90 days as Non-Performing Credit Facilities (NPCF). This severely restricts future borrowing across the banking sector." }
+            { type: "p", text: "At the end of every month your bank reports each card's limit, balance and number of days overdue to the Credit Information Bureau (CRIB), so even a short delay shows up on your record. Once a card is more than 90 days past due, the Central Bank of Sri Lanka classes it as non-performing, which severely restricts borrowing across the banking sector. Paying at least the minimum by the due date keeps your record clean." }
           ]
         },
         surcharge_rules: {

@@ -34,12 +34,33 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 /* FINANCIAL CALCULATIONS */
 
 /* Payoff convention used by every calculator: each month starts from a statement balance. Paying it in
-   full by the due date costs no interest; whatever is left carries a month's interest into the next
-   statement. The minimum is the card's rule applied to that statement balance (app default: 4%, LKR 1,000). */
-var calculateCBSLAmortization = function(balance, apr, minPct, minFloor) {
+   full by the due date costs no interest. Otherwise the bank charges interest daily (see cycleInterest):
+   on the whole statement balance until the payment lands, then on what's left, up to the next statement.
+   The minimum is the card's rule applied to that statement balance (app default: 4%, LKR 1,000).
+   terms (optional, from cardTerms): { basis, payDay, days }. Without them a month's interest is simply the
+   rest of the balance x APR / 12. */
+var CYCLE_DAYS = 365 / 12;
+// The banks' interest formula: amount x yearly rate x days / basis (360 at HNB, BOC and People's; 365 at
+// LOLC and NTB)
+function dayInterest(amount, apr, days, basis) {
+  return amount * (apr / 100) * days / (basis === 360 ? 360 : 365);
+}
+// One billing cycle's interest when `payment` is made against a statement `balance`, as Sri Lankan banks
+// work it out (HNB, BOC, LOLC, NTB calculation guides): day by day, the whole balance until the payment
+// lands on the due date (payDay days after the statement), then what's left until the next statement.
+// days: the cycle's length (an average month unless given).
+function cycleInterest(balance, payment, apr, terms) {
+  if (!(balance > 0) || payment >= balance || !(apr > 0)) return 0;
+  var paid = Math.max(0, payment);
+  if (!terms) return (balance - paid) * (apr / 100 / 12);
+  var cycle = Number(terms.days) > 0 ? Number(terms.days) : CYCLE_DAYS;
+  var day = Math.min(cycle, Math.max(0, Number(terms.payDay) || 0));
+  return dayInterest(balance, apr, day, terms.basis) + dayInterest(balance - paid, apr, cycle - day, terms.basis);
+}
+
+var calculateCBSLAmortization = function(balance, apr, minPct, minFloor, terms) {
     if (balance <= 0) return null;
 
-    const monthlyRate = (apr / 100) / 12;
     const pctRule = isFinite(minPct) && minPct > 0 ? minPct : MIN_PMT_PCT;
     const floorRule = isFinite(minFloor) && minFloor >= 0 ? minFloor : MIN_PMT_FLOOR;
 
@@ -48,41 +69,43 @@ var calculateCBSLAmortization = function(balance, apr, minPct, minFloor) {
     let minMonths = 0;
     let minTotalInterest = 0;
     while (minBal > 0.005 && minMonths < 600) {
-        minBal -= Math.min(minBal, Math.max(minBal * pctRule, floorRule));
+        const pay = Math.min(minBal, Math.max(minBal * pctRule, floorRule));
+        const interest = cycleInterest(minBal, pay, apr, terms);
         minMonths++;
-        const interest = minBal * monthlyRate;
         minTotalInterest += interest;
-        minBal += interest;
+        minBal = minBal - pay + interest;
     }
 
     // --- SCENARIO B: FIXED PAYMENT THAT CLEARS IT IN ABOUT 12 MONTHS (rounded up to LKR 1,000) ---
     const targetMonths = 12;
+    const monthlyRate = (apr / 100) / 12;
     const rawFixedPayment = monthlyRate === 0
         ? balance / targetMonths
         : (monthlyRate * balance) / ((1 - Math.pow(1 + monthlyRate, -targetMonths)) * (1 + monthlyRate));
-    const targetFixedPayment = Math.ceil(rawFixedPayment / 1000) * 1000;
-    const fixed = calcPayoff(balance, targetFixedPayment, apr);
+    let targetFixedPayment = Math.ceil(rawFixedPayment / 1000) * 1000;
+    let fixed = calcPayoff(balance, targetFixedPayment, apr, terms);
+    // (a bank's daily interest can cost a little more than APR / 12: round up until it fits the year)
+    while (fixed.months > targetMonths) { targetFixedPayment += 1000; fixed = calcPayoff(balance, targetFixedPayment, apr, terms); }
 
     return { minMonths, minTotalInterest, fixedMonths: fixed.months, fixedTotalInterest: fixed.totalInterest, targetFixedPayment };
 };
 
 // Fixed-payment payoff: returns { months, totalInterest } (see the convention above)
-function calcPayoff(balance, payment, apr) {
-  var rate = (apr !== undefined) ? (apr / 100 / 12) : MONTHLY_RATE;
+function calcPayoff(balance, payment, apr, terms) {
+  if (apr === undefined) apr = APR * 100;
   if (!(balance > 0)) return { months: 0, totalInterest: 0 };
   if (payment <= 0) return { months: Infinity, totalInterest: Infinity };
   if (payment >= balance) return { months: 1, totalInterest: 0 };
-  if (rate === 0) return { months: Math.ceil(balance / payment), totalInterest: 0 };
-  // The part left after each payment grows by a month's interest; it has to shrink overall
-  if ((balance - payment) * (1 + rate) >= balance) return { months: Infinity, totalInterest: Infinity };
+  if (!(apr > 0)) return { months: Math.ceil(balance / payment), totalInterest: 0 };
+  // A month's interest has to be less than the payment, or the balance never shrinks
+  if (cycleInterest(balance, payment, apr, terms) >= payment) return { months: Infinity, totalInterest: Infinity };
   var remaining = balance, months = 0, totalInterest = 0;
   while (months < 1200) {
     months++;
     if (remaining <= payment + 0.005) break;
-    remaining -= payment;
-    var interest = remaining * rate;
+    var interest = cycleInterest(remaining, payment, apr, terms);
     totalInterest += interest;
-    remaining += interest;
+    remaining = remaining - payment + interest;
   }
   return { months: months, totalInterest: totalInterest };
 }
@@ -101,9 +124,13 @@ function getStrategy() {
   return window.currentStrategy || "avalanche";
 }
 
-// A card's minimum-payment rule, taken from its bank when the card was added.
-// Cards saved before per-bank rules existed keep the app default (4%, LKR 1,000 floor).
+// A card's minimum-payment rule: its bank's, read live from the issuer table (like the cash-advance fee),
+// so tariff corrections reach cards saved earlier. Cards from other banks use the rule saved with the
+// card, else the app default (4%, LKR 1,000 floor).
 function cardMinRule(c) {
+  var key = c ? (c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c.bank)) : null;
+  var iss = key && SL_CARD_ISSUERS[key];
+  if (iss) return { pct: iss.minPct, floor: iss.minFloor };
   var pct = c ? parseFloat(c.minPct) : NaN;
   var floor = c ? parseFloat(c.minFloor) : NaN;
   return {
@@ -137,31 +164,55 @@ function cardApr(c) {
 /* ── Sri Lankan credit card issuers ──
    fee:      cash-advance fee at an ATM on standard cards.
              'greater' = higher of percent and fixed, 'plus' = percent + fixed, 'flat' = fixed only.
-   apr:      the bank's standard card rate. CBSL has capped card interest at 28% p.a. since Aug 2023.
+   apr:      the bank's standard card rate. CBSL has capped bank card interest at 28% p.a. since Aug 2023;
+             LOLC is a finance company and its tariff is slightly higher (tierApr: rates for named cards).
    minPct / minFloor: minimum monthly payment rule (fraction of balance, LKR floor).
-   verified: the fee was checked against the bank's own published tariff (asOf). Unverified banks
-             use the app defaults (28%, 4% / LKR 1,000) until their tariff is confirmed.
+   basis:    day count for interest. Banks charge interest daily: balance x rate x days / basis.
+   grace:    days from the statement date to the payment due date.
+   lateFee:  charged when the minimum isn't paid by the due date. of: the balance the percent is taken from.
+   verified: checked against the bank's own published tariff or calculation guide (asOf). Fields a bank
+             doesn't publish keep the app defaults (28% APR, 4% / LKR 1,000 minimum payment,
+             4% / LKR 500 cash-advance fee, 365-day year, 21 days to pay).
+   Sources (Rates folder and the banks' sites):
+     BOC      Terms & conditions (minimum 5% or Rs 500), interest guide (28%, daily / 360), sample statement
+              (cash advance 4% or Rs 300), 22 days to pay.
+     HNB      Calculation methods (cash advance 4%, 28% daily / 360 from the transaction date, 25 days to pay,
+              minimum 3% in its worked statements; late fee 0.75% of the opening balance or Rs 750).
+     NDB      Credit card tariff 1 May 2026 (28%, minimum 4%, cash advance Rs 1,200 + 5%, late fee Rs 2,100 or
+              0.5% of the closing balance, 51 interest-free days at most).
+     NTB      Late fee and minimum payment guide 2026 (minimum at least Rs 250, flat late fee Rs 2,000);
+              interest daily / 365 from the posting date.
+     LOLC     Tariff 1 Jun 2025 (28.5%, 29% on Pulse and Savi cards, cash advance 6% or Rs 500, minimum 4% or
+              Rs 100, 45 interest-free days at most), interest guide (daily / 365).
+     Cargills Tariff 18 Feb 2025 (2.2% a month = 26%, cash advance Rs 990 + 5%, minimum 4%, late fee Rs 1,600,
+              55 interest-free days at most).
+     People's Interest guide (daily / 360, 21 days to pay), tariff 2026 (late fee 5% of the minimum or Rs 1,200).
    HSBC Sri Lanka's retail cards moved to Nations Trust Bank on 1 May 2026, so HSBC maps to ntb.
    Standard Chartered Sri Lanka's retail cards moved to DFCC Bank on 31 July 2026, so it maps to dfcc. */
 var SL_CARD_ISSUERS = {
   combank:  { name: 'Commercial Bank',          aliases: ['commercialbankofceylon', 'commercialbank', 'commercial', 'combank'],
               fee: { type: 'greater', percent: 4.5, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2026' },
   boc:      { name: 'Bank of Ceylon',           aliases: ['bankofceylon', 'boc'],
-              fee: { type: 'greater', percent: 4.0, fixed: 300 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'greater', percent: 4.0, fixed: 300 },  apr: 28, minPct: 0.05, minFloor: 500,  basis: 360, grace: 22,
+              verified: true,  asOf: 'Nov 2026' },
   peoples:  { name: "People's Bank",            aliases: ['peoplesbank', 'peoples'],
-              fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jun 2026' },
+              fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, basis: 360, grace: 21,
+              lateFee: { type: 'greater', percent: 5, of: 'minimum', fixed: 1200 }, verified: true,  asOf: 'Jun 2026' },
   sampath:  { name: 'Sampath Bank',             aliases: ['sampathbank', 'sampath'],
               fee: { type: 'greater', percent: 4.0, fixed: 300 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'May 2025' },
   hnb:      { name: 'Hatton National Bank (HNB)', aliases: ['hattonnationalbank', 'hattonnational', 'hnb'],
-              fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'greater', percent: 4.0, fixed: 0 },    apr: 28, minPct: 0.03, minFloor: 1000, basis: 360, grace: 25,
+              lateFee: { type: 'greater', percent: 0.75, of: 'opening', fixed: 750 }, verified: true,  asOf: 'Nov 2025' },
   seylan:   { name: 'Seylan Bank',              aliases: ['seylanbank', 'seylan'],
               fee: { type: 'greater', percent: 4.0, fixed: 700 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2026' },
   ntb:      { name: 'Nations Trust Bank',       aliases: ['nationstrustbank', 'nationstrust', 'americanexpress', 'amex', 'hsbc', 'ntb'],
-              fee: { type: 'plus',    percent: 5.0, fixed: 1250 }, apr: 26, minPct: 0.04, minFloor: 250,  verified: true,  asOf: 'Oct 2026' },
+              fee: { type: 'plus',    percent: 5.0, fixed: 1250 }, apr: 26, minPct: 0.04, minFloor: 250,  basis: 365,
+              lateFee: { type: 'flat', fixed: 2000 }, verified: true,  asOf: 'Oct 2026' },
   ndb:      { name: 'NDB Bank',                 aliases: ['nationaldevelopmentbank', 'ndbbank', 'ndb'],
-              fee: { type: 'plus',    percent: 5.0, fixed: 1200 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'plus',    percent: 5.0, fixed: 1200 }, apr: 28, minPct: 0.04, minFloor: 1000, grace: 21,
+              lateFee: { type: 'greater', percent: 0.5, of: 'closing', fixed: 2100 }, verified: true,  asOf: 'May 2026' },
   dfcc:     { name: 'DFCC Bank',                aliases: ['dfccbank', 'dfcc', 'standardchartered', 'stanchart', 'scb'],
-              fee: { type: 'greater', percent: 5.0, fixed: 1250 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'greater', percent: 5.0, fixed: 1250 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: '2025' },
   pabc:     { name: 'Pan Asia Bank',            aliases: ['panasiabanking', 'panasiabank', 'panasia', 'pabc'],
               fee: { type: 'greater', percent: 5.0, fixed: 1000 }, apr: 26, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Jul 2025' },
   union:    { name: 'Union Bank',               aliases: ['unionbankofcolombo', 'unionbank'],
@@ -169,9 +220,11 @@ var SL_CARD_ISSUERS = {
   cdb:      { name: 'CDB (Citizens Development Business Finance)', aliases: ['citizensdevelopment', 'cdb'],
               fee: { type: 'greater', percent: 5.0, fixed: 1000 }, apr: 28, minPct: 0.04, minFloor: 1000, verified: true,  asOf: 'Oct 2026' },
   cargills: { name: 'Cargills Bank',            aliases: ['cargillsbank', 'cargills'],
-              fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'plus',    percent: 5.0, fixed: 990 },  apr: 26, minPct: 0.04, minFloor: 1000, grace: 25,
+              lateFee: { type: 'flat', fixed: 1600 }, verified: true,  asOf: 'Feb 2025' },
   lolc:     { name: 'LOLC Finance',             aliases: ['lolcfinance', 'lolc'],
-              fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' },
+              fee: { type: 'greater', percent: 6.0, fixed: 500 },  apr: 28.5, minPct: 0.04, minFloor: 100, basis: 365, grace: 15,
+              tierApr: [{ match: /pulse|savi/i, apr: 29 }], verified: true,  asOf: 'Jun 2025' },
 'default': { name: 'Other bank',              aliases: [],
               fee: { type: 'greater', percent: 4.0, fixed: 500 },  apr: 28, minPct: 0.04, minFloor: 1000, verified: false, asOf: '' }
 };
@@ -192,7 +245,7 @@ var SL_ISSUER_CARDS = {
   union:    ['Visa Gold', 'Visa Platinum', 'Visa Signature'],
   cdb:      ['Mastercard Standard', 'Mastercard Gold', 'Mastercard Titanium', 'Mastercard Platinum', 'Mastercard World'],
   cargills: ['Mastercard Ascend', 'Mastercard Gold', 'Mastercard Titanium', 'Mastercard Platinum'],
-  lolc:     ['Mastercard Gold', 'Mastercard Platinum', 'Mastercard World', 'Mastercard Pulse', 'Swairee Credit Card', 'Savi Credit Card'],
+  lolc:     ['Mastercard Gold', 'Mastercard Platinum', 'Mastercard World', 'Mastercard Pulse', 'Swairee Credit Card', 'Savi Credit Card', 'Savi World', 'University Student Gold'],
   'default': ['Visa Classic', 'Visa Gold', 'Visa Platinum', 'Visa Signature', 'Visa Infinite', 'Mastercard Gold', 'Mastercard Titanium', 'Mastercard Platinum', 'World Mastercard', 'American Express']
 };
 var SL_ISSUER_NOTES = {
@@ -229,6 +282,51 @@ function resolveIssuer(name) {
 function cardIssuer(c) {
   var key = c && c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c && c.bank);
   return SL_CARD_ISSUERS[key] || SL_CARD_ISSUERS['default'];
+}
+
+// The rate a new card starts with: the bank's standard rate, or the rate for a named card (LOLC Pulse, Savi)
+function issuerApr(key, tier) {
+  var iss = SL_CARD_ISSUERS[key] || SL_CARD_ISSUERS['default'];
+  var hit = (iss.tierApr || []).filter(function (t) { return t.match.test(String(tier || '')); })[0];
+  return hit ? hit.apr : iss.apr;
+}
+
+// How this card's bank charges interest: { basis: 360 | 365, payDay }. payDay is the days from a
+// statement to its due date: the card's own billing cycle when it has one, else its bank's.
+function cardTerms(c) {
+  var iss = cardIssuer(c);
+  var payDay = iss.grace || 21;
+  if (c && isValidDay(c.statementDay) && isValidDay(c.dueDay)) {
+    var sd = parseInt(c.statementDay, 10), dd = parseInt(c.dueDay, 10);
+    payDay = dd > sd ? dd - sd : dd + CYCLE_DAYS - sd;
+  }
+  return { basis: iss.basis || 365, payDay: payDay };
+}
+
+// A month's interest on what the card owes now (balance x daily rate x an average month's days)
+function cardMonthlyInterest(c, balance) {
+  var b = balance === undefined ? Number(c && c.balance) || 0 : balance;
+  if (!(b > 0)) return 0;
+  return b * (cardApr(c) / 100 / cardTerms(c).basis) * CYCLE_DAYS;
+}
+
+// The balance after one cycle on minimum payments only (the "minimums only" line on the charts)
+function minimumStep(c, balance) {
+  if (!(balance > 0.005)) return 0;
+  var r = cardMinRule(c);
+  var pay = Math.min(balance, Math.max(balance * r.pct, r.floor));
+  return balance - pay + cycleInterest(balance, pay, cardApr(c), cardTerms(c));
+}
+
+// The bank's late fee in words ("LKR 2,000", "0.75% of the opening balance or LKR 750, whichever is
+// higher"), or '' when the bank doesn't publish one
+function lateFeeText(c) {
+  var f = cardIssuer(c).lateFee;
+  if (!f) return '';
+  var fixed = 'LKR ' + Number(f.fixed).toLocaleString('en-US');
+  if (f.type === 'flat') return fixed;
+  var of = { opening: 'the opening balance', closing: 'the closing balance', minimum: 'the minimum payment' }[f.of] || 'the balance';
+  return f.percent + '% of ' + of + ' or ' + fixed + ', whichever is higher';
 }
 
 function computeAdvanceFee(fee, amount) {
@@ -381,8 +479,8 @@ function allocateMonthlyPayments(sortedActiveCards, budget) {
 }
 
 // Minimum-only path, using the card's minimum-payment rule when given
-function calcMinPayoff(balance, apr, rule) {
-  var res = calculateCBSLAmortization(balance, apr !== undefined ? apr : 28, rule && rule.pct, rule && rule.floor);
+function calcMinPayoff(balance, apr, rule, terms) {
+  var res = calculateCBSLAmortization(balance, apr !== undefined ? apr : 28, rule && rule.pct, rule && rule.floor, terms);
   if (!res || res.minMonths >= 600) return { months: Infinity, totalInterest: Infinity };
   return { months: res.minMonths, totalInterest: res.minTotalInterest };
 }
@@ -423,7 +521,9 @@ function calculateNextStatement(statementDayInt) {
 function calcCashAdvance(principal, days, c, overrides) {
   var advanceFee = overrides && overrides.fee !== undefined ? overrides.fee : cardFee(c, principal);
   var apr = overrides && overrides.apr !== undefined ? overrides.apr : cashAdvanceApr(c);
-  var interest = principal * (apr / 100 / 365) * days;
+  // (daily from the withdrawal, on the bank's own day count: HNB and BOC divide by 360)
+  var basis = overrides && overrides.apr !== undefined ? 365 : cardTerms(c).basis;
+  var interest = dayInterest(principal, apr, days, basis);
   return { advanceFee: advanceFee, interest: interest, total: principal + advanceFee + interest };
 }
 
@@ -779,7 +879,7 @@ function recordStatements(card, todayStr) {
   statementDatesBetween(card.statementDay, card.cycleTrackedFrom, todayStr).forEach(function (d) {
     if (have[d]) return;
     var bal = balanceAt(card, d);
-    var minDue = Math.round(minPaymentFor({ balance: bal, minPct: card.minPct, minFloor: card.minFloor }) * 100) / 100;
+    var minDue = Math.round(minPaymentFor({ balance: bal, issuer: card.issuer, minPct: card.minPct, minFloor: card.minFloor }) * 100) / 100;
     card.statements.push({ date: d, due: dueDateFor(d, card.dueDay), balance: bal, minDue: minDue });
     changed = true;
   });
@@ -1159,6 +1259,14 @@ export {
   cardFloor,
   cardIssuer,
   cardMinRule,
+  cycleInterest,
+  dayInterest,
+  cardTerms,
+  cardMonthlyInterest,
+  minimumStep,
+  lateFeeText,
+  issuerApr,
+  CYCLE_DAYS,
   cardName,
   cardTheme,
   cashAdvanceApr,

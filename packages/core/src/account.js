@@ -1,7 +1,7 @@
 // Loading an account copy into an app: which settings are still defaults, the name to show,
 // and the cards and spaces in their current shape. Moved from setCloudData in index.html (Phase 3);
 // each UI then draws from the result.
-import { ensureSpaceHistory, resolveIssuer } from './domain.js';
+import { ensureSpaceHistory, resolveIssuer, issuerApr } from './domain.js';
 
 // user: the signed-in Firebase user (for a name when the account has none), or null.
 // Changes `data` in place (as the phone app always has) and returns
@@ -36,6 +36,9 @@ export function prepareAccount(data, user) {
   cards.forEach(function (c) {
     if (c.issuer === undefined) c.issuer = resolveIssuer(c.bank);
     if (c.apr === undefined) c.apr = 28.0;
+    // Tariff corrections (Nov 2026): cards added on the old 28% default move to the bank's published rate.
+    // A rate the user typed in themselves is anything else, and is kept.
+    if ((c.issuer === 'lolc' || c.issuer === 'cargills') && Number(c.apr) === 28) c.apr = issuerApr(c.issuer, c.nick);
   });
   return {
     data: data,

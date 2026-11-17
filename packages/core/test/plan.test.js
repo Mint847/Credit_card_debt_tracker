@@ -67,8 +67,11 @@ test('one debt-free date everywhere: the month-by-month plan', () => {
   expect(Math.max(pr.clearedIn.a, pr.clearedIn.b)).toBe(pr.months);
   expect(pr.clearedIn.z).toBeUndefined(); // already settled
   expect(planDebtFree([{ id: 'q', balance: 0, limit: 1 }]).label).toBe('--');
+  // A tiny income: the budget is just the minimums, which still clear these cards, only much later
   window.currentUserData = { income: '1000' };
-  expect(planDebtFree(cards, 'avalanche').label).toBe('Never');
+  const slow = planDebtFree(cards, 'avalanche');
+  expect(slow.months).toBeGreaterThan(pr.months);
+  expect(slow.label).not.toBe('Never');
   window.currentUserData = undefined;
 });
 

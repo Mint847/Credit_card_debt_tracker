@@ -2,7 +2,7 @@
 // the "Did you pay?" check-in, overdue and CRIB warnings, over budget, recurring charges due tomorrow,
 // and the month's interest. Plus the catch-up plan for an overdue card. Moved from renderDueAlerts /
 // renderSpendAlerts / openRemedialSheet in index.html (Phase 3).
-import { isValidDay, cycleStatus, minPaymentFor, nextDueDayFrom, daysBetween, addDays, periodSummary, billingPeriod, spendCategory, recurringNextDue, cardApr, cardName } from './domain.js';
+import { isValidDay, cycleStatus, minPaymentFor, nextDueDayFrom, daysBetween, addDays, periodSummary, billingPeriod, spendCategory, recurringNextDue, cardApr, cardName, cardMonthlyInterest, lateFeeText } from './domain.js';
 import { activeRecurring } from './ledger-actions.js';
 import { amountDueNow } from './recurring-actions.js';
 import { shortDate } from './screen-rules.js';
@@ -30,7 +30,7 @@ export function homeAlertData(cards, todayStr) {
       Object.keys(b).forEach(function (k) { if (b[k] > 0 && (s.byCat[k] || 0) > b[k]) overs.push({ card: c, cat: k, spent: s.byCat[k], budget: b[k] }); });
     }
     activeRecurring(c, todayStr).forEach(function (r) { if (recurringNextDue(r, todayStr) === tomorrow) dues.push({ card: c, item: r }); });
-    if (c.balance > 0) bleed += c.balance * (cardApr(c) / 100 / 12);
+    if (c.balance > 0) bleed += cardMonthlyInterest(c);
   });
   upcoming.sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
   overdue.sort(function (a, b) { return b.st.overdue.days - a.st.overdue.days; });
@@ -66,12 +66,12 @@ export function homeAlerts(cards, todayStr, fmt) {
         action: { kind: 'ask', cardId: c.id, amount: o.amount } });
     } else if (o.days < 60) {
       items.push({ kind: 'overdue', tone: 'late', eyebrow: 'Overdue', title: 'Payment overdue · ' + o.days + (o.days === 1 ? ' day' : ' days'), cards: [c],
-        text: 'Pay ' + fmt(o.amount) + ' to catch up' + (o.days >= 30 ? '. At 30+ days a missed payment can be reported to CRIB.' : '. Late fees and interest are building.') + more,
+        text: 'Pay ' + fmt(o.amount) + ' to catch up. ' + (lateFeeText(c) ? 'Each missed minimum adds a late fee (' + lateFeeText(c) + '), and days' : 'Days') + ' overdue are reported to CRIB every month.' + more,
         action: { kind: 'catch-up', label: 'Catch-up plan', cardId: c.id } });
     } else {
       var left = Math.max(0, 90 - o.days);
       items.push({ kind: 'crib', tone: 'critical', eyebrow: 'Critical', title: 'CRIB Default Warning', cards: [c],
-        text: cardName(c) + ' is ' + o.days + ' days past due. ' + (left > 0 ? left + (left === 1 ? ' day' : ' days') + ' before it’s classed as non-performing (90 days) and reported to CRIB.' : 'It has passed 90 days and is likely reported to CRIB as non-performing.') + more,
+        text: cardName(c) + ' is ' + o.days + ' days past due. ' + (left > 0 ? left + (left === 1 ? ' day' : ' days') + ' before it’s classed as non-performing (90 days). Days overdue are already on its CRIB record.' : 'It has passed 90 days, so it’s classed as non-performing on its CRIB record.') + more,
         action: { kind: 'catch-up', label: 'Catch-up plan', cardId: c.id }, help: 'crib' });
     }
   }
@@ -108,7 +108,7 @@ export function catchUpPlan(card, cards, todayStr, fmt) {
   if (untracked) steps.push({ n: 4, title: 'Track due dates on your other cards', body: untracked + ' other card' + (untracked === 1 ? '' : 's') + ' ha' + (untracked === 1 ? 's' : 've') + ' no billing cycle, so the app can’t warn you before they’re due.' });
   return {
     owed: owed,
-    banner: o ? { title: fmt(o.amount) + ' overdue since ' + shortDate(o.since), body: o.days + (o.days === 1 ? ' day' : ' days') + ' past due. Accounts 90 days past due are classed as non-performing and reported to CRIB.' } : null,
+    banner: o ? { title: fmt(o.amount) + ' overdue since ' + shortDate(o.since), body: o.days + (o.days === 1 ? ' day' : ' days') + ' past due. Banks report days overdue to CRIB at the end of every month; at 90 days the card is classed as non-performing.' } : null,
     steps: steps
   };
 }

@@ -199,7 +199,7 @@ function OverviewTab({ card }: { card: Card }) {
               {st.overdue && (
                 <div className="rounded-lg border border-danger/30 bg-danger/5 p-3">
                   <p className="text-[13px] font-semibold text-danger">{fmtAmt(st.overdue.amount)} overdue since {shortDate(st.overdue.since)}</p>
-                  <p className="mt-0.5 text-[12px] text-muted">{st.overdue.days} days past due. Accounts 90 days past due are reported to CRIB.</p>
+                  <p className="mt-0.5 text-[12px] text-muted">{st.overdue.days} days past due. Banks report days overdue to CRIB every month; at 90 days the card is classed as non-performing.</p>
                 </div>
               )}
               {st.rows.slice(-3).reverse().map((r: { s: { date: string; due: string; minDue: number }; paid: number; remaining: number }) => (

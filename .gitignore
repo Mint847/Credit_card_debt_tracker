@@ -38,3 +38,6 @@ web/desktop/
 
 # Skill files from other authors (kept locally, never uploaded)
 skills/
+
+# Bank tariff PDFs (reference only, not published)
+stitch_fintech_credit_debt_manager/

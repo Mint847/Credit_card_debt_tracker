@@ -1,11 +1,13 @@
 // The home screen's payoff plan: how long the monthly budget takes to clear every card, and the
 // interest it saves compared with paying only minimums. Moved from renderHomeDashboard in index.html.
-import { calculateCBSLAmortization, cardMinRule, cardApr, minPaymentFor, computeMonthlyBudget, fmtLKR, getStrategy } from './domain.js';
+import { calculateCBSLAmortization, cardMinRule, cardApr, cardTerms, cycleInterest, minPaymentFor, computeMonthlyBudget, fmtLKR, getStrategy } from './domain.js';
 
 // Returns { baselineMonths, baselineInterest, months, interest, curve, clearedIn }.
 //   Baseline: each card on its own minimum rule (Infinity when one never clears).
-//   Plan: each month a month's interest is added, then the budget pays every minimum and the rest
+//   Plan: each month the budget pays every card's minimum on its statement balance and the rest
 //   cascades in pay-first order (snowball: smallest balance; otherwise highest APR, then smallest).
+//   Then each card's bank charges its interest for the cycle (cycleInterest: daily, on the statement
+//   balance until the payment lands, then on what's left). A card paid in full costs no interest.
 //   months is Infinity when the budget can't cover the minimums or it takes 100 years.
 //   curve[m] is the total still owed at the start of month m (curve[0] is today's total).
 //   clearedIn[cardId] is the month the plan pays that card off (cards it never clears are missing).
@@ -13,7 +15,7 @@ export function projectPlan(cards, strategy, budget) {
   var baselineInterest = 0, baselineMonths = 0;
   cards.filter(function (c) { return c.balance > 0; }).forEach(function (c) {
     var rule = cardMinRule(c);
-    var res = calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor);
+    var res = calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor, cardTerms(c));
     if (res.minMonths === Infinity || res.minMonths >= 1200) {
       baselineMonths = Infinity;
     } else {
@@ -27,41 +29,44 @@ export function projectPlan(cards, strategy, budget) {
   var total = function () { return portfolio.reduce(function (s, c) { return s + Math.max(0, c.balance); }, 0); };
   var curve = [total()], clearedIn = {};
   while (portfolio.some(function (c) { return c.balance > 0.01; }) && months < safetyLimit) {
-    var monthMinReq = 0;
+    var monthMinReq = 0, paid = {};
+    var left = function (c) { return c.balance - paid[c.id]; };
     portfolio.forEach(function (c) {
-      if (c.balance > 0.01) {
-        var i = c.balance * (cardApr(c) / 100 / 12);
-        c.balance += i;
-        interest += i;
-        monthMinReq += minPaymentFor(c);
-      }
+      paid[c.id] = 0;
+      if (c.balance > 0.01) monthMinReq += minPaymentFor(c);
     });
     if (budget < monthMinReq) { months = Infinity; break; }
     var surplus = budget;
     portfolio.forEach(function (c) {
       if (c.balance > 0.01) {
         var minPmt = minPaymentFor(c);
-        c.balance -= minPmt;
+        paid[c.id] = minPmt;
         surplus -= minPmt;
       }
     });
     if (strategy === 'snowball') {
-      portfolio.sort(function (a, b) { return a.balance - b.balance; });
+      portfolio.sort(function (a, b) { return left(a) - left(b); });
     } else {
       portfolio.sort(function (a, b) {
         var d = cardApr(b) - cardApr(a);
-        return d !== 0 ? d : a.balance - b.balance;
+        return d !== 0 ? d : left(a) - left(b);
       });
     }
     for (var k = 0; k < portfolio.length; k++) {
       if (surplus <= 0.01) break;
       var cc = portfolio[k];
-      if (cc.balance > 0.01) {
-        var payment = Math.min(cc.balance, surplus);
-        cc.balance -= payment;
+      if (left(cc) > 0.01) {
+        var payment = Math.min(left(cc), surplus);
+        paid[cc.id] += payment;
         surplus -= payment;
       }
     }
+    portfolio.forEach(function (c) {
+      if (!(c.balance > 0.01)) return;
+      var i = cycleInterest(c.balance, paid[c.id], cardApr(c), cardTerms(c));
+      interest += i;
+      c.balance = Math.max(0, c.balance - paid[c.id]) + i;
+    });
     months++;
     portfolio.forEach(function (c) { if (c.balance <= 0.01 && !(c.id in clearedIn)) clearedIn[c.id] = months; });
     curve.push(total());

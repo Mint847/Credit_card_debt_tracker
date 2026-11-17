@@ -4819,42 +4819,57 @@ var SerendibCore = (function() {
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
-  var calculateCBSLAmortization = function(balance, apr, minPct, minFloor) {
+  var CYCLE_DAYS = 365 / 12;
+  function dayInterest(amount, apr, days, basis) {
+    return amount * (apr / 100) * days / (basis === 360 ? 360 : 365);
+  }
+  function cycleInterest(balance, payment, apr, terms) {
+    if (!(balance > 0) || payment >= balance || !(apr > 0)) return 0;
+    var paid = Math.max(0, payment);
+    if (!terms) return (balance - paid) * (apr / 100 / 12);
+    var cycle = Number(terms.days) > 0 ? Number(terms.days) : CYCLE_DAYS;
+    var day = Math.min(cycle, Math.max(0, Number(terms.payDay) || 0));
+    return dayInterest(balance, apr, day, terms.basis) + dayInterest(balance - paid, apr, cycle - day, terms.basis);
+  }
+  var calculateCBSLAmortization = function(balance, apr, minPct, minFloor, terms) {
     if (balance <= 0) return null;
-    const monthlyRate = apr / 100 / 12;
     const pctRule = isFinite(minPct) && minPct > 0 ? minPct : MIN_PMT_PCT;
     const floorRule = isFinite(minFloor) && minFloor >= 0 ? minFloor : MIN_PMT_FLOOR;
     let minBal = balance;
     let minMonths = 0;
     let minTotalInterest = 0;
     while (minBal > 5e-3 && minMonths < 600) {
-      minBal -= Math.min(minBal, Math.max(minBal * pctRule, floorRule));
+      const pay = Math.min(minBal, Math.max(minBal * pctRule, floorRule));
+      const interest = cycleInterest(minBal, pay, apr, terms);
       minMonths++;
-      const interest = minBal * monthlyRate;
       minTotalInterest += interest;
-      minBal += interest;
+      minBal = minBal - pay + interest;
     }
     const targetMonths = 12;
+    const monthlyRate = apr / 100 / 12;
     const rawFixedPayment = monthlyRate === 0 ? balance / targetMonths : monthlyRate * balance / ((1 - Math.pow(1 + monthlyRate, -targetMonths)) * (1 + monthlyRate));
-    const targetFixedPayment = Math.ceil(rawFixedPayment / 1e3) * 1e3;
-    const fixed = calcPayoff(balance, targetFixedPayment, apr);
+    let targetFixedPayment = Math.ceil(rawFixedPayment / 1e3) * 1e3;
+    let fixed = calcPayoff(balance, targetFixedPayment, apr, terms);
+    while (fixed.months > targetMonths) {
+      targetFixedPayment += 1e3;
+      fixed = calcPayoff(balance, targetFixedPayment, apr, terms);
+    }
     return { minMonths, minTotalInterest, fixedMonths: fixed.months, fixedTotalInterest: fixed.totalInterest, targetFixedPayment };
   };
-  function calcPayoff(balance, payment, apr) {
-    var rate = apr !== void 0 ? apr / 100 / 12 : MONTHLY_RATE;
+  function calcPayoff(balance, payment, apr, terms) {
+    if (apr === void 0) apr = APR * 100;
     if (!(balance > 0)) return { months: 0, totalInterest: 0 };
     if (payment <= 0) return { months: Infinity, totalInterest: Infinity };
     if (payment >= balance) return { months: 1, totalInterest: 0 };
-    if (rate === 0) return { months: Math.ceil(balance / payment), totalInterest: 0 };
-    if ((balance - payment) * (1 + rate) >= balance) return { months: Infinity, totalInterest: Infinity };
+    if (!(apr > 0)) return { months: Math.ceil(balance / payment), totalInterest: 0 };
+    if (cycleInterest(balance, payment, apr, terms) >= payment) return { months: Infinity, totalInterest: Infinity };
     var remaining = balance, months = 0, totalInterest = 0;
     while (months < 1200) {
       months++;
       if (remaining <= payment + 5e-3) break;
-      remaining -= payment;
-      var interest = remaining * rate;
+      var interest = cycleInterest(remaining, payment, apr, terms);
       totalInterest += interest;
-      remaining += interest;
+      remaining = remaining - payment + interest;
     }
     return { months, totalInterest };
   }
@@ -4868,6 +4883,9 @@ var SerendibCore = (function() {
     return window.currentStrategy || "avalanche";
   }
   function cardMinRule(c) {
+    var key = c ? c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c.bank) : null;
+    var iss = key && SL_CARD_ISSUERS[key];
+    if (iss) return { pct: iss.minPct, floor: iss.minFloor };
     var pct = c ? parseFloat(c.minPct) : NaN;
     var floor = c ? parseFloat(c.minFloor) : NaN;
     return {
@@ -4906,10 +4924,12 @@ var SerendibCore = (function() {
       aliases: ["bankofceylon", "boc"],
       fee: { type: "greater", percent: 4, fixed: 300 },
       apr: 28,
-      minPct: 0.04,
-      minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      minPct: 0.05,
+      minFloor: 500,
+      basis: 360,
+      grace: 22,
+      verified: true,
+      asOf: "Nov 2026"
     },
     peoples: {
       name: "People's Bank",
@@ -4918,6 +4938,9 @@ var SerendibCore = (function() {
       apr: 28,
       minPct: 0.04,
       minFloor: 1e3,
+      basis: 360,
+      grace: 21,
+      lateFee: { type: "greater", percent: 5, of: "minimum", fixed: 1200 },
       verified: true,
       asOf: "Jun 2026"
     },
@@ -4934,12 +4957,15 @@ var SerendibCore = (function() {
     hnb: {
       name: "Hatton National Bank (HNB)",
       aliases: ["hattonnationalbank", "hattonnational", "hnb"],
-      fee: { type: "greater", percent: 4, fixed: 500 },
+      fee: { type: "greater", percent: 4, fixed: 0 },
       apr: 28,
-      minPct: 0.04,
+      minPct: 0.03,
       minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      basis: 360,
+      grace: 25,
+      lateFee: { type: "greater", percent: 0.75, of: "opening", fixed: 750 },
+      verified: true,
+      asOf: "Nov 2025"
     },
     seylan: {
       name: "Seylan Bank",
@@ -4958,6 +4984,8 @@ var SerendibCore = (function() {
       apr: 26,
       minPct: 0.04,
       minFloor: 250,
+      basis: 365,
+      lateFee: { type: "flat", fixed: 2e3 },
       verified: true,
       asOf: "Oct 2026"
     },
@@ -4968,8 +4996,10 @@ var SerendibCore = (function() {
       apr: 28,
       minPct: 0.04,
       minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      grace: 21,
+      lateFee: { type: "greater", percent: 0.5, of: "closing", fixed: 2100 },
+      verified: true,
+      asOf: "May 2026"
     },
     dfcc: {
       name: "DFCC Bank",
@@ -4978,8 +5008,8 @@ var SerendibCore = (function() {
       apr: 28,
       minPct: 0.04,
       minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      verified: true,
+      asOf: "2025"
     },
     pabc: {
       name: "Pan Asia Bank",
@@ -5014,22 +5044,27 @@ var SerendibCore = (function() {
     cargills: {
       name: "Cargills Bank",
       aliases: ["cargillsbank", "cargills"],
-      fee: { type: "greater", percent: 4, fixed: 500 },
-      apr: 28,
+      fee: { type: "plus", percent: 5, fixed: 990 },
+      apr: 26,
       minPct: 0.04,
       minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      grace: 25,
+      lateFee: { type: "flat", fixed: 1600 },
+      verified: true,
+      asOf: "Feb 2025"
     },
     lolc: {
       name: "LOLC Finance",
       aliases: ["lolcfinance", "lolc"],
-      fee: { type: "greater", percent: 4, fixed: 500 },
-      apr: 28,
+      fee: { type: "greater", percent: 6, fixed: 500 },
+      apr: 28.5,
       minPct: 0.04,
-      minFloor: 1e3,
-      verified: false,
-      asOf: ""
+      minFloor: 100,
+      basis: 365,
+      grace: 15,
+      tierApr: [{ match: /pulse|savi/i, apr: 29 }],
+      verified: true,
+      asOf: "Jun 2025"
     },
     "default": {
       name: "Other bank",
@@ -5056,7 +5091,7 @@ var SerendibCore = (function() {
     union: ["Visa Gold", "Visa Platinum", "Visa Signature"],
     cdb: ["Mastercard Standard", "Mastercard Gold", "Mastercard Titanium", "Mastercard Platinum", "Mastercard World"],
     cargills: ["Mastercard Ascend", "Mastercard Gold", "Mastercard Titanium", "Mastercard Platinum"],
-    lolc: ["Mastercard Gold", "Mastercard Platinum", "Mastercard World", "Mastercard Pulse", "Swairee Credit Card", "Savi Credit Card"],
+    lolc: ["Mastercard Gold", "Mastercard Platinum", "Mastercard World", "Mastercard Pulse", "Swairee Credit Card", "Savi Credit Card", "Savi World", "University Student Gold"],
     "default": ["Visa Classic", "Visa Gold", "Visa Platinum", "Visa Signature", "Visa Infinite", "Mastercard Gold", "Mastercard Titanium", "Mastercard Platinum", "World Mastercard", "American Express"]
   };
   var SL_ISSUER_NOTES = {
@@ -5095,6 +5130,41 @@ var SerendibCore = (function() {
   function cardIssuer(c) {
     var key = c && c.issuer && SL_CARD_ISSUERS[c.issuer] ? c.issuer : resolveIssuer(c && c.bank);
     return SL_CARD_ISSUERS[key] || SL_CARD_ISSUERS["default"];
+  }
+  function issuerApr(key, tier) {
+    var iss = SL_CARD_ISSUERS[key] || SL_CARD_ISSUERS["default"];
+    var hit = (iss.tierApr || []).filter(function(t) {
+      return t.match.test(String(tier || ""));
+    })[0];
+    return hit ? hit.apr : iss.apr;
+  }
+  function cardTerms(c) {
+    var iss = cardIssuer(c);
+    var payDay = iss.grace || 21;
+    if (c && isValidDay(c.statementDay) && isValidDay(c.dueDay)) {
+      var sd = parseInt(c.statementDay, 10), dd = parseInt(c.dueDay, 10);
+      payDay = dd > sd ? dd - sd : dd + CYCLE_DAYS - sd;
+    }
+    return { basis: iss.basis || 365, payDay };
+  }
+  function cardMonthlyInterest(c, balance) {
+    var b = balance === void 0 ? Number(c && c.balance) || 0 : balance;
+    if (!(b > 0)) return 0;
+    return b * (cardApr(c) / 100 / cardTerms(c).basis) * CYCLE_DAYS;
+  }
+  function minimumStep(c, balance) {
+    if (!(balance > 5e-3)) return 0;
+    var r = cardMinRule(c);
+    var pay = Math.min(balance, Math.max(balance * r.pct, r.floor));
+    return balance - pay + cycleInterest(balance, pay, cardApr(c), cardTerms(c));
+  }
+  function lateFeeText(c) {
+    var f = cardIssuer(c).lateFee;
+    if (!f) return "";
+    var fixed = "LKR " + Number(f.fixed).toLocaleString("en-US");
+    if (f.type === "flat") return fixed;
+    var of = { opening: "the opening balance", closing: "the closing balance", minimum: "the minimum payment" }[f.of] || "the balance";
+    return f.percent + "% of " + of + " or " + fixed + ", whichever is higher";
   }
   function computeAdvanceFee(fee, amount) {
     var p = (fee.percent || 0) / 100;
@@ -5228,8 +5298,8 @@ var SerendibCore = (function() {
     });
     return { alloc, total };
   }
-  function calcMinPayoff(balance, apr, rule) {
-    var res = calculateCBSLAmortization(balance, apr !== void 0 ? apr : 28, rule && rule.pct, rule && rule.floor);
+  function calcMinPayoff(balance, apr, rule, terms) {
+    var res = calculateCBSLAmortization(balance, apr !== void 0 ? apr : 28, rule && rule.pct, rule && rule.floor, terms);
     if (!res || res.minMonths >= 600) return { months: Infinity, totalInterest: Infinity };
     return { months: res.minMonths, totalInterest: res.minTotalInterest };
   }
@@ -5256,7 +5326,8 @@ var SerendibCore = (function() {
   function calcCashAdvance(principal, days, c, overrides) {
     var advanceFee = overrides && overrides.fee !== void 0 ? overrides.fee : cardFee(c, principal);
     var apr = overrides && overrides.apr !== void 0 ? overrides.apr : cashAdvanceApr(c);
-    var interest = principal * (apr / 100 / 365) * days;
+    var basis = overrides && overrides.apr !== void 0 ? 365 : cardTerms(c).basis;
+    var interest = dayInterest(principal, apr, days, basis);
     return { advanceFee, interest, total: principal + advanceFee + interest };
   }
   function calcSurchargeAPR(purchasePrice, surchargePct, tenure) {
@@ -5615,7 +5686,7 @@ var SerendibCore = (function() {
     statementDatesBetween(card.statementDay, card.cycleTrackedFrom, todayStr).forEach(function(d) {
       if (have[d]) return;
       var bal = balanceAt(card, d);
-      var minDue = Math.round(minPaymentFor({ balance: bal, minPct: card.minPct, minFloor: card.minFloor }) * 100) / 100;
+      var minDue = Math.round(minPaymentFor({ balance: bal, issuer: card.issuer, minPct: card.minPct, minFloor: card.minFloor }) * 100) / 100;
       card.statements.push({ date: d, due: dueDateFor(d, card.dueDay), balance: bal, minDue });
       changed = true;
     });
@@ -6617,7 +6688,7 @@ var SerendibCore = (function() {
       balance,
       color: input.color,
       issuer: issuerKey,
-      apr: issuer.apr,
+      apr: issuerApr(issuerKey, nick),
       isZeroPercent: false,
       minPct: issuer.minPct,
       minFloor: issuer.minFloor
@@ -6981,7 +7052,7 @@ var SerendibCore = (function() {
       return c.balance > 0;
     }).forEach(function(c) {
       var rule = cardMinRule(c);
-      var res = calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor);
+      var res = calculateCBSLAmortization(c.balance, cardApr(c), rule.pct, rule.floor, cardTerms(c));
       if (res.minMonths === Infinity || res.minMonths >= 1200) {
         baselineMonths = Infinity;
       } else {
@@ -7004,14 +7075,13 @@ var SerendibCore = (function() {
     while (portfolio.some(function(c) {
       return c.balance > 0.01;
     }) && months < safetyLimit) {
-      var monthMinReq = 0;
+      var monthMinReq = 0, paid = {};
+      var left = function(c) {
+        return c.balance - paid[c.id];
+      };
       portfolio.forEach(function(c) {
-        if (c.balance > 0.01) {
-          var i = c.balance * (cardApr(c) / 100 / 12);
-          c.balance += i;
-          interest += i;
-          monthMinReq += minPaymentFor(c);
-        }
+        paid[c.id] = 0;
+        if (c.balance > 0.01) monthMinReq += minPaymentFor(c);
       });
       if (budget < monthMinReq) {
         months = Infinity;
@@ -7021,29 +7091,35 @@ var SerendibCore = (function() {
       portfolio.forEach(function(c) {
         if (c.balance > 0.01) {
           var minPmt = minPaymentFor(c);
-          c.balance -= minPmt;
+          paid[c.id] = minPmt;
           surplus -= minPmt;
         }
       });
       if (strategy === "snowball") {
         portfolio.sort(function(a, b) {
-          return a.balance - b.balance;
+          return left(a) - left(b);
         });
       } else {
         portfolio.sort(function(a, b) {
           var d = cardApr(b) - cardApr(a);
-          return d !== 0 ? d : a.balance - b.balance;
+          return d !== 0 ? d : left(a) - left(b);
         });
       }
       for (var k = 0; k < portfolio.length; k++) {
         if (surplus <= 0.01) break;
         var cc = portfolio[k];
-        if (cc.balance > 0.01) {
-          var payment = Math.min(cc.balance, surplus);
-          cc.balance -= payment;
+        if (left(cc) > 0.01) {
+          var payment = Math.min(left(cc), surplus);
+          paid[cc.id] += payment;
           surplus -= payment;
         }
       }
+      portfolio.forEach(function(c) {
+        if (!(c.balance > 0.01)) return;
+        var i = cycleInterest(c.balance, paid[c.id], cardApr(c), cardTerms(c));
+        interest += i;
+        c.balance = Math.max(0, c.balance - paid[c.id]) + i;
+      });
       months++;
       portfolio.forEach(function(c) {
         if (c.balance <= 0.01 && !(c.id in clearedIn)) clearedIn[c.id] = months;
@@ -7206,6 +7282,7 @@ var SerendibCore = (function() {
     cards.forEach(function(c) {
       if (c.issuer === void 0) c.issuer = resolveIssuer(c.bank);
       if (c.apr === void 0) c.apr = 28;
+      if ((c.issuer === "lolc" || c.issuer === "cargills") && Number(c.apr) === 28) c.apr = issuerApr(c.issuer, c.nick);
     });
     return {
       data,
@@ -7375,11 +7452,12 @@ var SerendibCore = (function() {
     var aprNote = !card ? "CBSL Statutory Ceiling" : card.isZeroPercent ? "0% plan rate" : "This card’s rate";
     if (!(balance > 0)) return { apr, aprNote, empty: true };
     var rule = cardMinRule(card);
-    var r = calculateCBSLAmortization(balance, apr, rule.pct, rule.floor);
+    var terms = card ? cardTerms(card) : void 0;
+    var r = calculateCBSLAmortization(balance, apr, rule.pct, rule.floor, terms);
     if (!r) return { apr, aprNote, empty: true };
     var savings = Math.max(0, r.minTotalInterest - r.fixedTotalInterest);
     var first = Math.min(balance, Math.max(balance * rule.pct, rule.floor));
-    var firstInterest = Math.min(first, (balance - first) * (apr / 100 / 12));
+    var firstInterest = Math.min(first, cycleInterest(balance, first, apr, terms));
     var principal = first - firstInterest;
     var principalPct = Math.round(principal / first * 100);
     return {
@@ -7424,7 +7502,8 @@ var SerendibCore = (function() {
       apr = parseFloat(custom && custom.apr) || 28;
       res = calcCashAdvance(amount, days, null, { fee: computeAdvanceFee({ type: "greater", percent: pct, fixed: 500 }, amount), apr });
     }
-    var out = { apr, days, daily: "Daily rate " + (apr / 365).toFixed(3) + "%" };
+    var basis = card ? cardTerms(card).basis : 365;
+    var out = { apr, days, daily: "Daily rate " + (apr / basis).toFixed(3) + "%" };
     if (!(amount > 0)) {
       out.empty = true;
       return out;
@@ -7473,14 +7552,14 @@ var SerendibCore = (function() {
     var balance = card.balance;
     if (!(balance > 0)) return { paidOff: true, minDuration: "Paid off", minInterest: fmtLKR(0), planDuration: "Paid off", planInterest: fmtLKR(0), payment: fmtLKR(0) + " / mo", tag: "", headline: "This card is fully paid off. Nothing to pay this month." };
     var minPmt = minPaymentFor(card);
-    var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
+    var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card), cardTerms(card));
     var out = {
       paidOff: false,
       minDuration: !isFinite(minRes.months) ? "Never clears!" : fmtMonths(minRes.months),
       minInterest: !isFinite(minRes.totalInterest) ? "Unending" : fmtLKR(Math.round(minRes.totalInterest)),
       payment: fmtLKR(payment) + " / mo"
     };
-    var planRes = calcPayoff(balance, payment, cardApr(card));
+    var planRes = calcPayoff(balance, payment, cardApr(card), cardTerms(card));
     if (!isFinite(planRes.months)) return Object.assign(out, { planDuration: "Too low to pay down", planInterest: "N/A", tag: "", headline: "This payment is below the monthly interest. Please increase the amount." });
     var planInt = Math.round(planRes.totalInterest);
     var tag = isFinite(minRes.totalInterest) ? Math.max(0, Math.round(minRes.totalInterest) - planInt) > 0 ? "Save " + fmtLKR(Math.max(0, Math.round(minRes.totalInterest) - planInt)) : "Optimal!" : "Save enormously!";
@@ -7956,7 +8035,7 @@ var SerendibCore = (function() {
       title: "Minimum Payment Trap",
       subtitle: "CBSL Statutory Minimum",
       body: [
-        { type: "p", text: "CBSL mandates that banks accept a minimum payment of 4% of the balance. While this prevents default and late fees, paying only this amount retroactively voids your grace period and maximizes the compound interest paid to the bank." }
+        { type: "p", text: "Each bank sets its own minimum payment: a few percent of the balance (HNB 3%, most banks 4%, BOC 5%). Paying it keeps you clear of late fees and CRIB arrears, but once the full balance isn't paid, interest is charged daily from each purchase date and the balance shrinks very slowly." }
       ]
     },
     crib: {
@@ -7966,7 +8045,7 @@ var SerendibCore = (function() {
       title: "CRIB Default Classification",
       subtitle: "Central Bank of Sri Lanka",
       body: [
-        { type: "p", text: "The Central Bank of Sri Lanka (CBSL) classifies credit facilities past due for more than 90 days as Non-Performing Credit Facilities (NPCF). This severely restricts future borrowing across the banking sector." }
+        { type: "p", text: "At the end of every month your bank reports each card's limit, balance and number of days overdue to the Credit Information Bureau (CRIB), so even a short delay shows up on your record. Once a card is more than 90 days past due, the Central Bank of Sri Lanka classes it as non-performing, which severely restricts borrowing across the banking sector. Paying at least the minimum by the due date keeps your record clean." }
       ]
     },
     surcharge_rules: {
@@ -8005,7 +8084,7 @@ var SerendibCore = (function() {
       activeRecurring(c, todayStr).forEach(function(r) {
         if (recurringNextDue(r, todayStr) === tomorrow) dues.push({ card: c, item: r });
       });
-      if (c.balance > 0) bleed += c.balance * (cardApr(c) / 100 / 12);
+      if (c.balance > 0) bleed += cardMonthlyInterest(c);
     });
     upcoming.sort(function(a, b) {
       return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
@@ -8059,7 +8138,7 @@ var SerendibCore = (function() {
           eyebrow: "Overdue",
           title: "Payment overdue · " + o.days + (o.days === 1 ? " day" : " days"),
           cards: [c],
-          text: "Pay " + fmt(o.amount) + " to catch up" + (o.days >= 30 ? ". At 30+ days a missed payment can be reported to CRIB." : ". Late fees and interest are building.") + more,
+          text: "Pay " + fmt(o.amount) + " to catch up. " + (lateFeeText(c) ? "Each missed minimum adds a late fee (" + lateFeeText(c) + "), and days" : "Days") + " overdue are reported to CRIB every month." + more,
           action: { kind: "catch-up", label: "Catch-up plan", cardId: c.id }
         });
       } else {
@@ -8070,7 +8149,7 @@ var SerendibCore = (function() {
           eyebrow: "Critical",
           title: "CRIB Default Warning",
           cards: [c],
-          text: cardName(c) + " is " + o.days + " days past due. " + (left > 0 ? left + (left === 1 ? " day" : " days") + " before it’s classed as non-performing (90 days) and reported to CRIB." : "It has passed 90 days and is likely reported to CRIB as non-performing.") + more,
+          text: cardName(c) + " is " + o.days + " days past due. " + (left > 0 ? left + (left === 1 ? " day" : " days") + " before it’s classed as non-performing (90 days). Days overdue are already on its CRIB record." : "It has passed 90 days, so it’s classed as non-performing on its CRIB record.") + more,
           action: { kind: "catch-up", label: "Catch-up plan", cardId: c.id },
           help: "crib"
         });
@@ -8124,7 +8203,7 @@ var SerendibCore = (function() {
     if (untracked) steps.push({ n: 4, title: "Track due dates on your other cards", body: untracked + " other card" + (untracked === 1 ? "" : "s") + " ha" + (untracked === 1 ? "s" : "ve") + " no billing cycle, so the app can’t warn you before they’re due." });
     return {
       owed,
-      banner: o ? { title: fmt(o.amount) + " overdue since " + shortDate(o.since), body: o.days + (o.days === 1 ? " day" : " days") + " past due. Accounts 90 days past due are classed as non-performing and reported to CRIB." } : null,
+      banner: o ? { title: fmt(o.amount) + " overdue since " + shortDate(o.since), body: o.days + (o.days === 1 ? " day" : " days") + " past due. Banks report days overdue to CRIB at the end of every month; at 90 days the card is classed as non-performing." } : null,
       steps
     };
   }
@@ -8240,6 +8319,7 @@ var SerendibCore = (function() {
     CHECKLIST,
     CHECKLIST_HIDDEN_TOAST,
     CLASSIC_TIP_SCREENS,
+    CYCLE_DAYS,
     DAILY_RATE,
     DEFAULT_CARDS,
     HELP_TEXTS,
@@ -8307,8 +8387,10 @@ var SerendibCore = (function() {
     cardFloor,
     cardIssuer,
     cardMinRule,
+    cardMonthlyInterest,
     cardName,
     cardPayoffSim,
+    cardTerms,
     cardTheme,
     cashAdvanceApr,
     cashPriceRequest,
@@ -8330,7 +8412,9 @@ var SerendibCore = (function() {
     createAccountSession,
     createSpace,
     createSyncEngine,
+    cycleInterest,
     cycleStatus,
+    dayInterest,
     dayToLocalDateStr,
     daysBetween,
     debtToIncome,
@@ -8355,9 +8439,11 @@ var SerendibCore = (function() {
     isQuietAuthError,
     isRealYmd,
     isValidDay,
+    issuerApr,
     issuerKeyOf,
     issuerNetworks,
     lastStatementOnOrBefore,
+    lateFeeText,
     ledgerCsv,
     ledgerCsvFileName,
     localDateStrToDay,
@@ -8372,6 +8458,7 @@ var SerendibCore = (function() {
     mergeTombstones,
     migrateOnboarding,
     minPaymentFor,
+    minimumStep,
     monthYear,
     monthlyRecurringTotal,
     monthsFromNow,
@@ -9392,8 +9479,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var totalBleed = 0;
         cards.forEach(function (c) {
           if (c.balance > 0) {
-              var apr = cardApr(c);
-              totalBleed += c.balance * (apr / 100 / 12);
+              totalBleed += cardMonthlyInterest(c);
           }
         });
         
@@ -9547,8 +9633,7 @@ var checkSnowball = document.getElementById('check-snowball');
         var totalBleed = 0;
         cards.forEach(function (c) {
           if (c.balance > 0) {
-              var apr = cardApr(c);
-              totalBleed += c.balance * (apr / 100 / 12);
+              totalBleed += cardMonthlyInterest(c);
           }
         });
         var elBleed = document.getElementById("overview-interest-bleed");
@@ -10709,15 +10794,15 @@ var checkSnowball = document.getElementById('check-snowball');
             elAsk.classList.remove('hidden');
           } else if (o.days < 60 && elLate) {
             document.getElementById('home-alert-overdue-title').textContent = 'Payment overdue · ' + o.days + (o.days === 1 ? ' day' : ' days');
-            document.getElementById('home-alert-overdue-text').textContent = 'Pay ' + fmtAmt(o.amount) + ' to catch up' +
-              (o.days >= 30 ? '. At 30+ days a missed payment can be reported to CRIB.' : '. Late fees and interest are building.') + more;
+            document.getElementById('home-alert-overdue-text').textContent = 'Pay ' + fmtAmt(o.amount) + ' to catch up. ' +
+              (lateFeeText(c) ? 'Each missed minimum adds a late fee (' + lateFeeText(c) + '), and days' : 'Days') + ' overdue are reported to CRIB every month.' + more;
             document.getElementById('home-alert-overdue-card').innerHTML = cardChip(c);
             document.getElementById('home-alert-overdue-btn').onclick = function () { openRemedialSheet(c.id); };
             elLate.classList.remove('hidden');
           } else if (elCrib) {
             var left = Math.max(0, 90 - o.days);
             document.getElementById('home-alert-crib-text').textContent = cardName(c) + ' is ' + o.days + ' days past due. ' +
-              (left > 0 ? left + (left === 1 ? ' day' : ' days') + ' before it\u2019s classed as non-performing (90 days) and reported to CRIB.' : 'It has passed 90 days and is likely reported to CRIB as non-performing.') + more;
+              (left > 0 ? left + (left === 1 ? ' day' : ' days') + ' before it\u2019s classed as non-performing (90 days). Days overdue are already on its CRIB record.' : 'It has passed 90 days, so it\u2019s classed as non-performing on its CRIB record.') + more;
             document.getElementById('home-alert-crib-btn').onclick = function () { openRemedialSheet(c.id); };
             elCrib.classList.remove('hidden');
           }

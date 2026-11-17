@@ -2,7 +2,7 @@
 // same order). Kept here so every desktop screen reads them from one place.
 import {
   ymd, addDays, cardApr, cardTheme, cardName, computeMonthlyBudget, allocateMonthlyPayments, calcPayoff,
-  calcMinPayoff, cardMinRule, cycleStatus, isValidDay, minPaymentFor, nextDueDayFrom, billingPeriod, periodSummary,
+  calcMinPayoff, cardMinRule, cardTerms, cardMonthlyInterest, minimumStep, cycleStatus, isValidDay, minPaymentFor, nextDueDayFrom, billingPeriod, periodSummary,
   spendCategory, recurringNextDue, statementDatesBetween, amountDueNow, activeRecurring, projectPlan, planDebtFree, monthsFromNow
 } from '@serendib/core';
 import type { Card, Recurring, Strategy } from './types';
@@ -50,7 +50,7 @@ export function plan(cards: Card[], strategy: Strategy): Plan {
   cards.forEach((c) => {
     totalDebt += c.balance;
     totalLimit += c.limit;
-    if (c.balance > 0) interestMonth += c.balance * (cardApr(c) / 100 / 12);
+    if (c.balance > 0) interestMonth += cardMonthlyInterest(c); // the bank's daily rate over an average month
   });
   // The same month-by-month plan as the Overview (core planDebtFree)
   const free = planDebtFree(cards, strategy);
@@ -86,12 +86,8 @@ export function projection(cards: Card[], strategy: Strategy): Projection {
       minimum: Math.round(Object.values(minBal).reduce((s, v) => s + v, 0))
     });
     cards.forEach((c) => {
-      let mb = minBal[c.id];
-      if (mb > 0.005) {
-        const r = cardMinRule(c);
-        mb -= Math.min(mb, Math.max(mb * r.pct, r.floor));
-        minBal[c.id] = mb + mb * (cardApr(c) / 100 / 12);
-      }
+      // One cycle on the minimum, with the bank's interest (core minimumStep)
+      if (minBal[c.id] > 0.005) minBal[c.id] = minimumStep(c, minBal[c.id]);
     });
   }
   const debtFree: Date | null = done ? monthsFromNow(pr.months) : null;
@@ -159,7 +155,7 @@ export function cardCycle(c: Card) {
 // A card's payoff on a monthly amount and on minimums only
 export function cardPayoff(c: Card, monthly: number) {
   return {
-    plan: calcPayoff(c.balance, monthly, cardApr(c)),
-    min: calcMinPayoff(c.balance, cardApr(c), cardMinRule(c))
+    plan: calcPayoff(c.balance, monthly, cardApr(c), cardTerms(c)),
+    min: calcMinPayoff(c.balance, cardApr(c), cardMinRule(c), cardTerms(c))
   };
 }

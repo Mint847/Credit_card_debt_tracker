@@ -17,9 +17,12 @@ test('check-in first, then overdue, then CRIB after 60 days', () => {
   expect(homeAlerts([overdueCard(5, false)], t, f).map((a) => a.kind)).toContain('ask');
   const late = homeAlerts([overdueCard(35, true)], t, f).find((a) => a.kind === 'overdue');
   expect(late.title).toBe('Payment overdue · 35 days');
-  expect(late.text).toBe('Pay LKR 2,000 to catch up. At 30+ days a missed payment can be reported to CRIB.');
+  expect(late.text).toBe('Pay LKR 2,000 to catch up. Days overdue are reported to CRIB every month.');
+  // A bank that publishes its late fee: NTB charges a flat LKR 2,000
+  const ntb = Object.assign(overdueCard(35, true), { bank: 'Nations Trust Bank' });
+  expect(homeAlerts([ntb], t, f).find((a) => a.kind === 'overdue').text).toBe('Pay LKR 2,000 to catch up. Each missed minimum adds a late fee (LKR 2,000), and days overdue are reported to CRIB every month.');
   const crib = homeAlerts([overdueCard(70, true)], t, f).find((a) => a.kind === 'crib');
-  expect(crib.text).toBe('Sampath Visa is 70 days past due. 20 days before it’s classed as non-performing (90 days) and reported to CRIB.');
+  expect(crib.text).toBe('Sampath Visa is 70 days past due. 20 days before it’s classed as non-performing (90 days). Days overdue are already on its CRIB record.');
 });
 
 test('"Not yet" stops the check-in asking', () => {
@@ -37,7 +40,8 @@ test('over budget, due tomorrow, interest, and the order', () => {
   expect(items.map((a) => a.kind)).toEqual(['budget', 'recurring', 'interest']);
   expect(items[0].text).toBe('LKR 3,000 spent of a LKR 1,000 budget this period');
   expect(items[1].title).toBe('Recurring charge due tomorrow');
-  expect(items[2].amount).toBeCloseTo(12000 * 0.24 / 12, 6);
+  // HNB charges interest daily on a 360-day year: a month is balance x rate / 360 x (365 / 12) days
+  expect(items[2].amount).toBeCloseTo(12000 * 0.24 / 360 * (365 / 12), 6);
 });
 
 test('catch-up plan', () => {

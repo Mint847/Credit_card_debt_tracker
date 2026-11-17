@@ -1,7 +1,7 @@
 // Card and space actions: add/edit/clear/delete cards, billing cycles, monthly targets; create, edit,
 // delete, fund, withdraw from and pay a card from a space.
 // Moved from the App closure in index.html (Phase 1). Data changes only; each UI shows its own messages.
-import { uid, ymd, resolveIssuer, isValidDay, recordStatements, ensureSpaceHistory, applyLedgerEffect, SL_CARD_ISSUERS, fmtLKR } from './domain.js';
+import { uid, ymd, resolveIssuer, isValidDay, recordStatements, ensureSpaceHistory, applyLedgerEffect, SL_CARD_ISSUERS, issuerApr, fmtLKR } from './domain.js';
 import { logSystemEntry, afterBalanceChange } from './ledger-actions.js';
 import { initCycleTracking } from './recurring-actions.js';
 
@@ -27,7 +27,7 @@ export function addCard(cards, input) {
     balance: balance,
     color: input.color,
     issuer: issuerKey,
-    apr: issuer.apr,
+    apr: issuerApr(issuerKey, nick),
     isZeroPercent: false,
     minPct: issuer.minPct,
     minFloor: issuer.minFloor

@@ -1,6 +1,6 @@
 // The Simulators screen's three sandboxes: the minimum-payment trap, cash advances and 0% surcharge
 // plans. Numbers and wording as the phone app shows them; moved from its simulator code (Phase 3).
-import { calculateCBSLAmortization, cardMinRule, cardApr, calcCashAdvance, calcSurchargeAPR, computeAdvanceFee, cardIssuer, cashAdvanceApr,
+import { calculateCBSLAmortization, cardMinRule, cardApr, cardTerms, cycleInterest, calcCashAdvance, calcSurchargeAPR, computeAdvanceFee, cardIssuer, cashAdvanceApr,
   minPaymentFor, calcMinPayoff, calcPayoff, cardFee, fmtLKR, fmtMonths, fmtPct } from './domain.js';
 
 function lkr(n) { return new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 }).format(n); }
@@ -21,12 +21,13 @@ export function simulateMinimum(balance, card) {
   var aprNote = !card ? 'CBSL Statutory Ceiling' : (card.isZeroPercent ? '0% plan rate' : 'This card’s rate');
   if (!(balance > 0)) return { apr: apr, aprNote: aprNote, empty: true };
   var rule = cardMinRule(card);
-  var r = calculateCBSLAmortization(balance, apr, rule.pct, rule.floor);
+  var terms = card ? cardTerms(card) : undefined;
+  var r = calculateCBSLAmortization(balance, apr, rule.pct, rule.floor, terms);
   if (!r) return { apr: apr, aprNote: aprNote, empty: true };
   var savings = Math.max(0, r.minTotalInterest - r.fixedTotalInterest);
   // Of this month's minimum, the part that goes to interest is the interest the rest then carries
   var first = Math.min(balance, Math.max(balance * rule.pct, rule.floor));
-  var firstInterest = Math.min(first, (balance - first) * (apr / 100 / 12));
+  var firstInterest = Math.min(first, cycleInterest(balance, first, apr, terms));
   var principal = first - firstInterest;
   var principalPct = Math.round((principal / first) * 100);
   return {
@@ -67,7 +68,8 @@ export function simulateCashAdvance(amount, daysRaw, card, custom) {
     apr = parseFloat(custom && custom.apr) || 28;
     res = calcCashAdvance(amount, days, null, { fee: computeAdvanceFee({ type: 'greater', percent: pct, fixed: 500 }, amount), apr: apr });
   }
-  var out = { apr: apr, days: days, daily: 'Daily rate ' + (apr / 365).toFixed(3) + '%' };
+  var basis = card ? cardTerms(card).basis : 365;
+  var out = { apr: apr, days: days, daily: 'Daily rate ' + (apr / basis).toFixed(3) + '%' };
   if (!(amount > 0)) { out.empty = true; return out; }
   var hidden = res.advanceFee + res.interest;
   out.empty = false;
@@ -116,14 +118,14 @@ export function cardPayoffSim(card, payment) {
   var balance = card.balance;
   if (!(balance > 0)) return { paidOff: true, minDuration: 'Paid off', minInterest: fmtLKR(0), planDuration: 'Paid off', planInterest: fmtLKR(0), payment: fmtLKR(0) + ' / mo', tag: '', headline: 'This card is fully paid off. Nothing to pay this month.' };
   var minPmt = minPaymentFor(card);
-  var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card));
+  var minRes = calcMinPayoff(balance, cardApr(card), cardMinRule(card), cardTerms(card));
   var out = {
     paidOff: false,
     minDuration: !isFinite(minRes.months) ? 'Never clears!' : fmtMonths(minRes.months),
     minInterest: !isFinite(minRes.totalInterest) ? 'Unending' : fmtLKR(Math.round(minRes.totalInterest)),
     payment: fmtLKR(payment) + ' / mo'
   };
-  var planRes = calcPayoff(balance, payment, cardApr(card));
+  var planRes = calcPayoff(balance, payment, cardApr(card), cardTerms(card));
   if (!isFinite(planRes.months)) return Object.assign(out, { planDuration: 'Too low to pay down', planInterest: 'N/A', tag: '', headline: 'This payment is below the monthly interest. Please increase the amount.' });
   var planInt = Math.round(planRes.totalInterest);
   var tag = isFinite(minRes.totalInterest) ? (Math.max(0, Math.round(minRes.totalInterest) - planInt) > 0 ? 'Save ' + fmtLKR(Math.max(0, Math.round(minRes.totalInterest) - planInt)) : 'Optimal!') : 'Save enormously!';
