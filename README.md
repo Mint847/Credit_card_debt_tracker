@@ -9,7 +9,8 @@
   <a href="https://stitch-debt-manager.web.app"><strong>Open the app</strong></a> ·
   <a href="https://stitch-debt-manager.web.app/desktop/?demo">Try the demo (no sign-in)</a> ·
   <a href="docs/features.md">All features</a> ·
-  <a href="docs/development.md">Run it locally</a>
+  <a href="docs/development.md">Run it locally</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
 <p align="center">
@@ -156,6 +157,12 @@ design/                  early mock-ups and design references
 - **[How it works](docs/how-it-works.md):** the maths, supported banks, architecture and security
 - **[Development](docs/development.md):** run, test, build and deploy
 - **[Change history](docs/changelog.md)**
+
+## Contributing
+
+Contributions are welcome, especially corrections to a bank's fees, rates and minimum-payment rules. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for how to run the app, check your work and send a pull request.
+
+---
 
 ## License
 

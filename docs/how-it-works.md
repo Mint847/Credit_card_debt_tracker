@@ -5,8 +5,9 @@ The maths behind the numbers, the banks Serendib knows, how the app is built, an
 ## How the numbers are worked out
 - **Payoff:**
   - each month starts from a statement balance
-  - paying it in full by the due date costs no interest; whatever is left carries a month's interest (APR ÷ 12)
-  - the minimum is the card's rule applied to the statement balance; most banks use 4% with an LKR 1,000 floor, and Nations Trust uses a lower LKR 250 floor
+  - banks charge interest by the day: amount × APR × days ÷ basis, where the basis is 360 days for HNB, Bank of Ceylon and People's Bank and 365 for LOLC and Nations Trust
+  - the whole statement balance keeps accruing until the payment lands on the due date; after that the remainder accrues for the rest of the cycle
+  - the minimum is each bank's own rule applied to the statement balance (a percentage with a floor, for example 5% / LKR 500 at Bank of Ceylon and 3% at HNB); banks without a checked rule use 4% with an LKR 1,000 floor
 - **Fixed plan:** the "about 12 months" fixed payment is rounded up to the nearest LKR 1,000.
 - **Cash advance:** the bank's fee (percentage, fixed or both, per its tariff) plus simple daily interest (APR ÷ 365) from the day of withdrawal. There is no interest-free period.
 - **0% plans:** the fee is turned into an interest rate with an IRR calculation and shown as a yearly rate, the same basis as the 28% cap. For example, a 5% fee over 12 months is about 9.1% a year.
