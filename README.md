@@ -158,4 +158,7 @@ design/                  early mock-ups and design references
 - **[Change history](docs/changelog.md)**
 
 ## License
-MIT. See [LICENSE](LICENSE).
+
+Copyright (C) 2026 Mint847. Licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0).
+
+In short: you can use, study, change and share Serendib. If you run a modified version as a service for other people, you must make your modified source available to them under the same licence. Earlier versions published before this change remain available under the MIT licence they were released under.
