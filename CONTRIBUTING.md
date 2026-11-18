@@ -31,7 +31,7 @@ npm run test:core        # unit tests for the shared core
 npm run build:desktop    # type-checks the app, then builds it into web/desktop/
 ```
 
-Both should pass before you open a pull request. There is no automatic test run on pull requests yet, so please run them yourself.
+Both should pass before you open a pull request. The same checks run automatically on every pull request (see `.github/workflows/ci.yml`), so you'll see a green tick or a red cross on your pull request.
 
 ## Where things live
 
