@@ -567,7 +567,13 @@ var CARD_THEMES = {
   cyan:    { name: 'Cyan / Ocean',      bg: 'bg-cyan-50',    icon: 'text-cyan-600',    text: 'text-cyan-700',    bar: 'bg-cyan-500',    hex: '#06b6d4', ink: '#0e7490', soft: 'rgba(6,182,212,.12)', inkDark: '#67e8f9' }
 };
 function cardTheme(card) { return CARD_THEMES[card && card.color] || CARD_THEMES.teal; }
-function cardName(c) { return String(c.bank || '').split(' ')[0] + ' ' + (c.nick || ''); }
+// A card's short name: the bank's first word and the card ("Sampath Ultramiles"). A bank named "Bank of …"
+// goes by its initials instead ("BOC Visa Platinum", not "Bank Visa Platinum").
+function cardName(c) {
+  var bank = String(c.bank || '').trim(), first = bank.split(' ')[0];
+  if (/^bank$/i.test(first) && bank.indexOf(' ') > 0) first = bank.split(/\s+/).map(function (w) { return w.charAt(0); }).join('').toUpperCase();
+  return first + ' ' + (c.nick || '');
+}
 /* ── Spend ledger: categories, statement periods, balance effects, recurring charges, SMS parsing ── */
 var SPEND_CATEGORIES = [
   { key: 'groceries', label: 'Groceries', icon: 'shopping_basket', bg: 'bg-emerald-50', text: 'text-emerald-700', bar: 'bg-emerald-500', offer: 'groceries' },

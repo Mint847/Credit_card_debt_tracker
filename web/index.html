@@ -5367,7 +5367,11 @@ var SerendibCore = (function() {
     return CARD_THEMES[card && card.color] || CARD_THEMES.teal;
   }
   function cardName(c) {
-    return String(c.bank || "").split(" ")[0] + " " + (c.nick || "");
+    var bank = String(c.bank || "").trim(), first = bank.split(" ")[0];
+    if (/^bank$/i.test(first) && bank.indexOf(" ") > 0) first = bank.split(/\s+/).map(function(w) {
+      return w.charAt(0);
+    }).join("").toUpperCase();
+    return first + " " + (c.nick || "");
   }
   var SPEND_CATEGORIES = [
     { key: "groceries", label: "Groceries", icon: "shopping_basket", bg: "bg-emerald-50", text: "text-emerald-700", bar: "bg-emerald-500", offer: "groceries" },
